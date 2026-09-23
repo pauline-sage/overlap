@@ -1,0 +1,30 @@
+# Angular and Node.js
+node_modules/
+dist/
+.angular/
+coverage/
+npm-debug.log*
+
+# .NET
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Local tooling caches
+.npm-cache/
+.dotnet-cli/
+.local/
+appsettings.Local.json
+
+# Editors
+# Local documentation
+*.md
+docs/
+
+.idea/
+.vscode/
+
+# Operating systems
+.DS_Store
+Thumbs.db

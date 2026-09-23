@@ -1,0 +1,196 @@
+<input
+  #photoPicker
+  type="file"
+  accept="image/jpeg,image/png,image/webp"
+  hidden
+  (change)="uploadPhoto($event)"
+/>
+
+@if (page() === 'home') {
+  <div class="welcome">
+    <div class="avatar" aria-hidden="true">{{ greetingName().charAt(0) }}</div>
+    <div>
+      <p class="label">Your little corner of together</p>
+      <h2 id="dashboard-heading" tabindex="-1">
+        Welcome, {{ greetingName() }} <span class="wave" aria-hidden="true">✦</span>
+      </h2>
+    </div>
+  </div>
+  <section class="hero" aria-labelledby="moments-title">
+    <span class="badge">Different places. Same moment.</span>
+    <div class="orbit">
+      <button
+        class="person"
+        type="button"
+        (click)="photoPicker.click()"
+        [disabled]="working() || !together()"
+        aria-label="Add or replace your profile photo"
+      >
+        @if (together()?.hasPhoto) {
+          <img [src]="photoUrl(together()!.id)" alt="Your profile photo" />
+        } @else {
+          {{ greetingName().charAt(0) }}
+        }
+      </button>
+      @if (together()?.partner; as partner) {
+        <span class="person partner" [attr.aria-label]="partner.displayName">
+          @if (partner.hasPhoto) {
+            <img [src]="photoUrl(partner.id)" [alt]="partner.displayName ?? 'Your person'" />
+          } @else {
+            {{ partner.displayName?.charAt(0) ?? '+1' }}
+          }
+        </span>
+      } @else {
+        <button
+          class="person partner"
+          type="button"
+          (click)="createInvite()"
+          [disabled]="working() || !together()"
+          aria-label="Invite your person"
+        >
+          +1
+        </button>
+      }
+    </div>
+    <p class="photo-hint">
+      Tap your circle to add a photo.
+      @if (!together()?.partner) {
+        Tap +1 to invite your person.
+      }
+    </p>
+    @if (together()?.partner; as partner) {
+      <p class="connected">You &amp; {{ partner.displayName }} · Connected</p>
+    }
+    <h2 id="moments-title">A little closer.<br />A lot more together.</h2>
+    <p>Coffee in two cities. A film from two sofas.<br />Something to look forward to, together.</p>
+  </section>
+}
+@if (page() === 'profile') {
+  <section class="profile-card">
+    <h2 id="dashboard-heading" tabindex="-1">Your profile</h2>
+    <p>{{ greetingName() }}</p>
+    <p class="identity">
+      Signed in as <strong>{{ email() }}</strong>
+    </p>
+    @if (together()?.hasPhoto) {
+      <img class="profile-photo" [src]="photoUrl(together()!.id)" alt="Your profile photo" />
+    }
+    <button type="button" (click)="photoPicker.click()" [disabled]="working()">
+      Add or replace photo
+    </button>
+    <button type="button" (click)="editProfile.emit()" [disabled]="busy() || working()">
+      Edit display name
+    </button>
+    <h3>Your connection</h3>
+    @if (together()?.partner; as partner) {
+      <p>Connected with {{ partner.displayName }}</p>
+    } @else {
+      <button type="button" (click)="createInvite()" [disabled]="working()">
+        Invite your person
+      </button>
+    }
+  </section>
+}
+@if (
+  page() === 'profile' ||
+  (page() === 'home' && (notice() || error() || invitation() || inviteUrl()))
+) {
+  <section class="sharing" aria-label="Your connection">
+    @if (notice()) {
+      <p role="status">{{ notice() }}</p>
+    }
+    @if (error()) {
+      <p role="alert">{{ error() }}</p>
+    }
+    @if (invitation(); as pending) {
+      <h2>{{ pending.displayName }} invited you</h2>
+      <p>Connect to share your display names and profile photos. You can leave anytime.</p>
+      <button type="button" (click)="accept()" [disabled]="working()">Accept invitation</button>
+      <button type="button" (click)="decline()" [disabled]="working()">Not now</button>
+    }
+    @if (inviteUrl()) {
+      <label for="invitation-link">Private invitation link</label>
+      <input
+        id="invitation-link"
+        readonly
+        [value]="inviteUrl()"
+        (click)="$any($event.target).select()"
+      />
+      <button type="button" (click)="copyInvite()">Copy invitation</button>
+    }
+    @if (page() === 'profile') {
+      @if (together()?.invitationExpiresUtc && !together()?.partner) {
+        <p>An invitation is pending. Creating a new link replaces the old one.</p>
+        <button type="button" (click)="revoke()" [disabled]="working()">Revoke invitation</button>
+      }
+      <button type="button" (click)="refresh()" [disabled]="working()">
+        {{ working() ? 'Please wait…' : 'Refresh connection' }}
+      </button>
+      @if (together()?.hasPhoto) {
+        <button type="button" (click)="removePhoto()" [disabled]="working()">
+          Remove my photo
+        </button>
+      }
+      @if (together()?.partner) {
+        @if (showLeave()) {
+          <p>End this connection for both of you? Your accounts and own photos will remain.</p>
+          <button type="button" (click)="leave()" [disabled]="working()">
+            Yes, leave connection
+          </button>
+          <button type="button" (click)="showLeave.set(false)" [disabled]="working()">
+            Cancel
+          </button>
+        } @else {
+          <button type="button" (click)="showLeave.set(true)">Leave connection</button>
+        }
+      }
+    }
+  </section>
+}
+@if (page() === 'home') {
+  <section class="next" aria-labelledby="next-title">
+    <div class="section-heading">
+      <h2 id="next-title">What's next?</h2>
+      <span class="badge">Coming next</span>
+    </div>
+    <div class="idea">
+      <span class="idea-icon" aria-hidden="true">◷</span>
+      <div>
+        <h3>Find your shared time</h3>
+        <p>Two schedules. One moment that works for both of you.</p>
+      </div>
+    </div>
+    <div class="idea">
+      <span class="idea-icon coffee" aria-hidden="true">☕</span>
+      <div>
+        <h3>Make it a coffee date</h3>
+        <p>Your favourite kind of break, wherever you each are.</p>
+      </div>
+    </div>
+    <p class="hint">
+      Your account is ready. Shared availability and activity discovery are on their way.
+    </p>
+  </section>
+}
+@if (page() === 'settings') {
+  <section class="card" aria-labelledby="dashboard-heading">
+    <h2 id="dashboard-heading" tabindex="-1">Settings</h2>
+    <p>Make Overlap feel like you.</p>
+    <button type="button" (click)="toggleTheme.emit()">
+      Switch to {{ theme() === 'dark' ? 'light' : 'dark' }} theme
+    </button>
+    <h3>Security</h3>
+    <p>You are signed out after 30 minutes without activity.</p>
+    <button type="button" (click)="changeEmail.emit()" [disabled]="busy()">Change email address</button>
+    <p class="identity">
+      Signed in as <strong>{{ email() }}</strong>
+    </p>
+    <button type="button" (click)="changePassword.emit()" [disabled]="busy()">
+      Change password
+    </button>
+    <button class="sign-out" type="button" (click)="signOut.emit()" [disabled]="busy()">
+      Sign out
+    </button>
+  </section>
+}
+<app-nav-bar [current]="page()" [disabled]="busy()" (navigate)="navigate($event)" />

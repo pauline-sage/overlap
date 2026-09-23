@@ -1,0 +1,22 @@
+@Overlap_Api_HostAddress = http://localhost:5217
+
+# Process health only; this does not test database or SMTP availability.
+GET {{Overlap_Api_HostAddress}}/api/health
+Accept: application/json
+
+###
+
+# Establish antiforgery cookies. Every account POST also requires the matching
+# X-XSRF-TOKEN header. Use the app or scripts/Test-LocalAuth.ps1 for full flows.
+GET {{Overlap_Api_HostAddress}}/api/auth/csrf
+
+###
+
+# Returns 401 without an authenticated session cookie, or the signed-in email.
+GET {{Overlap_Api_HostAddress}}/api/auth/me
+Accept: application/json
+
+###
+
+# Endpoint contracts: services/api/README.md
+# Never save real passwords or confirmation/reset tokens in this file.

@@ -1,0 +1,39 @@
+﻿* {
+  box-sizing: border-box;
+}
+html {
+  color-scheme: dark;
+  --canvas: #101714;
+  --surface: #18221d;
+  --field: #101914;
+  --text: #edf3e9;
+  --muted: #adbcb0;
+  --line: #45584b;
+  --accent: #c4e5a0;
+  --on-accent: #1b301d;
+  --error-bg: #382220;
+  --error-text: #ffc2b7;
+  --success-bg: #203c2b;
+  --success-text: #c3e8bf;
+  background: var(--canvas);
+  color: var(--text);
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+html[data-theme='light'] {
+  color-scheme: light;
+  --canvas: #f5f5ef;
+  --surface: #ffffff;
+  --field: #fafbf7;
+  --text: #20392b;
+  --muted: #53675a;
+  --line: #a1b2a5;
+  --accent: #315c3b;
+  --on-accent: #ffffff;
+  --error-bg: #fff0ec;
+  --error-text: #843b31;
+  --success-bg: #e9f1e5;
+  --success-text: #315b46;
+}
+body {
+  margin: 0;
+}

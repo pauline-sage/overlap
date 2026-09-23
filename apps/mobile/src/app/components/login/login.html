@@ -1,0 +1,305 @@
+<main class="auth-page">
+  <header class="topbar">
+    <span class="brand"
+      ><span class="brand-mark" aria-hidden="true"><i></i><i></i></span> overlap</span
+    >
+    <button
+      class="theme-toggle"
+      type="button"
+      (click)="toggleTheme()"
+      [attr.aria-label]="theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+    >
+      <span aria-hidden="true">{{ theme() === 'dark' ? '☀' : '☾' }}</span>
+      {{ theme() === 'dark' ? 'Light' : 'Dark' }}
+    </button>
+  </header>
+  <section class="auth-panel" aria-labelledby="page-title">
+    @if (screen() !== 'account') {
+      <p class="eyebrow">Different places. Same moment.</p>
+    }
+    <h1 id="page-title" tabindex="-1" [style.font-size]="screen() === 'account' ? '1rem' : null">
+      {{ emailSent() ? 'Check your inbox.' : headings[screen()] }}
+    </h1>
+    @if (loading()) {
+      <p role="status">Getting things ready…</p>
+    } @else {
+      @if (screen() === 'login') {
+        <p class="intro">Sign in to find your next shared moment.</p>
+        @if (invitationToken) {
+          <p class="notice success">
+            You have an invitation. Sign in or create an account, then review it on your dashboard.
+          </p>
+        }
+      }
+      @if (screen() === 'register' && !emailSent()) {
+        <p class="steps">01 Create account <span aria-hidden="true">→</span> 02 Verify email</p>
+        <p class="intro">Create your account. We’ll email you a link to confirm it’s yours.</p>
+      }
+      @if (screen() === 'forgot-password') {
+        <p class="intro">
+          Enter your email and we’ll send a password reset link if your account is eligible.
+        </p>
+      }
+      @if (screen() === 'resend-confirmation') {
+        <p class="intro">
+          Request a fresh confirmation link. Please allow ten minutes between requests.
+        </p>
+      }
+      @if (screen() === 'confirm-email') {
+        <p class="intro">Confirm your email to finish setting up your account.</p>
+      }
+      @if (screen() === 'reset-password') {
+        <p class="intro">Choose a new password. You’ll sign in again afterwards.</p>
+      }
+      @if (screen() === 'change-password') {
+        <p class="intro">Changing your password signs you out of all sessions.</p>
+      }
+      @if (screen() === 'change-email') {
+        <p class="intro">Your current address stays active until you verify the new one. Please allow ten minutes between email-link requests.</p>
+      }
+      @if (screen() === 'confirm-email-change') {
+        <p class="intro">Confirm the new sign-in address below. This signs out all existing sessions.</p>
+      }
+      @if (message()) {
+        <p class="notice success" role="status">{{ message() }}</p>
+      }
+      @if (error()) {
+        <p class="notice error" role="alert">{{ error() }}</p>
+      }
+      @if (emailSent()) {
+        <div class="account-card">
+          <span class="small-label">Your next step</span>
+          <p>
+            Open the link in your email to continue. Check your junk folder too. Links expire after
+            one hour.
+          </p>
+          <p class="hint">No email yet? Allow ten minutes before requesting another link.</p>
+        </div>
+        <button class="primary" type="button" (click)="navigate(account() ? 'account' : 'login')">{{ account() ? 'Back to account' : 'Back to sign in' }}</button>
+        <button
+          class="text-button secondary-link"
+          type="button"
+          (click)="
+            navigate(screen() === 'change-email' ? 'change-email' : screen() === 'forgot-password' ? 'forgot-password' : 'resend-confirmation')
+          "
+        >
+          Request another link
+        </button>
+      } @else if (screen() === 'account') {
+        <app-dashboard
+          (sessionExpired)="sessionEnded()"
+          [theme]="theme()"
+          (toggleTheme)="toggleTheme()"
+          [email]="account()?.email ?? ''"
+          [greetingName]="account()?.displayName ?? ''"
+          [invitationToken]="invitationToken"
+          (invitationHandled)="invitationToken = ''"
+          [busy]="busy()"
+          (editProfile)="navigate('profile')"
+          (changePassword)="navigate('change-password')"
+          (changeEmail)="navigate('change-email')"
+          (signOut)="logout()"
+        />
+      } @else {
+        <form
+          (ngSubmit)="submit(authForm.valid === true)"
+          #authForm="ngForm"
+          [attr.aria-busy]="busy()"
+        >
+          <fieldset [disabled]="busy()">
+            @if (screen() === 'profile') {
+              <p class="intro">
+                Your name or nickname. This is how we’ll welcome you, and you can change it anytime.
+              </p>
+              <label for="display-name">Display name</label>
+              <input
+                id="display-name"
+                name="displayName"
+                autocomplete="nickname"
+                required
+                maxlength="50"
+                [(ngModel)]="displayName"
+              />
+            }
+            @if (screen() === 'change-email' || screen() === 'confirm-email-change') {
+              <label for="new-email">New email address</label>
+              <input id="new-email" name="newEmail" type="email" email required maxlength="254" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" [(ngModel)]="newEmail" [readOnly]="screen() === 'confirm-email-change'" />
+            }
+            @if (screen() !== 'change-password' && screen() !== 'profile' && screen() !== 'change-email' && screen() !== 'confirm-email-change') {
+              <label for="email">Email</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                email
+                placeholder="you@example.com"
+                autocomplete="email"
+                inputmode="email"
+                autocapitalize="none"
+                spellcheck="false"
+                maxlength="254"
+                required
+                [(ngModel)]="email"
+                [readOnly]="screen() === 'reset-password' || screen() === 'confirm-email'"
+              />
+            }
+            @if (screen() === 'change-password' || screen() === 'change-email') {
+              <label for="current-password">Current password</label>
+              <input
+                id="current-password"
+                name="currentPassword"
+                [type]="revealPassword() ? 'text' : 'password'"
+                autocomplete="current-password"
+                required
+                maxlength="128"
+                [(ngModel)]="currentPassword"
+              />
+            }
+            @if (
+              screen() === 'login' ||
+              screen() === 'register' ||
+              screen() === 'reset-password' ||
+              screen() === 'change-password'
+            ) {
+              <label for="password">{{
+                screen() === 'login' || screen() === 'register' ? 'Password' : 'New password'
+              }}</label>
+              <input
+                id="password"
+                name="password"
+                [type]="revealPassword() ? 'text' : 'password'"
+                [autocomplete]="screen() === 'login' ? 'current-password' : 'new-password'"
+                required
+                [minlength]="screen() === 'login' ? 1 : 10"
+                maxlength="128"
+                [(ngModel)]="password"
+                [attr.aria-describedby]="screen() === 'login' ? null : 'password-hint'"
+              />
+              <button
+                class="text-button reveal"
+                type="button"
+                (click)="revealPassword.set(!revealPassword())"
+                [attr.aria-pressed]="revealPassword()"
+                aria-label="Show passwords"
+              >
+                {{ revealPassword() ? 'Hide passwords' : 'Show passwords' }}
+              </button>
+              @if (screen() !== 'login') {
+                <p id="password-hint" class="hint">
+                  10–128 characters. A few unrelated words work well. Password managers and paste
+                  are welcome.
+                </p>
+                <label for="password-confirmation">Confirm password</label>
+                <input
+                  id="password-confirmation"
+                  name="passwordConfirmation"
+                  [type]="revealPassword() ? 'text' : 'password'"
+                  autocomplete="new-password"
+                  required
+                  maxlength="128"
+                  [(ngModel)]="passwordConfirmation"
+                />
+              }
+            }
+            @if (screen() === 'login') {
+              <button
+                class="text-button inline-link"
+                type="button"
+                (click)="navigate('forgot-password')"
+              >
+                Forgot password?
+              </button>
+            }
+            <button
+              class="primary"
+              type="submit"
+              [disabled]="
+                authForm.invalid ||
+                busy() ||
+                ((screen() === 'confirm-email' || screen() === 'reset-password' || screen() === 'confirm-email-change') && !hasLink())
+              "
+            >
+              @if (busy()) {
+                Please wait…
+              } @else {
+                @switch (screen()) {
+                  @case ('change-email') { Verify new email }
+                  @case ('confirm-email-change') { Confirm email change }
+                  @case ('profile') {
+                    Save and continue
+                  }
+                  @case ('login') {
+                    Sign in
+                  }
+                  @case ('register') {
+                    Create account
+                  }
+                  @case ('confirm-email') {
+                    Confirm my email
+                  }
+                  @case ('reset-password') {
+                    Reset password
+                  }
+                  @case ('change-password') {
+                    Change password
+                  }
+                  @default {
+                    Send email link
+                  }
+                }
+              }
+            </button>
+          </fieldset>
+        </form>
+        @if (screen() === 'login') {
+          <p class="switch-prompt">
+            First time here?
+            <button
+              class="text-button"
+              type="button"
+              (click)="navigate('register')"
+              [disabled]="busy()"
+            >
+              Create an account
+            </button>
+          </p>
+          <button
+            class="text-button secondary-link"
+            type="button"
+            (click)="navigate('resend-confirmation')"
+            [disabled]="busy()"
+          >
+            Resend confirmation email
+          </button>
+        } @else {
+          @if (screen() === 'confirm-email-change') {
+            <p class="hint">Expired or invalid link? Sign in with your current email, then request another link from Settings → Change email address.</p>
+          }
+          @if (screen() === 'confirm-email' || screen() === 'reset-password') {
+            <button
+              class="text-button secondary-link"
+              type="button"
+              [disabled]="busy()"
+              (click)="
+                navigate(screen() === 'confirm-email' ? 'resend-confirmation' : 'forgot-password')
+              "
+            >
+              Link expired? Request a new one
+            </button>
+          }
+          <button
+            class="text-button back-link"
+            type="button"
+            (click)="navigate(account() ? 'account' : 'login')"
+            [disabled]="busy()"
+          >
+            {{ account() ? 'Back to account' : 'Back to sign in' }}
+          </button>
+        }
+      }
+    }
+  </section>
+  <footer>
+    <span class="footer-dots" aria-hidden="true">● ●</span> More together, wherever you are.
+  </footer>
+</main>

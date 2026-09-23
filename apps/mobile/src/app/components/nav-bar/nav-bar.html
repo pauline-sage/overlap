@@ -1,0 +1,29 @@
+<nav aria-label="Main navigation">
+  <button
+    type="button"
+    aria-label="Home"
+    [attr.aria-current]="current() === 'home' ? 'page' : null"
+    [disabled]="disabled()"
+    (click)="navigate.emit('home')"
+  >
+    <span aria-hidden="true">⌂</span>Home
+  </button>
+  <button
+    type="button"
+    aria-label="Profile"
+    [attr.aria-current]="current() === 'profile' ? 'page' : null"
+    [disabled]="disabled()"
+    (click)="navigate.emit('profile')"
+  >
+    <span aria-hidden="true">☺</span>Profile
+  </button>
+  <button
+    type="button"
+    aria-label="Settings"
+    [attr.aria-current]="current() === 'settings' ? 'page' : null"
+    [disabled]="disabled()"
+    (click)="navigate.emit('settings')"
+  >
+    <span aria-hidden="true">⚙</span>Settings
+  </button>
+</nav>
