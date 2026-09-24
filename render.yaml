@@ -1,0 +1,36 @@
+# Optional Blueprint; the same settings can be entered in the Render form.
+services:
+  - type: web
+    name: overlap
+    runtime: docker
+    plan: free
+    numInstances: 1
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeployTrigger: "off"
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Hosting__RenderProxy
+        value: "true"
+      - key: Email__Transport
+        value: Mailjet
+      - key: Email__LocalCapture
+        value: "false"
+      - key: Auth__PublicAppUrl
+        sync: false
+      - key: AllowedHosts
+        sync: false
+      - key: ConnectionStrings__Accounts
+        sync: false
+      - key: Auth__KeyCertificateBase64
+        sync: false
+      - key: Email__From
+        sync: false
+      - key: Email__Username
+        sync: false
+      - key: Email__Password
+        sync: false
+      - key: Database__ServerVersion
+        sync: false

@@ -1,4 +1,8 @@
 using System.Threading.RateLimiting;
+using System.Security.Cryptography.X509Certificates;
+using Microsoft.AspNetCore.HttpOverrides;
+using Overlap.Api.Hosting;
+using MySqlConnector;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -8,7 +12,24 @@ using Overlap.Api.Auth;
 var builder = WebApplication.CreateBuilder(args);
 if (builder.Environment.IsDevelopment())
     builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true).AddEnvironmentVariables();
+if (await DeploymentCommands.RunAsync(args, builder.Configuration)) return;
 builder.Services.AddProblemDetails();
+var renderProxy = builder.Configuration.GetValue<bool>("Hosting:RenderProxy");
+if (renderProxy)
+{
+    if (builder.Configuration["RENDER"] != "true")
+        throw new InvalidOperationException("Render proxy mode requires the Render environment.");
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        // Only the last hop is trusted. Never consume arbitrary leftmost client-supplied headers.
+        // Render must be the only ingress; do not enable this on a directly exposed server.
+        options.ForwardLimit = 1;
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+}
+builder.Services.AddHttpsRedirection(options => options.HttpsPort = 443);
 builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 16 * 1024);
 var connection = builder.Configuration.GetConnectionString("Accounts");
 var authConfigured = !string.IsNullOrWhiteSpace(connection);
@@ -22,12 +43,25 @@ if (authConfigured)
         (!builder.Environment.IsDevelopment() && uri.Scheme != "https") ||
         (uri.Scheme != "https" && !(uri.Scheme == "http" && uri.IsLoopback)))
         throw new InvalidOperationException("Auth:PublicAppUrl must be HTTPS (HTTP loopback is allowed in Development).");
-    if (string.IsNullOrWhiteSpace(builder.Configuration["Email:Host"]) ||
-        string.IsNullOrWhiteSpace(builder.Configuration["Email:From"]))
-        throw new InvalidOperationException("Configure Email:Host and Email:From before enabling accounts.");
+    var transport = builder.Configuration["Email:Transport"] ?? "Smtp";
+    if (transport is not ("Smtp" or "Mailjet"))
+        throw new InvalidOperationException("Email:Transport must be Smtp or Mailjet.");
+    if (string.IsNullOrWhiteSpace(builder.Configuration["Email:From"]) ||
+        (transport == "Smtp" && string.IsNullOrWhiteSpace(builder.Configuration["Email:Host"])) ||
+        (transport == "Mailjet" && (string.IsNullOrWhiteSpace(builder.Configuration["Email:Username"]) ||
+            string.IsNullOrWhiteSpace(builder.Configuration["Email:Password"]))))
+        throw new InvalidOperationException("Configure the sender and credentials for the selected email transport.");
     if (!builder.Environment.IsDevelopment() && builder.Configuration.GetValue<bool>("Email:LocalCapture"))
         throw new InvalidOperationException("Local email capture cannot be enabled in production.");
 
+    if (!builder.Environment.IsDevelopment())
+    {
+        if (new MySqlConnectionStringBuilder(connection!).SslMode != MySqlSslMode.VerifyFull)
+            throw new InvalidOperationException("Production database connections require SslMode=VerifyFull.");
+        var allowedHosts = builder.Configuration["AllowedHosts"];
+        if (string.IsNullOrWhiteSpace(allowedHosts) || allowedHosts.Contains('*'))
+            throw new InvalidOperationException("Set AllowedHosts to the public application hostname.");
+    }
     var serverVersion = builder.Configuration["Database:ServerVersion"] ?? "8.4.0-mysql";
     builder.Services.AddDbContext<AuthDbContext>(options => options.UseMySql(connection, ServerVersion.Parse(serverVersion)));
     builder.Services.AddIdentity<Account, IdentityRole>(options =>
@@ -79,12 +113,29 @@ if (authConfigured)
         options.Cookie.SameSite = SameSiteMode.Strict;
         options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
     });
-    var keys = builder.Configuration["Auth:KeyDirectory"] ?? Path.Combine(builder.Environment.ContentRootPath, ".local", "keys");
-    var protection = builder.Services.AddDataProtection().SetApplicationName("Overlap")
-        .PersistKeysToFileSystem(new DirectoryInfo(keys));
-    if (OperatingSystem.IsWindows()) protection.ProtectKeysWithDpapi();
+    var protection = builder.Services.AddDataProtection().SetApplicationName("Overlap");
+    if (builder.Environment.IsDevelopment())
+    {
+        var keys = builder.Configuration["Auth:KeyDirectory"] ?? Path.Combine(builder.Environment.ContentRootPath, ".local", "keys");
+        protection.PersistKeysToFileSystem(new DirectoryInfo(keys));
+        if (OperatingSystem.IsWindows()) protection.ProtectKeysWithDpapi();
+    }
+    else
+    {
+        var encoded = builder.Configuration["Auth:KeyCertificateBase64"];
+        if (string.IsNullOrWhiteSpace(encoded))
+            throw new InvalidOperationException("Auth:KeyCertificateBase64 is required for persistent production keys.");
+        var certificate = X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(encoded), null,
+            X509KeyStorageFlags.EphemeralKeySet);
+        if (!certificate.HasPrivateKey)
+            throw new InvalidOperationException("The key-protection certificate must include its private key.");
+        builder.Services.AddSingleton(certificate);
+        protection.PersistKeysToDbContext<AuthDbContext>().ProtectKeysWithCertificate(certificate);
+    }
     builder.Services.AddSingleton<DummyPasswordCheck>();
     builder.Services.AddScoped<AccountMail>();
+    builder.Services.AddHttpClient<AccountEmailSender>(client => client.Timeout = TimeSpan.FromSeconds(15))
+        .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
     builder.Services.AddHostedService<AccountMailDispatcher>();
     builder.Services.AddRateLimiter(options =>
     {
@@ -102,6 +153,7 @@ if (authConfigured)
 }
 
 var app = builder.Build();
+if (renderProxy) app.UseForwardedHeaders();
 app.UseExceptionHandler();
 app.Use(async (context, next) =>
 {
@@ -111,6 +163,8 @@ app.Use(async (context, next) =>
     await next();
 });
 if (!app.Environment.IsDevelopment()) { app.UseHsts(); app.UseHttpsRedirection(); }
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok" }));
 if (authConfigured)
 {
@@ -137,6 +191,13 @@ else
 {
     app.Map("/api/auth/{**path}", () => Results.Problem(statusCode: 503, title: "Account storage is not configured yet."));
 }
+// Angular currently uses fragment links. Unknown API paths must remain API 404s.
+app.MapFallbackToFile("/{*path:nonfile}", "index.html").Add(endpoint =>
+{
+    var original = endpoint.RequestDelegate!;
+    endpoint.RequestDelegate = context => context.Request.Path.StartsWithSegments("/api")
+        ? Results.NotFound().ExecuteAsync(context) : original(context);
+});
 app.Run();
 
 public partial class Program;

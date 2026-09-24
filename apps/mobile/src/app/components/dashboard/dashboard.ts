@@ -65,11 +65,23 @@ export class DashboardComponent implements OnInit {
   async refresh(): Promise<void> {
     await this.run(async () => {
       this.together.set(await this.auth.together());
+      if (this.together()?.partner || !this.together()?.invitationExpiresUtc) this.inviteUrl.set('');
       this.photoVersion.update((v) => v + 1);
     });
   }
+  canInvite(): boolean {
+    const status = this.together();
+    return !!status && !status.partner && !status.invitationExpiresUtc && !this.invitation();
+  }
   async createInvite(): Promise<void> {
+    if (!this.canInvite()) return;
     await this.run(async () => {
+      this.together.set(await this.auth.together());
+      if (!this.canInvite()) {
+        this.inviteUrl.set('');
+        this.navigate('profile');
+        return;
+      }
       const result = await this.auth.submit<{ url: string }>('together/invite', {});
       this.inviteUrl.set(result.url);
       this.page.set('profile');

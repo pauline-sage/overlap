@@ -1,0 +1,4 @@
+{
+  "ConnectionStrings__AccountsMigration": "Server=YOUR_AIVEN_HOST;Port=YOUR_AIVEN_PORT;Database=overlap;User ID=overlap_migrate;Password=YOUR_PRIVATE_PASSWORD;SslMode=VerifyFull;SslCa=C:/Dev/overlap/.local/deployment/aiven-ca.pem;MaximumPoolSize=5",
+  "Database__ServerVersion": "8.4.0-mysql"
+}

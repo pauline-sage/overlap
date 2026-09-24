@@ -56,10 +56,16 @@ describe('Dashboard photos and invitations', () => {
     expect(fixture.nativeElement.querySelector('img').src).toContain(
       '/api/auth/together/photo/self',
     );
-    await fixture.componentInstance.removePhoto();
+    fixture.componentInstance.navigate('profile');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#dashboard-heading').textContent).toBe("Me's profile");
+    expect(fixture.nativeElement.querySelector('[aria-label="Add or replace photo"]')).toBeTruthy();
+    fixture.nativeElement.querySelector('[aria-label="Remove my photo"]').click();
+    await fixture.whenStable();
     fixture.detectChanges();
     expect(auth.submit).toHaveBeenCalledWith('together/photo', { pixels: null });
     expect(fixture.nativeElement.querySelector('img')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[aria-label="Remove my photo"]')).toBeNull();
   });
   it('rejects SVG files without uploading them', async () => {
     const fixture = await render();
@@ -87,4 +93,52 @@ describe('Dashboard photos and invitations', () => {
       fixture.nativeElement.querySelector('[aria-current="page"]').getAttribute('aria-label'),
     ).toBe('Profile');
   });
+  it.each([
+    { invitationExpiresUtc: '2099-01-01T00:00:00Z', partner: null },
+    { invitationExpiresUtc: null, partner: { id: 'partner', displayName: 'Partner', hasPhoto: false } },
+  ])('does not offer another invitation for an existing invitation or connection: %j', async (state) => {
+    auth.together.mockResolvedValue({ ...status, ...state });
+    const fixture = await render();
+    expect(fixture.nativeElement.querySelector('[aria-label="Invite your person"]')).toBeNull();
+    fixture.componentInstance.navigate('profile');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain('Invite your person');
+    await fixture.componentInstance.createInvite();
+    expect(auth.submit).not.toHaveBeenCalled();
+  });
+  it('refreshes server state before creating an invitation to avoid replacing a pending link', async () => {
+    const fixture = await render();
+    auth.together.mockResolvedValue({ ...status, invitationExpiresUtc: '2099-01-01T00:00:00Z' });
+    await fixture.componentInstance.createInvite();
+    expect(auth.submit).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.page()).toBe('profile');
+  });
+  it('offers invitations again after revocation and clears the old link', async () => {
+    auth.together.mockResolvedValue({ ...status, invitationExpiresUtc: '2099-01-01T00:00:00Z' });
+    const fixture = await render();
+    fixture.componentInstance.inviteUrl.set('old-link');
+    auth.together.mockResolvedValue(status);
+    await fixture.componentInstance.revoke();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[aria-label="Invite your person"]')).toBeTruthy();
+    expect(fixture.componentInstance.inviteUrl()).toBe('');
+  });
+  it('clears a stale link on refresh when the invitation expires or is accepted', async () => {
+    const fixture = await render();
+    fixture.componentInstance.inviteUrl.set('old-link');
+    await fixture.componentInstance.refresh();
+    expect(fixture.componentInstance.inviteUrl()).toBe('');
+    expect(fixture.componentInstance.canInvite()).toBe(true);
+  });
+  it('keeps an incoming invitation focused on acceptance rather than another invite', async () => {
+    auth.submit.mockResolvedValue({ displayName: 'Partner', expiresUtc: '2099-01-01T00:00:00Z' });
+    const fixture = await render('private');
+    expect(fixture.nativeElement.querySelector('[aria-label="Invite your person"]')).toBeNull();
+    await fixture.componentInstance.createInvite();
+    expect(auth.submit).toHaveBeenCalledTimes(1);
+    fixture.componentInstance.decline();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[aria-label="Invite your person"]')).toBeTruthy();
+  });
+
 });

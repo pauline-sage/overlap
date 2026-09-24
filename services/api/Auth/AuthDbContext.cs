@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -30,8 +31,9 @@ public sealed class PairMember
 }
 
 public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
-    : IdentityDbContext<Account>(options)
+    : IdentityDbContext<Account>(options), IDataProtectionKeyContext
 {
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
     public DbSet<PendingEmail> PendingEmails => Set<PendingEmail>();
     public DbSet<PairMember> PairMembers => Set<PairMember>();
 

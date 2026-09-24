@@ -1,9 +1,6 @@
 using System.Text.Json;
-using MailKit.Net.Smtp;
-using MailKit.Security;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
-using MimeKit;
 
 namespace Overlap.Api.Auth;
 
@@ -32,7 +29,7 @@ public sealed class AccountMail(AuthDbContext db, IDataProtectionProvider protec
 
 // One dispatcher for this single-instance monolith. Multiple instances require database leasing.
 public sealed class AccountMailDispatcher(
-    IServiceScopeFactory scopes, IConfiguration config, IHostEnvironment environment,
+    IServiceScopeFactory scopes,
     IDataProtectionProvider protection, ILogger<AccountMailDispatcher> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -67,23 +64,7 @@ public sealed class AccountMailDispatcher(
             {
                 var content = protection.CreateProtector(AccountMail.ProtectionPurpose).Unprotect(pending.ProtectedContent);
                 var email = JsonSerializer.Deserialize<AccountEmail>(content)!;
-                using var message = new MimeMessage();
-                message.From.Add(MailboxAddress.Parse(config["Email:From"]!));
-                message.To.Add(MailboxAddress.Parse(email.Recipient));
-                message.Subject = email.Subject;
-                message.MessageId = $"overlap-{pending.Id}@{MailboxAddress.Parse(config["Email:From"]!).Domain}";
-                message.Body = new TextPart("plain") { Text = email.Body };
-                using var smtp = new SmtpClient { Timeout = 15000 };
-                var host = config["Email:Host"]!;
-                var localCapture = environment.IsDevelopment() && config.GetValue<bool>("Email:LocalCapture")
-                    && host is "127.0.0.1" or "localhost";
-                var security = localCapture ? SecureSocketOptions.None
-                    : config.GetValue<int>("Email:Port") == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
-                await smtp.ConnectAsync(host, config.GetValue<int>("Email:Port"), security, cancellationToken);
-                if (!string.IsNullOrEmpty(config["Email:Username"]))
-                    await smtp.AuthenticateAsync(config["Email:Username"]!, config["Email:Password"] ?? "", cancellationToken);
-                await smtp.SendAsync(message, cancellationToken);
-                await smtp.DisconnectAsync(true, cancellationToken);
+                await scope.ServiceProvider.GetRequiredService<AccountEmailSender>().SendAsync(email, pending.Id, cancellationToken);
                 db.PendingEmails.Remove(pending);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }

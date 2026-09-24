@@ -93,6 +93,12 @@ describe('Account screens', () => {
     ['Resend confirmation email', 'resend-confirmation'],
   ])('requests an email through %s', async (label, action) => {
     const fixture = await render();
+    if (action === 'resend-confirmation') {
+      expect(fixture.nativeElement.textContent).not.toContain('Resend confirmation email');
+      await fill(fixture, { email: 'person@example.test', password: 'incorrect password' });
+      auth.submit.mockRejectedValue(new HttpErrorResponse({ status: 401 }));
+      await submitForm(fixture);
+    }
     click(fixture, label);
     await fill(fixture, { email: 'person@example.test' });
     auth.submit.mockResolvedValue({ message: 'If eligible, check your inbox.' });
@@ -188,6 +194,7 @@ describe('Account screens', () => {
       fixture.nativeElement.querySelector('input[autocomplete="current-password"]'),
     ).toBeTruthy();
     expect(fixture.nativeElement.textContent).toContain('Create an account');
+    expect(fixture.nativeElement.textContent).not.toContain('Resend confirmation email');
     expect(fixture.nativeElement.querySelector('[role="alert"]')).toBeNull();
   });
   it('requests email change from Settings with the current password', async () => {
@@ -237,7 +244,7 @@ describe('Account screens', () => {
     auth.me.mockResolvedValue({ email: 'person@example.test', displayName: 'Person' });
     const fixture = await render();
     click(fixture, 'Settings');
-    expect(fixture.nativeElement.textContent).toContain('person@example.test');
+    expect(fixture.nativeElement.textContent).not.toContain('30 minutes');
     expect(fixture.nativeElement.textContent).toContain('Change password');
     expect(fixture.nativeElement.querySelector('input[type="password"]')).toBeNull();
   });
@@ -289,4 +296,22 @@ describe('Account screens', () => {
       'don’t match',
     );
   });
+  it('returns to Home from dashboard tabs and account forms through the brand', async () => {
+    auth.me.mockResolvedValue({ email: 'person@example.test', displayName: 'Person' });
+    const fixture = await render();
+    for (const tab of ['Profile', 'Settings']) {
+      click(fixture, tab);
+      click(fixture, 'Overlap home');
+      await fixture.whenStable();
+      expect(fixture.nativeElement.querySelector('[aria-current="page"]').getAttribute('aria-label')).toBe('Home');
+    }
+    click(fixture, 'Settings');
+    click(fixture, 'Change password');
+    click(fixture, 'Overlap home');
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-dashboard')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('#password')).toBeNull();
+  });
+
 });

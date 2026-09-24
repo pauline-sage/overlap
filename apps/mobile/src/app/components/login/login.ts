@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal, viewChild } from '@angular/core';
 import { IdleSessionService } from '../../idle-session.service';
 import { FormsModule } from '@angular/forms';
 import { Account, AuthMessage, AuthService } from '../../auth.service';
@@ -26,6 +26,7 @@ type Screen =
 })
 export class LoginComponent {
   private readonly auth = inject(AuthService);
+  private readonly dashboard = viewChild(DashboardComponent);
   private readonly idle = inject(IdleSessionService);
   protected readonly screen = signal<Screen>('login');
   protected readonly account = signal<Account | null>(null);
@@ -36,6 +37,7 @@ export class LoginComponent {
   protected readonly theme = signal<'dark' | 'light'>('dark');
   protected readonly revealPassword = signal(false);
   protected readonly emailSent = signal(false);
+  protected readonly showConfirmationHelp = signal(false);
   protected email = '';
   protected newEmail = '';
   protected displayName = '';
@@ -54,7 +56,7 @@ export class LoginComponent {
     'resend-confirmation': 'Check your inbox.',
     'confirm-email': 'One last step.',
     'reset-password': 'A fresh start.',
-    account: 'Your dashboard.',
+    account: 'Your account',
     'change-password': 'Keep it yours.',
   };
   constructor() {
@@ -103,13 +105,22 @@ export class LoginComponent {
     if (screen === 'profile') this.displayName = this.account()?.displayName ?? '';
     this.screen.set(screen);
     this.emailSent.set(false);
+    this.showConfirmationHelp.set(false);
     this.revealPassword.set(false);
     this.token = '';
     this.message.set('');
     this.error.set('');
     this.password = this.currentPassword = this.passwordConfirmation = '';
     if (screen === 'change-email' || screen === 'login') this.newEmail = '';
-    queueMicrotask(() => document.getElementById('page-title')?.focus());
+    queueMicrotask(() => document.getElementById(screen === 'account' ? 'dashboard-heading' : 'page-title')?.focus());
+  }
+  protected goHome(): void {
+    if (this.busy() || this.loading()) return;
+    if (this.account() && this.screen() === 'account') {
+      this.dashboard()?.navigate('home');
+    } else {
+      this.navigate(this.account() ? 'account' : 'login');
+    }
   }
   protected toggleTheme(): void {
     this.theme.update((value) => (value === 'dark' ? 'light' : 'dark'));
@@ -130,6 +141,7 @@ export class LoginComponent {
       return;
     }
     const screen = this.screen();
+    this.showConfirmationHelp.set(false);
     this.error.set('');
     this.message.set('');
     if (['confirm-email', 'reset-password', 'confirm-email-change'].includes(screen) && !this.hasLink()) {
@@ -176,6 +188,7 @@ export class LoginComponent {
         this.message.set((result as AuthMessage).message);
       }
     } catch (error) {
+      this.showConfirmationHelp.set(screen === 'login' && error instanceof HttpErrorResponse && error.status === 401);
       this.showError(error);
     } finally {
       this.password = this.currentPassword = this.passwordConfirmation = '';

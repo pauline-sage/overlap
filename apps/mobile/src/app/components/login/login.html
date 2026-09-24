@@ -1,8 +1,8 @@
 <main class="auth-page">
   <header class="topbar">
-    <span class="brand"
-      ><span class="brand-mark" aria-hidden="true"><i></i><i></i></span> overlap</span
-    >
+    <button class="brand" type="button" (click)="goHome()" [disabled]="busy() || loading()" [attr.aria-label]="account() ? 'Overlap home' : 'Overlap sign in'">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i></span> overlap
+    </button>
     <button
       class="theme-toggle"
       type="button"
@@ -17,7 +17,7 @@
     @if (screen() !== 'account') {
       <p class="eyebrow">Different places. Same moment.</p>
     }
-    <h1 id="page-title" tabindex="-1" [style.font-size]="screen() === 'account' ? '1rem' : null">
+    <h1 id="page-title" tabindex="-1" [class.sr-only]="screen() === 'account'">
       {{ emailSent() ? 'Check your inbox.' : headings[screen()] }}
     </h1>
     @if (loading()) {
@@ -164,6 +164,7 @@
               <label for="password">{{
                 screen() === 'login' || screen() === 'register' ? 'Password' : 'New password'
               }}</label>
+              <div class="password-field">
               <input
                 id="password"
                 name="password"
@@ -176,14 +177,19 @@
                 [attr.aria-describedby]="screen() === 'login' ? null : 'password-hint'"
               />
               <button
-                class="text-button reveal"
+                class="reveal"
                 type="button"
                 (click)="revealPassword.set(!revealPassword())"
                 [attr.aria-pressed]="revealPassword()"
-                aria-label="Show passwords"
+                [attr.aria-label]="revealPassword() ? 'Hide passwords' : 'Show passwords'"
               >
-                {{ revealPassword() ? 'Hide passwords' : 'Show passwords' }}
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                  <circle cx="12" cy="12" r="3" />
+                  @if (revealPassword()) { <path d="m3 3 18 18" /> }
+                </svg>
               </button>
+              </div>
               @if (screen() !== 'login') {
                 <p id="password-hint" class="hint">
                   10–128 characters. A few unrelated words work well. Password managers and paste
@@ -263,6 +269,8 @@
               Create an account
             </button>
           </p>
+          @if (showConfirmationHelp()) {
+            <p class="hint confirmation-help">Haven't confirmed your email?</p>
           <button
             class="text-button secondary-link"
             type="button"
@@ -271,6 +279,7 @@
           >
             Resend confirmation email
           </button>
+          }
         } @else {
           @if (screen() === 'confirm-email-change') {
             <p class="hint">Expired or invalid link? Sign in with your current email, then request another link from Settings → Change email address.</p>
