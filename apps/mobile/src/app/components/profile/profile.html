@@ -1,3 +1,16 @@
+@if (viewingPartner() && together()?.partner) {
+  @let partner = together()!.partner!;
+  <section class="partner-profile" aria-labelledby="partner-heading">
+    <button class="back" type="button" (click)="viewPartner(false)">&#8592; Back</button>
+    <h2 id="partner-heading" tabindex="-1">{{ partner.displayName || 'Your partner' }}'s profile</h2>
+    <div class="photo-editor">
+      @if (partner.hasPhoto) { <img class="profile-photo" [src]="photoUrl(partner.id)" [alt]="partner.displayName || 'Your partner'" /> }
+      @else { <span class="profile-photo" aria-label="No profile photo">{{ partner.displayName?.charAt(0) || '?' }}</span> }
+      <span class="presence-dot" [class.online]="partner.online" role="img" [attr.aria-label]="partner.online === undefined ? 'Status unavailable' : partner.online ? 'Online' : 'Away'"></span>
+    </div>
+    <p class="partner-caption">Connected with you</p>
+  </section>
+} @else {
 <input
   #photoPicker
   type="file"
@@ -59,7 +72,7 @@
     </button>
   </div>
   @if (together()?.partner; as partner) {
-    <div class="partner-row">
+    <button id="partner-link" class="partner-row" type="button" (click)="viewPartner(true)" [attr.aria-label]="'View ' + (partner.displayName || 'your partner') + '’s profile'">
       @if (partner.hasPhoto) {
         <img [src]="photoUrl(partner.id)" alt="Your partner's photo" />
       } @else {
@@ -68,7 +81,8 @@
       <div>
         <span class="hint">Connected with</span><strong>{{ partner.displayName }}</strong>
       </div>
-    </div>
+      <span class="partner-arrow" aria-hidden="true">&#8250;</span>
+    </button>
   } @else if (canInvite()) {
     <button type="button" (click)="action.emit('createInvite')" [disabled]="working()">
       Invite your person
@@ -123,3 +137,5 @@
     }
   }
 </section>
+
+}

@@ -1,4 +1,4 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, output, signal, effect } from '@angular/core';
 import { TogetherStatus } from '../../auth.service';
 export type ProfileAction =
   | 'removePhoto'
@@ -24,6 +24,16 @@ export class ProfileComponent {
   readonly action = output<ProfileAction>();
   readonly upload = output<Event>();
   readonly showLeave = signal(false);
+  readonly viewingPartner = signal(false);
+  private readonly resetPartner = effect(() => {
+    const id = this.together()?.partner?.id;
+    if (id !== this.partnerId) { this.partnerId = id; this.viewingPartner.set(false); }
+  });
+  private partnerId: string | undefined;
+  viewPartner(show: boolean): void {
+    this.viewingPartner.set(show && !!this.together()?.partner);
+    setTimeout(() => document.getElementById(show ? 'partner-heading' : 'partner-link')?.focus());
+  }
   canInvite(): boolean {
     const t = this.together();
     return !!t && !t.partner && !t.invitationExpiresUtc && !this.invitation();
