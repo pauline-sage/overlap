@@ -165,4 +165,19 @@ describe('Dashboard photos and invitations', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[aria-label="Invite your person"]')).toBeTruthy();
   });
+  it('refreshes the photo URL even when the partner still has a photo', async () => {
+    const visibility=vi.spyOn(document,'visibilityState','get').mockReturnValue('visible');
+    try {
+      auth.together.mockResolvedValue({...status,partner:{id:'partner',displayName:'Juu',hasPhoto:true,online:true}});
+      const f=await render(); const c=f.componentInstance;
+      const previous=c.photoUrl('partner');
+      await c.checkPresence(); f.detectChanges();
+      expect(c.photoUrl('partner')).not.toBe(previous);
+      expect(f.nativeElement.querySelector('.partner img').getAttribute('src')).toBe(c.photoUrl('partner'));
+      c.navigate('profile'); f.detectChanges();
+      expect(f.nativeElement.querySelector('.partner-row img').getAttribute('src')).toBe(c.photoUrl('partner'));
+      f.destroy();
+    } finally { visibility.mockRestore(); }
+  });
+
 });

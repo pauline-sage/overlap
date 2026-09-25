@@ -33,7 +33,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly error = signal('');
   readonly inviteUrl = signal('');
   readonly invitation = signal<{ displayName: string; expiresUtc: string } | null>(null);
-  readonly photoVersion = signal(0);
+  readonly photoVersion = signal(Date.now());
   readonly showLeave = signal(false);
   readonly presenceKnown = signal(false);
   private readonly zone = inject(NgZone);
@@ -57,6 +57,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const status = await this.auth.together();
       if (!this.destroyed) {
         this.together.set(status);
+        this.photoVersion.update((version) => version + 1);
         this.presenceKnown.set(true);
       }
     } catch (error) {
