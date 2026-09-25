@@ -6,7 +6,7 @@
   max-width: 30rem;
   min-height: 100dvh;
   margin: auto;
-  padding: max(1.5rem, env(safe-area-inset-top)) 1.25rem max(1rem, env(safe-area-inset-bottom));
+  padding: max(1rem, env(safe-area-inset-top)) 1.25rem max(1rem, env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
 }
@@ -43,22 +43,9 @@
     }
   }
 }
-.theme-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.8rem;
-  border: 1px solid var(--line);
-  border-radius: 2rem;
-  background: var(--surface);
-  color: var(--text);
-  font-size: 0.8rem;
-}
-.theme-toggle span {
-  font-size: 1.25rem;
-}
+
 .auth-panel {
-  padding: 3.5rem 0 2rem;
+  padding: 2rem 0 1rem;
   flex: 1;
 }
 .eyebrow,
@@ -67,7 +54,7 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--text);
 }
 h1 {
   font-size: clamp(2rem, 9vw, 2.8rem);
@@ -77,9 +64,9 @@ h1 {
   font-weight: 650;
 }
 .intro {
-  line-height: 1.65;
+  line-height: 1.5;
   color: var(--muted);
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.5rem;
   overflow-wrap: anywhere;
 }
 .steps {
@@ -96,7 +83,7 @@ fieldset {
 }
 label {
   display: block;
-  margin: 1.2rem 0 0.5rem;
+  margin: 1rem 0 0.5rem;
   font-size: 0.85rem;
   font-weight: 600;
 }
@@ -104,11 +91,11 @@ input {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 0.9rem;
-  padding: 0.95rem 1rem;
+  padding: 0.8rem 1rem;
   font: inherit;
   background: var(--field);
   color: var(--text);
-  min-height: 3.25rem;
+  min-height: 3rem;
 }
 input::placeholder {
   color: var(--muted);
@@ -117,25 +104,37 @@ input::placeholder {
 input[readonly] {
   background: var(--surface);
 }
-.password-field { position: relative; }
-.password-field input { padding-right: 3.5rem; }
-.password-field input::-ms-reveal { display: none; }
+.password-field {
+  position: relative;
+}
+.password-field input {
+  padding-right: 3.5rem;
+}
+.password-field input::-ms-reveal {
+  display: none;
+}
 .reveal {
   position: absolute;
-  right: .3rem;
+  right: 0.3rem;
   top: 50%;
   transform: translateY(-50%);
   display: grid;
   place-items: center;
   width: 2.75rem;
-  padding: .65rem;
+  padding: 0.65rem;
   border: 0;
-  border-radius: .6rem;
+  border-radius: 0.6rem;
   background: transparent;
   color: var(--muted);
 }
-.reveal svg { width: 1.25rem; height: 1.25rem; }
-.confirmation-help { text-align: center; margin-bottom: 0; }
+.reveal svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.confirmation-help {
+  text-align: center;
+  margin-bottom: 0;
+}
 .sr-only {
   position: absolute;
   width: 1px;
@@ -162,9 +161,9 @@ button:disabled {
   background: var(--accent);
   color: var(--on-accent);
   border-radius: 0.9rem;
-  padding: 1rem;
-  font-weight: 700;
-  margin-top: 1.5rem;
+  padding: 0.85rem;
+  font-weight: 650;
+  margin-top: 0.75rem;
 }
 .primary:hover:enabled {
   filter: brightness(1.08);
@@ -172,7 +171,7 @@ button:disabled {
 .text-button {
   background: transparent;
   border: 0;
-  color: var(--accent);
+  color: var(--text);
   text-decoration: underline;
   text-underline-offset: 0.25em;
   padding: 0.4rem;
@@ -223,19 +222,9 @@ button:disabled {
   background: var(--surface);
   line-height: 1.5;
 }
-footer {
-  color: var(--muted);
-  text-align: center;
-  font-size: 0.72rem;
-  padding: 1rem 0;
-}
-.footer-dots {
-  color: var(--accent);
-  letter-spacing: -0.2em;
-  margin-right: 0.5rem;
-}
+
 :is(button, input):focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 2px solid var(--text);
   outline-offset: 3px;
 }
 h1:focus {
@@ -245,4 +234,45 @@ h1:focus {
   .auth-panel {
     padding-top: 2rem;
   }
+}
+
+.account-page .auth-panel {
+  padding-top: 1.5rem;
+}
+.login-page .auth-panel {
+  flex: 0;
+  margin-block: auto;
+  padding-block: clamp(1.25rem, 5dvh, 3rem);
+}
+.login-page h1 {
+  margin: 0 0 0.65rem;
+  font-size: clamp(2rem, 8vw, 2.6rem);
+}
+.login-page .intro {
+  margin: 0 0 1.5rem;
+}
+.login-page .switch-prompt {
+  margin-top: 1rem;
+}
+@media (max-height: 640px) {
+  .login-page .auth-panel {
+    padding-block: 1rem;
+  }
+  .login-page .intro {
+    margin-bottom: 1rem;
+  }
+}
+
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1.25rem;
 }

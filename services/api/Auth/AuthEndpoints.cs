@@ -73,8 +73,9 @@ public static class AuthEndpoints
         group.MapPost("/change-password", ChangePassword).RequireAuthorization();
         group.MapPost("/change-email", ChangeEmail).RequireAuthorization().RequireRateLimiting("email");
         group.MapPost("/confirm-email-change", ConfirmEmailChange).RequireRateLimiting("email");
-        group.MapPost("/logout", async (SignInManager<Account> signIn) =>
+        group.MapPost("/logout", async (SignInManager<Account> signIn, ClaimsPrincipal principal, OnlinePresence presence) =>
         {
+            presence.Leave(principal.FindFirstValue(ClaimTypes.NameIdentifier)!);
             await signIn.SignOutAsync();
             return Results.NoContent();
         }).RequireAuthorization();

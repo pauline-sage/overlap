@@ -58,7 +58,7 @@ describe('Account screens', () => {
   it('defaults to dark and restores an explicitly selected light theme', async () => {
     const fixture = await render();
     expect(document.documentElement.dataset['theme']).toBe('dark');
-    click(fixture, '☀ Light');
+    click(fixture, 'Switch to light theme');
     expect(document.documentElement.dataset['theme']).toBe('light');
     expect(localStorage.getItem('overlap-theme')).toBe('light');
     fixture.destroy();

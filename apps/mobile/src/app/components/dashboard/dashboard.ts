@@ -1,20 +1,25 @@
-import { Component, inject, input, output, signal, OnInit } from '@angular/core';
+import { Component, inject, input, output, signal, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService, TogetherStatus } from '../../auth.service';
+import { SharedTimeComponent } from '../shared-time/shared-time';
 import { DashboardPage, NavBarComponent } from '../nav-bar/nav-bar';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [NavBarComponent],
+  imports: [NavBarComponent, SharedTimeComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
+  readonly watching = signal(false);
+  openSharedTime(): void {
+    this.watching.set(true);
+    setTimeout(() => document.getElementById('dashboard-heading')?.focus());
+  }
   readonly page = signal<DashboardPage>('home');
   readonly sessionExpired = output<void>();
-  readonly theme = input<'light' | 'dark'>('dark');
-  readonly toggleTheme = output<void>();
   navigate(page: DashboardPage): void {
+    this.watching.set(false);
     this.page.set(page);
     queueMicrotask(() => document.getElementById('dashboard-heading')?.focus());
   }
@@ -29,13 +34,47 @@ export class DashboardComponent implements OnInit {
   readonly invitation = signal<{ displayName: string; expiresUtc: string } | null>(null);
   readonly photoVersion = signal(0);
   readonly showLeave = signal(false);
+  readonly presenceKnown = signal(false);
+  private readonly zone = inject(NgZone);
+  private presenceTimer?: ReturnType<typeof setInterval>;
+  private checkingPresence = false;
+  private destroyed = false;
+  private readonly onVisibility = () => {
+    this.presenceKnown.set(false);
+    if (document.visibilityState === 'visible') void this.checkPresence();
+  };
+  async checkPresence(): Promise<void> {
+    if (this.checkingPresence || this.working() || this.destroyed || document.visibilityState !== 'visible') return;
+    this.checkingPresence = true;
+    try {
+      const status = await this.auth.together();
+      if (!this.destroyed) { this.together.set(status); this.presenceKnown.set(true); }
+    } catch (error) {
+      this.presenceKnown.set(false);
+      if (!this.destroyed && error instanceof HttpErrorResponse && error.status === 401) this.sessionExpired.emit();
+    } finally { this.checkingPresence = false; }
+  }
+  presenceLabel(online: boolean | undefined): string {
+    return !this.presenceKnown() || online === undefined ? 'Status unavailable' : online ? 'Online' : 'Away';
+  }
+  ngOnDestroy(): void {
+    this.destroyed = true;
+    clearInterval(this.presenceTimer);
+    document.removeEventListener('visibilitychange', this.onVisibility);
+  }
   async ngOnInit(): Promise<void> {
     await this.run(async () => {
       this.together.set(await this.auth.together());
+      this.presenceKnown.set(true);
       if (this.invitationToken())
         this.invitation.set(
           await this.auth.submit('together/preview', { token: this.invitationToken() }),
         );
+    });
+    if (this.destroyed) return;
+    this.zone.runOutsideAngular(() => {
+      this.presenceTimer = setInterval(() => void this.checkPresence(), 30000);
+      document.addEventListener('visibilitychange', this.onVisibility);
     });
   }
   photoUrl(id: string): string {
@@ -65,7 +104,8 @@ export class DashboardComponent implements OnInit {
   async refresh(): Promise<void> {
     await this.run(async () => {
       this.together.set(await this.auth.together());
-      if (this.together()?.partner || !this.together()?.invitationExpiresUtc) this.inviteUrl.set('');
+      if (this.together()?.partner || !this.together()?.invitationExpiresUtc)
+        this.inviteUrl.set('');
       this.photoVersion.update((v) => v + 1);
     });
   }

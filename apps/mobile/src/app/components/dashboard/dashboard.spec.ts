@@ -24,6 +24,16 @@ describe('Dashboard photos and invitations', () => {
     fixture.detectChanges();
     return fixture;
   }
+  it('opens shared time and returns home through dashboard navigation', async () => {
+    const fixture = await render();
+    fixture.nativeElement.querySelector('button.time-idea').click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#dashboard-heading').textContent).toContain('Watch together');
+    fixture.componentInstance.navigate('home');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#dashboard-heading').textContent).toContain('Welcome');
+    expect(fixture.nativeElement.textContent).not.toContain('Watch together');
+  });
   it('generates a link only after an explicit request and can revoke it', async () => {
     const fixture = await render();
     expect(auth.submit).not.toHaveBeenCalled();

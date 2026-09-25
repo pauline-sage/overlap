@@ -1,43 +1,46 @@
 nav {
   position: fixed;
-  bottom: 0;
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
-  width: min(100%, 30rem);
+  width: min(calc(100% - 2rem), 28rem);
   display: flex;
-  padding: 0.5rem 0.75rem max(0.5rem, env(safe-area-inset-bottom));
-  background: var(--surface);
+  gap: 0.25rem;
+  padding: 0.35rem;
   border: 1px solid var(--line);
-  border-bottom: 0;
-  border-radius: 1.4rem 1.4rem 0 0;
+  border-radius: 1.4rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
   z-index: 10;
-  box-shadow: 0 -6px 24px #0002;
 }
 button {
   flex: 1;
   min-height: 3.25rem;
   border: 0;
-  border-radius: 0.9rem;
+  border-radius: 1rem;
   background: transparent;
   color: var(--muted);
   font: inherit;
-  font-size: 0.75rem;
-  display: grid;
-  place-content: center;
-  gap: 0.2rem;
+  font-size: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
   cursor: pointer;
 }
-span {
-  font-size: 1.35rem;
-  line-height: 1.2;
+svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.7;
 }
 button[aria-current] {
-  background: var(--accent);
-  color: var(--on-accent);
-  font-weight: 700;
+  color: var(--text);
+  background: var(--accent-soft);
+  font-weight: 600;
 }
 button:focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 2px solid var(--text);
   outline-offset: 2px;
 }
 button:disabled {

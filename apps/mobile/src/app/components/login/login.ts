@@ -50,7 +50,7 @@ export class LoginComponent {
     'change-email': 'A new address.',
     'confirm-email-change': 'Confirm your new email.',
     profile: 'What should we call you?',
-    login: 'A little closer.',
+    login: 'Welcome back.',
     register: 'Make time together.',
     'forgot-password': 'Let’s get you back in.',
     'resend-confirmation': 'Check your inbox.',

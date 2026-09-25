@@ -45,14 +45,16 @@ public static class TogetherEndpoints
         });
     }
 
-    private static async Task<IResult> Status(ClaimsPrincipal principal, AuthDbContext db)
+    private static async Task<IResult> Status(ClaimsPrincipal principal, AuthDbContext db, OnlinePresence presence)
     {
         var id = UserId(principal);
+        presence.Seen(id);
         var own = await db.Users.Where(x => x.Id == id).Select(x => new { x.DisplayName, HasPhoto = x.Photo != null, x.InvitationExpiresUtc }).SingleAsync();
         var pair = await db.PairMembers.Where(x => x.AccountId == id).Select(x => x.PairId).SingleOrDefaultAsync();
         var partnerId = pair is null ? null : await db.PairMembers.Where(x => x.PairId == pair && x.AccountId != id).Select(x => x.AccountId).SingleOrDefaultAsync();
         var partner = await db.Users.Where(x => x.Id == partnerId).Select(x => new { x.Id, x.DisplayName, HasPhoto = x.Photo != null }).SingleOrDefaultAsync();
-        return Results.Ok(new { id, own.HasPhoto, invitationExpiresUtc = own.InvitationExpiresUtc > DateTime.UtcNow ? own.InvitationExpiresUtc : null, partner });
+        return Results.Ok(new { id, own.HasPhoto, online = true, invitationExpiresUtc = own.InvitationExpiresUtc > DateTime.UtcNow ? own.InvitationExpiresUtc : null,
+            partner = partner is null ? null : new { partner.Id, partner.DisplayName, partner.HasPhoto, online = presence.IsOnline(partner.Id) } });
     }
 
     private static async Task<IResult> Photo(string id, ClaimsPrincipal principal, AuthDbContext db)

@@ -1,3 +1,4 @@
+using Overlap.Api.Watch;
 using System.Threading.RateLimiting;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -14,6 +15,13 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true).AddEnvironmentVariables();
 if (await DeploymentCommands.RunAsync(args, builder.Configuration)) return;
 builder.Services.AddProblemDetails();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<OnlinePresence>();
+builder.Services.AddSingleton<TmdbCache>();
+builder.Services.AddHttpClient<YouTubeSearch>(client => client.Timeout = TimeSpan.FromSeconds(12))
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+builder.Services.AddHttpClient<TmdbCatalog>(client => client.Timeout = TimeSpan.FromSeconds(12))
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 var renderProxy = builder.Configuration.GetValue<bool>("Hosting:RenderProxy");
 if (renderProxy)
 {
@@ -140,6 +148,9 @@ if (authConfigured)
     builder.Services.AddRateLimiter(options =>
     {
         options.RejectionStatusCode = 429;
+        options.AddPolicy("watch", context => RateLimitPartition.GetFixedWindowLimiter(
+            context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
+            { PermitLimit = 8, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
         options.AddPolicy("auth", context => RateLimitPartition.GetFixedWindowLimiter(
             context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
             { PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
@@ -168,8 +179,8 @@ app.UseStaticFiles();
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok" }));
 if (authConfigured)
 {
-    app.UseRateLimiter();
     app.UseAuthentication();
+    app.UseRateLimiter();
     app.UseAuthorization();
     app.Use(async (context, next) =>
     {
@@ -186,6 +197,7 @@ if (authConfigured)
     });
     app.MapAuth();
     app.MapTogether();
+    app.MapWatch();
 }
 else
 {

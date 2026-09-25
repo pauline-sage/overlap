@@ -6,88 +6,27 @@
   (change)="uploadPhoto($event)"
 />
 
-@if (page() === 'home') {
-  <div class="welcome">
-    <div class="avatar" aria-hidden="true">
-      @if (together()?.hasPhoto) {
-        <img [src]="photoUrl(together()!.id)" alt="" />
-      } @else {
-        {{ greetingName().charAt(0) }}
-      }
-    </div>
-    <div>
-      <h2 id="dashboard-heading" tabindex="-1">
-        Welcome, {{ greetingName() }} <span class="wave" aria-hidden="true">✦</span>
-      </h2>
-    </div>
-  </div>
+@if (page() === 'home' && !watching()) {
+  <div class="welcome"><h2 id="dashboard-heading" tabindex="-1">Welcome, {{ greetingName() }} <span class="wave" aria-hidden="true">&#10022;</span></h2></div>
   <section class="hero" aria-labelledby="moments-title">
-    <div class="hero-topline">
-      <span class="badge">Different places. Same moment.</span
-      ><span class="sparkle" aria-hidden="true">&#10035;</span>
-    </div>
     <div class="orbit">
-      <i class="orbit-spark" aria-hidden="true">&#10022;</i>
-      <button
-        class="person"
-        type="button"
-        (click)="photoPicker.click()"
-        [disabled]="working() || !together()"
-        aria-label="Add or replace your profile photo"
-      >
-        @if (together()?.hasPhoto) {
-          <img [src]="photoUrl(together()!.id)" alt="Your profile photo" />
-        } @else {
-          {{ greetingName().charAt(0) }}
-        }
-      </button>
-      @if (together()?.partner; as partner) {
-        <span class="person partner" [attr.aria-label]="partner.displayName">
-          @if (partner.hasPhoto) {
-            <img [src]="photoUrl(partner.id)" [alt]="partner.displayName ?? 'Your person'" />
-          } @else {
-            {{ partner.displayName?.charAt(0) ?? '+1' }}
-          }
-        </span>
-      } @else if (together()?.invitationExpiresUtc || invitation()) {
-        <span class="person partner" aria-label="Invitation pending">&#9719;</span>
-      } @else if (canInvite()) {
-        <button
-          class="person partner"
-          type="button"
-          (click)="createInvite()"
-          [disabled]="working() || !together()"
-          aria-label="Invite your person"
-        >
-          +1
-        </button>
-      }
+      <div class="person-slot">
+        <div class="portrait"><button class="person" type="button" (click)="photoPicker.click()" [disabled]="working() || !together()" aria-label="Add or replace your profile photo">@if (together()?.hasPhoto) { <img [src]="photoUrl(together()!.id)" alt="Your profile photo"> } @else { {{ greetingName().charAt(0) }} }</button><span class="presence-dot" [class.online]="presenceKnown() && together()?.online" aria-hidden="true"></span></div>
+        <strong>{{ greetingName() }}</strong><span class="presence-label">{{ presenceLabel(together()?.online) }}</span>
+      </div>
+      <span class="pair-link" aria-hidden="true">&amp;</span>
+      <div class="person-slot">
+        @if (together()?.partner; as partner) {
+          <div class="portrait"><span class="person partner">@if (partner.hasPhoto) { <img [src]="photoUrl(partner.id)" [alt]="partner.displayName || 'Your person'"> } @else { {{ partner.displayName?.charAt(0) || '?' }} }</span><span class="presence-dot" [class.online]="presenceKnown() && partner.online" aria-hidden="true"></span></div><strong>{{ partner.displayName || 'Your person' }}</strong><span class="presence-label">{{ presenceLabel(partner.online) }}</span>
+        } @else if (together()?.invitationExpiresUtc || invitation()) {
+          <span class="person empty-person" aria-label="Invitation pending">&#9719;</span><strong>Your person</strong><span class="presence-label">Invitation pending</span>
+        } @else if (canInvite()) {
+          <button class="person empty-person" type="button" (click)="createInvite()" [disabled]="working()" aria-label="Invite your person">+</button><strong>Your person</strong><span class="presence-label">Invite to connect</span>
+        } @else { <span class="person empty-person" aria-label="Connection loading">&#183;&#183;&#183;</span><strong>Your person</strong><span class="presence-label">Loading</span> }
+      </div>
     </div>
-    <p class="photo-hint">
-      Tap your circle to add a photo.
-      @if (canInvite()) {
-        Tap +1 to invite your person.
-      }
-    </p>
-    @if (together()?.partner; as partner) {
-      <p class="connected">You &amp; {{ partner.displayName }} · Connected</p>
-    }
-    <h2 id="moments-title">A little closer.<br />A lot more together.</h2>
-    <p>Coffee in two cities. A film from two sofas.<br />Something to look forward to, together.</p>
-    <div class="hero-bottom">
-      <span class="status-dot" aria-hidden="true"></span
-      ><span>{{
-        together()?.partner ? 'Connected. More moments ahead.' : together()?.invitationExpiresUtc ? 'Invitation sent. Waiting for your person.' : invitation() ? 'Your invitation is ready to review.' : together() ? 'Good moments start with two.' : 'Loading your connection...'
-      }}</span
-      ><button
-        type="button"
-        class="connection-shortcut"
-        (click)="navigate('profile')"
-        aria-label="Manage your connection"
-      >
-        &#8599;
-      </button>
-    </div>
+    <h2 id="moments-title">A little closer.</h2>
+    <button class="connection-shortcut" type="button" (click)="navigate('profile')" aria-label="Manage your connection">{{ together()?.partner ? 'You two are connected' : together()?.invitationExpiresUtc ? 'Invitation sent' : invitation() ? 'Review invitation' : 'Your connection' }} <span aria-hidden="true">&#8599;</span></button>
   </section>
 }
 @if (page() === 'profile') {
@@ -98,12 +37,32 @@
       @if (together()?.hasPhoto) {
         <img class="profile-photo" [src]="photoUrl(together()!.id)" alt="Your profile photo" />
       } @else {
-        <span class="profile-photo photo-placeholder" aria-label="No profile photo">{{ greetingName().charAt(0) }}</span>
+        <span class="profile-photo photo-placeholder" aria-label="No profile photo">{{
+          greetingName().charAt(0)
+        }}</span>
       }
       <div class="photo-actions">
-        <button class="icon-button" type="button" (click)="photoPicker.click()" [disabled]="working() || busy() || !together()" aria-label="Add or replace photo" title="Add or replace photo"><span aria-hidden="true">&#128247;</span></button>
+        <button
+          class="icon-button"
+          type="button"
+          (click)="photoPicker.click()"
+          [disabled]="working() || busy() || !together()"
+          aria-label="Add or replace photo"
+          title="Add or replace photo"
+        >
+          <span aria-hidden="true">&#128247;</span>
+        </button>
         @if (together()?.hasPhoto) {
-          <button class="icon-button" type="button" (click)="removePhoto()" [disabled]="working() || busy()" aria-label="Remove my photo" title="Remove my photo"><span aria-hidden="true">&#128465;&#65039;</span></button>
+          <button
+            class="icon-button"
+            type="button"
+            (click)="removePhoto()"
+            [disabled]="working() || busy()"
+            aria-label="Remove my photo"
+            title="Remove my photo"
+          >
+            <span aria-hidden="true">&#128465;&#65039;</span>
+          </button>
         }
       </div>
     </div>
@@ -112,7 +71,16 @@
     </button>
     <div class="connection-heading">
       <h3>Your connection</h3>
-      <button class="icon-button" type="button" (click)="refresh()" [disabled]="working() || busy()" aria-label="Refresh connection" title="Refresh connection"><span aria-hidden="true">&#8635;</span></button>
+      <button
+        class="icon-button"
+        type="button"
+        (click)="refresh()"
+        [disabled]="working() || busy()"
+        aria-label="Refresh connection"
+        title="Refresh connection"
+      >
+        <span aria-hidden="true">&#8635;</span>
+      </button>
     </div>
     @if (together()?.partner; as partner) {
       <p>Connected with {{ partner.displayName }}</p>
@@ -125,7 +93,7 @@
 }
 @if (
   page() === 'profile' ||
-  (page() === 'home' && (notice() || error() || invitation() || inviteUrl()))
+  (page() === 'home' && !watching() && (notice() || error() || invitation() || inviteUrl()))
 ) {
   <section class="sharing" aria-label="Your connection">
     @if (notice()) {
@@ -153,7 +121,9 @@
     @if (page() === 'profile') {
       @if (together()?.invitationExpiresUtc && !together()?.partner) {
         <p>Invitation sent. Once your person accepts, you will appear here together.</p>
-        <p class="hint">Need a new link? Revoke this invitation first. If it has expired, refresh your connection.</p>
+        <p class="hint">
+          Need a new link? Revoke this invitation first. If it has expired, refresh your connection.
+        </p>
         <button type="button" (click)="revoke()" [disabled]="working()">Revoke invitation</button>
       }
       @if (together()?.partner) {
@@ -172,25 +142,40 @@
     }
   </section>
 }
-@if (page() === 'home') {
+@if (page() === 'home' && !watching()) {
   <section class="next" aria-labelledby="next-title">
     <div class="section-heading">
       <h2 id="next-title">What's next?</h2>
-      <span class="badge">Coming next</span>
     </div>
     <div class="idea-grid">
-      <div class="idea time-idea">
-        <span class="idea-icon" aria-hidden="true">◷</span>
-        <div>
-          <h3>Find your shared time</h3>
-          <p>Two schedules. One moment that works for both of you.</p>
-        </div>
-      </div>
+      <button class="idea time-idea" type="button" (click)="openSharedTime()">
+        <span class="idea-icon" aria-hidden="true"
+          ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <rect x="3" y="3" width="18" height="18" rx="5" />
+            <path d="m10 8 6 4-6 4Z" /></svg
+        ></span>
+        <span
+          ><strong>Find your shared time</strong
+          ><span class="idea-description">Find a film or series to watch together.</span></span
+        >
+        <span aria-hidden="true">&#8599;</span>
+      </button>
       <div class="idea coffee-idea">
-        <span class="idea-icon coffee" aria-hidden="true">☕</span>
+        <span class="idea-icon coffee" aria-hidden="true"
+          ><svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+          >
+            <path
+              d="M4 8h12v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5ZM16 9h2a3 3 0 0 1 0 6h-2M7 3v2M12 3v2"
+            /></svg
+        ></span>
         <div>
           <h3>Make it a coffee date</h3>
-          <p>Your favourite kind of break, wherever you each are.</p>
+          <p>Coming soon</p>
         </div>
       </div>
     </div>
@@ -210,4 +195,10 @@
     </button>
   </section>
 }
+<app-shared-time
+  [hidden]="!watching() || page() !== 'home'"
+  [active]="watching() && page() === 'home'"
+  [partnerName]="together()?.partner?.displayName || 'Your person'"
+  (back)="navigate('home')"
+/>
 <app-nav-bar [current]="page()" [disabled]="busy()" (navigate)="navigate($event)" />

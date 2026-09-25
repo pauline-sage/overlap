@@ -1,0 +1,284 @@
+@if (active()) {
+  @if (selected(); as title) {
+    <button class="back" type="button" (click)="close()">
+      <span aria-hidden="true">&#8592;</span> Back
+    </button>
+    <article class="detail">
+      <div class="detail-cover" [class.video-cover]="title.source === 'youtube'">
+        @if (title.poster) {
+          <img [src]="title.poster" [alt]="title.title + ' poster'" (error)="imageFailed($event)" />
+        } @else {
+          <span>No poster available</span>
+        }
+      </div>
+      <p class="eyebrow">
+        {{ title.format }}
+        @if (title.year) {
+          &middot; {{ title.year }}
+        }
+      </p>
+      <h2 id="watch-detail-title" tabindex="-1">{{ title.title }}</h2>
+      <p class="muted">
+        {{ title.minutes ? title.minutes + ' min' : 'Duration unavailable'
+        }}{{ title.format === 'Series' ? ' / first episode' : '' }}
+      </p>
+      <p class="genres">{{ title.genres.join(' / ') }}</p>
+      @if (title.source === 'youtube') {
+        <p class="muted">{{ title.channel }}</p>
+        <p class="fine">
+          {{
+            title.captions
+              ? 'Subtitle tracks listed; language unverified.'
+              : 'No subtitle tracks reported.'
+          }}
+          Duration is for this video, which may be part of an episode.
+        </p>
+      } @else {
+        <p class="summary">{{ title.description || 'No summary available for this title.' }}</p>
+      }
+      <div class="where">
+        <div>
+          <span>You &middot; {{ title.ownCountry }}</span
+          ><strong>{{ title.ownServices.join(' / ') }}</strong
+          ><a [href]="title.ownLink" target="_blank" rel="noopener noreferrer"
+            >Where to watch &#8599;</a
+          >
+        </div>
+        <div>
+          <span>{{ partnerName() }} &middot; {{ title.partnerCountry }}</span
+          ><strong>{{ title.partnerServices.join(' / ') }}</strong
+          ><a [href]="title.partnerLink" target="_blank" rel="noopener noreferrer"
+            >Where to watch &#8599;</a
+          >
+        </div>
+      </div>
+      @if (title.source !== 'youtube') {
+        <p class="fine">
+          Availability by JustWatch. Check access before watching.
+          @if (title.format === 'Series') {
+            Season availability and episode lengths can vary.
+          }
+        </p>
+      }
+      @if (
+        title.source !== 'youtube' &&
+        (title.ownServices.includes('YouTube') || title.partnerServices.includes('YouTube'))
+      ) {
+        <p class="fine">
+          YouTube coverage is limited. Subtitle languages and full-episode availability are not
+          verified by this catalogue.
+        </p>
+      }
+      <button class="primary" type="button" (click)="togglePick(title)">
+        {{ saved(title.id) ? 'Remove from my picks' : 'Save to my picks' }}
+      </button>
+    </article>
+  } @else {
+    <button class="back" type="button" (click)="back.emit()">
+      <span aria-hidden="true">&#8592;</span> Back
+    </button>
+    <header><h2 id="dashboard-heading" tabindex="-1">Watch together</h2></header>
+    <nav aria-label="Watch views">
+      <button
+        type="button"
+        [attr.aria-pressed]="tab() === 'discover'"
+        (click)="tab.set('discover')"
+      >
+        Discover</button
+      ><button type="button" [attr.aria-pressed]="tab() === 'picks'" (click)="tab.set('picks')">
+        My picks <span>{{ picks().length || '' }}</span>
+      </button>
+    </nav>
+    @if (tab() === 'discover') {
+      <form (ngSubmit)="search()">
+        <div class="formats" role="group" aria-label="Movie or series">
+          @for (item of formats; track item) {
+            <button
+              type="button"
+              [attr.aria-pressed]="format === item"
+              (click)="format = item; changed()"
+            >
+              {{ item }}
+            </button>
+          }
+        </div>
+        <label class="sr-only" for="watch-query">Title or keyword</label>
+        <div class="search-line">
+          <input
+            id="watch-query"
+            name="query"
+            type="search"
+            [(ngModel)]="query"
+            (ngModelChange)="changed()"
+            [placeholder]="mode === 'title' ? 'Search a title...' : 'Try space, friendship...'"
+            maxlength="120"
+          /><label class="sr-only" for="watch-mode">Search by</label
+          ><select id="watch-mode" name="mode" [(ngModel)]="mode" (ngModelChange)="changed()">
+            <option value="title">Title</option>
+            <option value="keyword">Keyword</option>
+          </select>
+        </div>
+        <div class="filters">
+          <div>
+            <label for="watch-genre">The mood</label
+            ><select id="watch-genre" name="mood" [(ngModel)]="mood" (ngModelChange)="changed()">
+              <option value="">Any mood</option>
+              @for (item of storyMoods; track item.value) {
+                <option [value]="item.value">{{ item.label }}</option>
+              }
+              @for (item of genres; track item) {
+                <option [value]="item">{{ item }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label for="watch-minutes">Time together</label
+            ><select
+              id="watch-minutes"
+              name="minutes"
+              [(ngModel)]="minutes"
+              (ngModelChange)="changed()"
+            >
+              <option [ngValue]="0">Any length</option>
+              <option [ngValue]="30">30 minutes</option>
+              <option [ngValue]="45">45 minutes</option>
+              <option [ngValue]="60">1 hour</option>
+              <option [ngValue]="90">90 minutes</option>
+              <option [ngValue]="120">2 hours</option>
+              <option [ngValue]="180">3 hours</option>
+            </select>
+          </div>
+        </div>
+        <details class="preferences">
+          <summary>
+            Our services <span>{{ ownCountry }} + {{ partnerCountry }}</span>
+          </summary>
+          <p class="fine">
+            Subscriptions and free YouTube listings. Rentals and purchases are excluded.
+          </p>
+          <div class="filters">
+            <fieldset>
+              <legend>You</legend>
+              <label class="sr-only" for="own-country">Your country</label
+              ><select
+                id="own-country"
+                name="ownCountry"
+                [(ngModel)]="ownCountry"
+                (ngModelChange)="changed()"
+              >
+                <option value="FR">France</option>
+                <option value="US">USA</option>
+              </select>
+              @for (service of platforms; track service) {
+                <label class="check"
+                  ><input
+                    type="checkbox"
+                    [checked]="ownPlatforms.includes(service)"
+                    (change)="togglePlatform('you', service)"
+                  />{{ service }}</label
+                >
+              }
+            </fieldset>
+            <fieldset>
+              <legend>{{ partnerName() }}</legend>
+              <label class="sr-only" for="partner-country">Their country</label
+              ><select
+                id="partner-country"
+                name="partnerCountry"
+                [(ngModel)]="partnerCountry"
+                (ngModelChange)="changed()"
+              >
+                <option value="FR">France</option>
+                <option value="US">USA</option>
+              </select>
+              @for (service of platforms; track service) {
+                <label class="check"
+                  ><input
+                    type="checkbox"
+                    [checked]="partnerPlatforms.includes(service)"
+                    (change)="togglePlatform('partner', service)"
+                  />{{ service }}</label
+                >
+              }
+            </fieldset>
+          </div>
+        </details>
+        @if (!ownPlatforms.length || !partnerPlatforms.length) {
+          <p class="fine" role="status">Choose a service for each person.</p>
+        }
+        <button
+          class="primary"
+          type="submit"
+          [disabled]="busy() || !ownPlatforms.length || !partnerPlatforms.length"
+        >
+          {{ busy() ? 'Finding something...' : 'Find something to watch' }}
+          <span aria-hidden="true">&#8599;</span>
+        </button>
+      </form>
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+      <div aria-live="polite" [attr.aria-busy]="busy()">
+        @if (results(); as titles) {
+          <div class="results-heading">
+            <h3>For both of you</h3>
+            <span>{{ titles.length }} found</span>
+          </div>
+          @if (!titles.length) {
+            <p class="empty">
+              No shared matches in this batch. Try more titles or adjust your filters.
+            </p>
+          }
+        }
+      </div>
+    } @else {
+      <p class="fine">
+        Saved for this visit only. These picks are not shared with your partner yet.
+      </p>
+    }
+    <div class="posters">
+      @for (title of tab() === 'picks' ? picks() : (results() ?? []); track title.id) {
+        <button
+          class="title-card"
+          type="button"
+          (click)="open(title, $event)"
+          [attr.aria-label]="'Details for ' + title.title"
+        >
+          <span class="poster" [class.video-poster]="title.source === 'youtube'"
+            ><span class="poster-fallback" aria-hidden="true">{{ title.title }}</span>
+            @if (title.poster) {
+              <img [src]="title.poster" alt="" loading="lazy" (error)="imageFailed($event)" />
+            }
+            <span class="format-tag">{{ title.format }}</span></span
+          ><strong>{{ title.title }}</strong
+          ><span class="meta"
+            >{{ title.minutes ? title.minutes + ' min' : 'Length unknown'
+            }}{{ title.format === 'Series' ? ' / ep. 1' : '' }}</span
+          >
+        </button>
+      }
+    </div>
+    @if (tab() === 'discover' && hasMore()) {
+      <button class="more" type="button" (click)="search(true)" [disabled]="busy()">
+        {{ busy() ? 'Searching...' : 'Find more titles' }}
+      </button>
+    }
+    @if (tab() === 'picks' && !picks().length) {
+      <p class="empty">A good story starts with a pick. Open a title to save it here.</p>
+    }
+  }
+  <details class="credits">
+    <summary>Data & credits</summary>
+    <p>Direct video search uses YouTube. Each video links to its channel upload on YouTube.</p>
+    <a href="https://www.themoviedb.org" target="_blank" rel="noopener noreferrer"
+      ><img src="/tmdb-logo.svg" alt="TMDB" width="80"
+    /></a>
+    <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+    <p>
+      Streaming availability by
+      <a href="https://www.justwatch.com" target="_blank" rel="noopener noreferrer">JustWatch</a>.
+      Catalogue updates can lag behind services. Results are filtered from batches ordered by
+      popularity, not the entire catalogue at once.
+    </p>
+  </details>
+}

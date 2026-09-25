@@ -32,3 +32,6 @@ services/api/**
 **/bin/**
 **/obj/**
 **/*.spec.ts
+
+!services/api/Watch/
+!services/api/Watch/**
