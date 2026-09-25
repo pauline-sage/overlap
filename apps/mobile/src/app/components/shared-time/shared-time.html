@@ -1,4 +1,5 @@
 @if (active()) {
+  @if (pickError()) { <p class="error" role="alert">{{ pickError() }}</p> }
   @if (selected(); as title) {
     <button class="back" type="button" (click)="close()">
       <span aria-hidden="true">&#8592;</span> Back
@@ -69,9 +70,16 @@
           verified by this catalogue.
         </p>
       }
-      <button class="primary" type="button" (click)="togglePick(title)">
-        {{ saved(title.id) ? 'Remove from my picks' : 'Save to my picks' }}
-      </button>
+      @if (pick(title.id); as item) {
+        <p class="pick-status" role="status">{{ item.status === 'pending' ? (item.mine ? 'Waiting for ' + partnerName() : partnerName() + ' suggested this') : item.status === 'accepted' ? 'Accepted' : 'Declined' }}</p>
+        @if (!item.mine && item.status === 'pending') {
+          <div class="pick-actions"><button class="primary" type="button" (click)="decide(title.id, 'accepted')" [disabled]="pickBusy()">Accept</button><button class="more" type="button" (click)="decide(title.id, 'declined')" [disabled]="pickBusy()">Pass</button></div>
+        }
+        @if (item.mine) { <button class="more" type="button" (click)="togglePick(title)" [disabled]="pickBusy()">Remove pick</button> }
+      } @else {
+        <button class="primary" type="button" (click)="togglePick(title)" [disabled]="pickBusy() || !connected() || !picksReady()">Suggest to {{ partnerName() }}</button>
+        @if (picksReady() && !connected()) { <p class="fine">Connect with your person to share picks.</p> }
+      }
     </article>
   } @else {
     <button class="back" type="button" (click)="back.emit()">
@@ -86,7 +94,7 @@
       >
         Discover</button
       ><button type="button" [attr.aria-pressed]="tab() === 'picks'" (click)="tab.set('picks')">
-        My picks <span>{{ picks().length || '' }}</span>
+        Our picks <span>{{ picks().length || '' }}</span>
       </button>
     </nav>
     @if (tab() === 'discover') {
@@ -232,9 +240,7 @@
         }
       </div>
     } @else {
-      <p class="fine">
-        Saved for this visit only. These picks are not shared with your partner yet.
-      </p>
+      <p class="fine">{{ connected() ? 'Choose together. Open a pick to respond.' : 'Connect with your person to share picks.' }}</p>
     }
     <div class="posters">
       @for (title of tab() === 'picks' ? picks() : (results() ?? []); track title.id) {
@@ -255,6 +261,7 @@
             >{{ title.minutes ? title.minutes + ' min' : 'Length unknown'
             }}{{ title.format === 'Series' ? ' / ep. 1' : '' }}</span
           >
+          @if (tab() === 'picks') { <span class="pick-status">{{ pick(title.id)?.status === 'pending' ? (pick(title.id)?.mine ? 'Waiting for response' : 'Your turn') : pick(title.id)?.status === 'accepted' ? 'Accepted' : 'Declined' }}</span> }
         </button>
       }
     </div>
@@ -264,7 +271,7 @@
       </button>
     }
     @if (tab() === 'picks' && !picks().length) {
-      <p class="empty">A good story starts with a pick. Open a title to save it here.</p>
+      <p class="empty">No picks yet. Open a title and suggest it.</p>
     }
   }
   <details class="credits">

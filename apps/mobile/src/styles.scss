@@ -12,7 +12,7 @@ html {
   --line: #39473e;
   --accent: #c4e5a0;
   --on-accent: #172511;
-  --accent-soft: #283820;
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--canvas));
   --hero: #202d24;
   --shadow: 0 8px 30px #00000024;
   --error-bg: #382220;
@@ -33,9 +33,9 @@ html[data-theme='light'] {
   --text: #19271f;
   --muted: #596a5e;
   --line: #cbd5cc;
-  --accent: #b8ee79;
+  --accent: #c4e5a0;
   --on-accent: #172511;
-  --accent-soft: #e5f2da;
+  --accent-soft: color-mix(in srgb, var(--accent) 25%, var(--canvas));
   --hero: #e8f1e2;
   --shadow: 0 8px 30px #233d2210;
   --error-bg: #fff0ec;

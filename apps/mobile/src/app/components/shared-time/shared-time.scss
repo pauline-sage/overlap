@@ -338,3 +338,7 @@ a {
   max-width: 100%;
   aspect-ratio: 16/9;
 }
+
+.pick-actions { display:flex; gap:.75rem; align-items:center; }
+.pick-actions button { flex:1; }
+.pick-status { color:var(--text); font-size:.8rem; }

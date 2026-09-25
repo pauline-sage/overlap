@@ -198,6 +198,7 @@ if (authConfigured)
     app.MapAuth();
     app.MapTogether();
     app.MapWatch();
+    app.MapPicks();
 }
 else
 {

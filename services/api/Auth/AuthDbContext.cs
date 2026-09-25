@@ -40,6 +40,15 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        builder.Entity<Overlap.Api.Watch.SharedPick>(pick => {
+            pick.Property(x => x.PairId).HasMaxLength(32);
+            pick.Property(x => x.ProposedBy).HasMaxLength(255);
+            pick.Property(x => x.TitleId).HasMaxLength(80);
+            pick.Property(x => x.Status).HasMaxLength(16);
+            pick.Property(x => x.Content).HasMaxLength(16000);
+            pick.HasIndex(x => new { x.PairId, x.TitleId }).IsUnique();
+            pick.HasOne<Account>().WithMany().HasForeignKey(x => x.ProposedBy).OnDelete(DeleteBehavior.Cascade);
+        });
         builder.Entity<Account>().Property(x => x.DisplayName).HasMaxLength(50);
         builder.Entity<Account>().Property(x => x.InvitationHash).HasMaxLength(64);
         builder.Entity<Account>().HasIndex(x => x.InvitationHash).IsUnique();

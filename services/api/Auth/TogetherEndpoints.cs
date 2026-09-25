@@ -40,7 +40,12 @@ public static class TogetherEndpoints
         group.MapPost("/leave", async (ClaimsPrincipal principal, AuthDbContext db) =>
         {
             var pair = await db.PairMembers.Where(x => x.AccountId == UserId(principal)).Select(x => x.PairId).SingleOrDefaultAsync();
-            if (pair is not null) await db.PairMembers.Where(x => x.PairId == pair).ExecuteDeleteAsync();
+            if (pair is not null) {
+                await using var transaction = await db.Database.BeginTransactionAsync();
+                await db.Set<Overlap.Api.Watch.SharedPick>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
+                await db.PairMembers.Where(x => x.PairId == pair).ExecuteDeleteAsync();
+                await transaction.CommitAsync();
+            }
             return Results.NoContent();
         });
     }

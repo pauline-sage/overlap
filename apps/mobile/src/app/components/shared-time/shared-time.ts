@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, output, signal } from '@angular/core';
+import { Component, effect, inject, input, output, signal, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../auth.service';
@@ -21,6 +21,8 @@ export interface WatchTitle {
   ownLink: string;
   partnerLink: string;
 }
+interface SharedPick { id: number; status: 'pending' | 'accepted' | 'declined'; mine: boolean; title: WatchTitle; }
+interface PickList { connected: boolean; picks: SharedPick[]; }
 interface YouTubeVideo {
   id: string;
   title: string;
@@ -40,7 +42,7 @@ interface WatchResults {
   templateUrl: './shared-time.html',
   styleUrl: './shared-time.scss',
 })
-export class SharedTimeComponent {
+export class SharedTimeComponent implements OnDestroy {
   private readonly auth = inject(AuthService);
   readonly active = input(false);
   readonly partnerName = input('Your person');
@@ -77,9 +79,22 @@ export class SharedTimeComponent {
   readonly hasMore = signal(false);
   readonly selected = signal<WatchTitle | null>(null);
   readonly picks = signal<WatchTitle[]>([]);
+  readonly sharedPicks = signal<SharedPick[]>([]);
+  readonly connected = signal(false);
+  readonly picksReady = signal(false);
+  readonly pickBusy = signal(false);
+  readonly pickError = signal('');
+  private poll?: ReturnType<typeof setInterval>;
+  private loadingPicks = false;
+  private disposed = false;
   readonly tab = signal<'discover' | 'picks'>('discover');
   private readonly resetDetail = effect(() => {
+    clearInterval(this.poll);
     if (!this.active()) this.selected.set(null);
+    else {
+      void this.loadPicks();
+      this.poll = setInterval(() => { if (document.visibilityState === 'visible') void this.loadPicks(); }, 10000);
+    }
   });
   private page = 0;
   private searchVersion = 0;
@@ -214,10 +229,41 @@ export class SharedTimeComponent {
   saved(id: string): boolean {
     return this.picks().some((p) => p.id === id);
   }
-  togglePick(title: WatchTitle): void {
-    this.picks.update((p) =>
-      this.saved(title.id) ? p.filter((t) => t.id !== title.id) : [...p, title],
-    );
+  ngOnDestroy(): void { this.disposed = true; clearInterval(this.poll); }
+  async loadPicks(): Promise<void> {
+    if (this.loadingPicks || this.pickBusy() || this.disposed) return;
+    this.loadingPicks = true;
+    try { this.applyPicks(await this.auth.picks<PickList>()); this.pickError.set(''); }
+    catch (error) { this.pickError.set(this.message(error)); }
+    finally { this.loadingPicks = false; }
+  }
+  private applyPicks(list: PickList): void {
+    if (this.disposed) return;
+    this.connected.set(list.connected);
+    this.picksReady.set(true);
+    this.sharedPicks.set(list.picks);
+    this.picks.set(list.picks.map(p => p.mine ? p.title : ({ ...p.title,
+      ownCountry:p.title.partnerCountry, partnerCountry:p.title.ownCountry,
+      ownServices:p.title.partnerServices, partnerServices:p.title.ownServices,
+      ownLink:p.title.partnerLink, partnerLink:p.title.ownLink })));
+  }
+  pick(id: string): SharedPick | undefined { return this.sharedPicks().find(p => p.title.id === id); }
+  async togglePick(title: WatchTitle): Promise<void> {
+    const pick = this.pick(title.id);
+    if (pick && !pick.mine) return;
+    await this.changePick(pick ? 'watch/picks/' + pick.id + '/remove' : 'watch/picks', pick ? {} : title);
+  }
+  async decide(id: string, status: 'accepted' | 'declined'): Promise<void> {
+    const pick = this.pick(id);
+    if (pick) await this.changePick('watch/picks/' + pick.id + '/decision', {status});
+  }
+  private async changePick(action: string, body: object): Promise<void> {
+    if (this.pickBusy() || this.loadingPicks) return;
+    this.pickBusy.set(true);
+    this.pickError.set('');
+    try { await this.auth.submit(action,body); this.applyPicks(await this.auth.picks<PickList>()); }
+    catch(error) { this.pickError.set(this.message(error)); }
+    finally { this.pickBusy.set(false); }
   }
   imageFailed(event: Event): void {
     (event.target as HTMLImageElement).style.display = 'none';

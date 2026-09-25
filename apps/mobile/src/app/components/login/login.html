@@ -13,6 +13,9 @@
     >
       <span class="brand-mark" aria-hidden="true"><i></i><i></i></span> overlap
     </button>
+    @if (account(); as person) {
+      <span class="header-welcome">Welcome, {{ person.displayName }}</span>
+    }
     <button
       class="theme-toggle"
       type="button"

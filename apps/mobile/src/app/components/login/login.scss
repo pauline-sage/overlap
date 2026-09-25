@@ -276,3 +276,7 @@ h1:focus {
   color: var(--text);
   font-size: 1.25rem;
 }
+
+.header-welcome { margin-left:auto; font-size:.8rem; color:var(--muted); max-width:9rem; overflow-wrap:anywhere; }
+.topbar { gap:.65rem; }
+@media(max-width:360px) { .brand { font-size:1.25rem; gap:.4rem; } .header-welcome { font-size:.75rem; } }

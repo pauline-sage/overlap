@@ -26,6 +26,9 @@ export class AuthService {
   together(): Promise<TogetherStatus> {
     return firstValueFrom(this.http.get<TogetherStatus>('/api/auth/together/'));
   }
+  picks<T>(): Promise<T> {
+    return firstValueFrom(this.http.get<T>('/api/auth/watch/picks'));
+  }
   async submit<T = AuthMessage>(action: string, body: object): Promise<T> {
     // Refresh antiforgery protection after any change of authenticated identity.
     await firstValueFrom(this.http.get<void>('/api/auth/csrf'));

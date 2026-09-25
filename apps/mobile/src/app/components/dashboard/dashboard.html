@@ -7,8 +7,7 @@
 />
 
 @if (page() === 'home' && !watching()) {
-  <div class="welcome"><h2 id="dashboard-heading" tabindex="-1">Welcome, {{ greetingName() }} <span class="wave" aria-hidden="true">&#10022;</span></h2></div>
-  <section class="hero" aria-labelledby="moments-title">
+  <section class="hero" aria-labelledby="dashboard-heading">
     <div class="orbit">
       <div class="person-slot">
         <div class="portrait"><button class="person" type="button" (click)="photoPicker.click()" [disabled]="working() || !together()" aria-label="Add or replace your profile photo">@if (together()?.hasPhoto) { <img [src]="photoUrl(together()!.id)" alt="Your profile photo"> } @else { {{ greetingName().charAt(0) }} }</button><span class="presence-dot" [class.online]="presenceKnown() && together()?.online" aria-hidden="true"></span></div>
@@ -25,7 +24,7 @@
         } @else { <span class="person empty-person" aria-label="Connection loading">&#183;&#183;&#183;</span><strong>Your person</strong><span class="presence-label">Loading</span> }
       </div>
     </div>
-    <h2 id="moments-title">A little closer.</h2>
+    <h2 id="dashboard-heading" tabindex="-1">A little closer.</h2>
     <button class="connection-shortcut" type="button" (click)="navigate('profile')" aria-label="Manage your connection">{{ together()?.partner ? 'You two are connected' : together()?.invitationExpiresUtc ? 'Invitation sent' : invitation() ? 'Review invitation' : 'Your connection' }} <span aria-hidden="true">&#8599;</span></button>
   </section>
 }
