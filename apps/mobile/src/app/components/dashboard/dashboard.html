@@ -13,7 +13,6 @@
         <div class="portrait"><button class="person" type="button" (click)="photoPicker.click()" [disabled]="working() || !together()" aria-label="Add or replace your profile photo">@if (together()?.hasPhoto) { <img [src]="photoUrl(together()!.id)" alt="Your profile photo"> } @else { {{ greetingName().charAt(0) }} }</button><span class="presence-dot" [class.online]="presenceKnown() && together()?.online" aria-hidden="true"></span></div>
         <strong>{{ greetingName() }}</strong><span class="presence-label">{{ presenceLabel(together()?.online) }}</span>
       </div>
-      <span class="pair-link" aria-hidden="true">&amp;</span>
       <div class="person-slot">
         @if (together()?.partner; as partner) {
           <div class="portrait"><span class="person partner">@if (partner.hasPhoto) { <img [src]="photoUrl(partner.id)" [alt]="partner.displayName || 'Your person'"> } @else { {{ partner.displayName?.charAt(0) || '?' }} }</span><span class="presence-dot" [class.online]="presenceKnown() && partner.online" aria-hidden="true"></span></div><strong>{{ partner.displayName || 'Your person' }}</strong><span class="presence-label">{{ presenceLabel(partner.online) }}</span>
@@ -31,7 +30,7 @@
 @if (page() === 'profile') {
   <section class="profile-card">
     <h2 id="dashboard-heading" tabindex="-1">{{ greetingName() }}'s profile</h2>
-    <p class="identity">{{ email() }}</p>
+    <!-- <p class="identity">{{ email() }}</p> -->
     <div class="photo-editor">
       @if (together()?.hasPhoto) {
         <img class="profile-photo" [src]="photoUrl(together()!.id)" alt="Your profile photo" />
