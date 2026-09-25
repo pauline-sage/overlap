@@ -115,10 +115,10 @@
           (click)="togglePick(title)"
           [disabled]="pickBusy() || !connected() || !picksReady()"
         >
-          Suggest to {{ partnerName() }}
+          {{ pickBusy() ? 'Adding...' : 'Add to your picks' }}
         </button>
         @if (picksReady() && !connected()) {
-          <p class="fine">Connect with your person to share picks.</p>
+          <p class="fine">Accept a partner invitation in Profile &amp; connection to enable shared picks.</p>
         }
       }
     </article>

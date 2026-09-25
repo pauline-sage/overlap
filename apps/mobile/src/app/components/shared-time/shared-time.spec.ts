@@ -177,4 +177,26 @@ describe('Unified watch search', () => {
     await c.decide('own', 'accepted');
     expect(auth.submit).not.toHaveBeenCalled();
   });
+  it('explains the disabled add button when no partner invitation has been accepted', async () => {
+    auth.picks.mockResolvedValue({connected:false,picks:[]});
+    const f=render(); await f.whenStable();
+    f.componentInstance.selected.set(title); f.detectChanges();
+    const button=[...f.nativeElement.querySelectorAll('button')].find((b:any)=>b.textContent.includes('Add to your picks')) as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+    expect(f.nativeElement.textContent).toContain('Accept a partner invitation');
+  });
+  it('does not drop a click while a background refresh is pending', async () => {
+    const f=render(); await f.whenStable(); const c=f.componentInstance;
+    let finish!: (value:unknown)=>void;
+    auth.picks.mockImplementationOnce(()=>new Promise(r=>finish=r));
+    const refresh=c.loadPicks();
+    auth.submit.mockResolvedValue({});
+    auth.picks.mockResolvedValue({connected:true,picks:[{id:1,mine:true,status:'pending',title}]});
+    await c.togglePick(title);
+    expect(auth.submit).toHaveBeenCalledWith('watch/picks',title);
+    finish({connected:true,picks:[]}); await refresh;
+    expect(c.saved(title.id)).toBe(true);
+    expect(c.pickBusy()).toBe(false);
+  });
+
 });

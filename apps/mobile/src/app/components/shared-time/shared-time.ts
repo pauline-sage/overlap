@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, output, signal, OnDestroy } from '@angular/core';
+import { Component, effect, inject, input, output, signal, untracked, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../auth.service';
@@ -94,13 +94,14 @@ export class SharedTimeComponent implements OnDestroy {
   readonly pickError = signal('');
   private poll?: ReturnType<typeof setInterval>;
   private loadingPicks = false;
+  private pickVersion = 0;
   private disposed = false;
   readonly tab = signal<'discover' | 'picks' | 'partner'>('discover');
   private readonly resetDetail = effect(() => {
     clearInterval(this.poll);
     if (!this.active()) this.selected.set(null);
     else {
-      void this.loadPicks();
+      untracked(() => void this.loadPicks());
       this.poll = setInterval(() => {
         if (document.visibilityState === 'visible') void this.loadPicks();
       }, 10000);
@@ -254,8 +255,11 @@ export class SharedTimeComponent implements OnDestroy {
   async loadPicks(): Promise<void> {
     if (this.loadingPicks || this.pickBusy() || this.disposed) return;
     this.loadingPicks = true;
+    const version = this.pickVersion;
     try {
-      this.applyPicks(await this.auth.picks<PickList>());
+      const list = await this.auth.picks<PickList>();
+      if (version !== this.pickVersion) return;
+      this.applyPicks(list);
       this.pickError.set('');
     } catch (error) {
       this.pickError.set(this.message(error));
@@ -301,7 +305,8 @@ export class SharedTimeComponent implements OnDestroy {
       await this.changePick('watch/picks/' + pick.id + '/decision', { status });
   }
   private async changePick(action: string, body: object): Promise<void> {
-    if (this.pickBusy() || this.loadingPicks) return;
+    if (this.pickBusy()) return;
+    this.pickVersion++;
     this.pickBusy.set(true);
     this.pickError.set('');
     try {
