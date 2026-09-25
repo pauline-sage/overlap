@@ -114,7 +114,7 @@
           [email]="account()?.email ?? ''"
           [greetingName]="account()?.displayName ?? ''"
           [invitationToken]="invitationToken"
-          (invitationHandled)="invitationToken = ''"
+          (invitationHandled)="clearInvitation()"
           [busy]="busy()"
           (editProfile)="navigate('profile')"
           (changePassword)="navigate('change-password')"

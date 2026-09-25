@@ -329,4 +329,27 @@ describe('Account screens', () => {
     expect(fixture.nativeElement.querySelector('app-dashboard')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('#password')).toBeNull();
   });
+  it('restores an invitation after leaving for email confirmation and opens its review after login', async () => {
+    window.history.replaceState(null, '', '/#invite?token=test-invite');
+    const first = await render(); first.destroy();
+    expect(window.location.hash).toBe('');
+    window.history.replaceState(null, '', '/#confirm-email?email=test%40example.test&token=confirmation');
+    const confirmation = await render(); confirmation.destroy();
+    window.history.replaceState(null, '', '/');
+    auth.me.mockResolvedValue({email:'test@example.test',displayName:'Ju'});
+    auth.submit.mockResolvedValue({displayName:'Lina',expiresUtc:new Date(Date.now()+60000).toISOString()});
+    const restored=await render();
+    await restored.whenStable(); restored.detectChanges();
+    expect(auth.submit).toHaveBeenCalledWith('together/preview',{token:'test-invite'});
+    expect(auth.submit).not.toHaveBeenCalledWith('together/accept',expect.anything());
+    expect(restored.nativeElement.textContent).toContain('Lina invited you');
+    click(restored,'Not now');
+    expect(localStorage.getItem('overlap-pending-invitation')).toBeNull();
+  });
+  it('discards an expired saved invitation', async () => {
+    localStorage.setItem('overlap-pending-invitation',JSON.stringify({token:'expired',expires:Date.now()-1}));
+    await render();
+    expect(localStorage.getItem('overlap-pending-invitation')).toBeNull();
+  });
+
 });

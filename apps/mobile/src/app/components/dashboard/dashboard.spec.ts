@@ -161,6 +161,7 @@ describe('Dashboard photos and invitations', () => {
     await fixture.componentInstance.createInvite();
     expect(auth.submit).toHaveBeenCalledTimes(1);
     fixture.componentInstance.decline();
+    fixture.componentInstance.navigate('home');
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[aria-label="Invite your person"]')).toBeTruthy();
   });

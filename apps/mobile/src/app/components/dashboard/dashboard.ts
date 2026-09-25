@@ -83,10 +83,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     await this.run(async () => {
       this.together.set(await this.auth.together());
       this.presenceKnown.set(true);
-      if (this.invitationToken())
-        this.invitation.set(
-          await this.auth.submit('together/preview', { token: this.invitationToken() }),
-        );
+      if (this.invitationToken()) {
+        if (this.together()?.partner) { this.invitationHandled.emit(); return; }
+        this.navigate('profile');
+        try {
+          this.invitation.set(await this.auth.submit('together/preview', { token: this.invitationToken() }));
+        } catch (error) {
+          if (error instanceof HttpErrorResponse && error.status === 400) this.invitationHandled.emit();
+          throw error;
+        }
+      }
     });
     if (this.destroyed) return;
     this.zone.runOutsideAngular(() => {

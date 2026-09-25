@@ -46,6 +46,18 @@ export class LoginComponent {
   protected passwordConfirmation = '';
   private token = '';
   protected invitationToken = '';
+  private readonly invitationKey = 'overlap-pending-invitation';
+  protected clearInvitation(): void {
+    this.invitationToken = '';
+    try { localStorage.removeItem(this.invitationKey); } catch { /* Storage may be disabled. */ }
+  }
+  private restoreInvitation(): void {
+    try {
+      const saved = JSON.parse(localStorage.getItem(this.invitationKey) ?? 'null');
+      if (saved && typeof saved.token === 'string' && saved.token.length <= 256 && Number.isFinite(saved.expires) && saved.expires > Date.now()) this.invitationToken = saved.token;
+      else this.clearInvitation();
+    } catch { this.clearInvitation(); }
+  }
   protected readonly headings: Record<Screen, string> = {
     'change-email': 'A new address.',
     'confirm-email-change': 'Confirm your new email.',
@@ -67,11 +79,15 @@ export class LoginComponent {
       /* Storage may be disabled; the theme still works for this visit. */
     }
     document.documentElement.dataset['theme'] = this.theme();
+    this.restoreInvitation();
     const fragment = window.location.hash.slice(1);
     const separator = fragment.indexOf('?');
     const action = fragment.slice(0, separator);
     if (separator >= 0 && action === 'invite') {
       this.invitationToken = new URLSearchParams(fragment.slice(separator + 1)).get('token') ?? '';
+      if (this.invitationToken.length <= 256 && this.invitationToken) {
+        try { localStorage.setItem(this.invitationKey, JSON.stringify({token:this.invitationToken,expires:Date.now()+48*60*60*1000})); } catch { /* Keep the in-memory invitation. */ }
+      } else this.clearInvitation();
       window.history.replaceState(null, '', window.location.pathname);
     }
     if (
@@ -261,7 +277,6 @@ export class LoginComponent {
     this.idle.stop();
     this.account.set(null);
     this.busy.set(false);
-    this.invitationToken = '';
     this.navigate('login');
     this.message.set('Your session ended. Sign in again to continue.');
   }
