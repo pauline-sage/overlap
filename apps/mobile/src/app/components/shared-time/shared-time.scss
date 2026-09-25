@@ -339,6 +339,25 @@ a {
   aspect-ratio: 16/9;
 }
 
-.pick-actions { display:flex; gap:.75rem; align-items:center; }
-.pick-actions button { flex:1; }
-.pick-status { color:var(--text); font-size:.8rem; }
+.pick-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+.pick-actions button {
+  flex: 1;
+}
+.pick-status {
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+nav {
+  gap: 0.75rem;
+}
+nav button {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  flex: 1;
+  font-size: 0.85rem;
+}

@@ -1,0 +1,34 @@
+import { Component, input, output, signal } from '@angular/core';
+import { TogetherStatus } from '../../auth.service';
+export type ProfileAction =
+  | 'removePhoto'
+  | 'refresh'
+  | 'createInvite'
+  | 'accept'
+  | 'decline'
+  | 'copyInvite'
+  | 'revoke'
+  | 'leave'
+  | 'editProfile';
+@Component({ selector: 'app-profile', templateUrl: './profile.html', styleUrl: './profile.scss' })
+export class ProfileComponent {
+  readonly greetingName = input.required<string>();
+  readonly together = input<TogetherStatus | null>(null);
+  readonly busy = input(false);
+  readonly working = input(false);
+  readonly notice = input('');
+  readonly error = input('');
+  readonly inviteUrl = input('');
+  readonly invitation = input<{ displayName: string; expiresUtc: string } | null>(null);
+  readonly photoVersion = input(0);
+  readonly action = output<ProfileAction>();
+  readonly upload = output<Event>();
+  readonly showLeave = signal(false);
+  canInvite(): boolean {
+    const t = this.together();
+    return !!t && !t.partner && !t.invitationExpiresUtc && !this.invitation();
+  }
+  photoUrl(id: string): string {
+    return '/api/auth/together/photo/' + encodeURIComponent(id) + '?v=' + this.photoVersion();
+  }
+}

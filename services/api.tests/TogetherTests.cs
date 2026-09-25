@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Overlap.Api.Tests;
 
-public sealed class TogetherTests
+public sealed partial class TogetherTests
 {
     private static async Task<HttpResponseMessage> Post(HttpClient client, string action, object body)
     {

@@ -1,3 +1,4 @@
+import { ProfileComponent, ProfileAction } from '../profile/profile';
 import { Component, inject, input, output, signal, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService, TogetherStatus } from '../../auth.service';
@@ -6,7 +7,7 @@ import { DashboardPage, NavBarComponent } from '../nav-bar/nav-bar';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [NavBarComponent, SharedTimeComponent],
+  imports: [NavBarComponent, SharedTimeComponent, ProfileComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -44,18 +45,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (document.visibilityState === 'visible') void this.checkPresence();
   };
   async checkPresence(): Promise<void> {
-    if (this.checkingPresence || this.working() || this.destroyed || document.visibilityState !== 'visible') return;
+    if (
+      this.checkingPresence ||
+      this.working() ||
+      this.destroyed ||
+      document.visibilityState !== 'visible'
+    )
+      return;
     this.checkingPresence = true;
     try {
       const status = await this.auth.together();
-      if (!this.destroyed) { this.together.set(status); this.presenceKnown.set(true); }
+      if (!this.destroyed) {
+        this.together.set(status);
+        this.presenceKnown.set(true);
+      }
     } catch (error) {
       this.presenceKnown.set(false);
-      if (!this.destroyed && error instanceof HttpErrorResponse && error.status === 401) this.sessionExpired.emit();
-    } finally { this.checkingPresence = false; }
+      if (!this.destroyed && error instanceof HttpErrorResponse && error.status === 401)
+        this.sessionExpired.emit();
+    } finally {
+      this.checkingPresence = false;
+    }
   }
   presenceLabel(online: boolean | undefined): string {
-    return !this.presenceKnown() || online === undefined ? 'Status unavailable' : online ? 'Online' : 'Away';
+    return !this.presenceKnown() || online === undefined
+      ? 'Status unavailable'
+      : online
+        ? 'Online'
+        : 'Away';
   }
   ngOnDestroy(): void {
     this.destroyed = true;
@@ -76,6 +93,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.presenceTimer = setInterval(() => void this.checkPresence(), 30000);
       document.addEventListener('visibilitychange', this.onVisibility);
     });
+  }
+  profileAction(action: ProfileAction): void {
+    if (action === 'editProfile') this.editProfile.emit();
+    else void this[action]();
   }
   photoUrl(id: string): string {
     return `/api/auth/together/photo/${encodeURIComponent(id)}?v=${this.photoVersion()}`;

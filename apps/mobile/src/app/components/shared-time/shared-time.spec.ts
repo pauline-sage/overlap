@@ -26,9 +26,10 @@ const video = {
   thumbnail: 'https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg',
 };
 describe('Unified watch search', () => {
-  const auth = { submit: vi.fn() };
+  const auth = { submit: vi.fn(), picks: vi.fn() };
   beforeEach(() => {
     vi.resetAllMocks();
+    auth.picks.mockResolvedValue({ connected: true, picks: [] });
     auth.submit.mockImplementation((action: string) =>
       Promise.resolve(action === 'watch/youtube' ? [video] : { titles: [title], hasMore: true }),
     );
@@ -73,7 +74,11 @@ describe('Unified watch search', () => {
     f.detectChanges();
     expect(f.nativeElement.textContent).toContain('language unverified');
     expect(f.nativeElement.textContent).not.toContain('Availability by JustWatch');
-    c.togglePick(c.selected()!);
+    auth.picks.mockResolvedValue({
+      connected: true,
+      picks: [{ id: 1, status: 'pending', mine: true, title: c.selected()! }],
+    });
+    await c.togglePick(c.selected()!);
     expect(c.picks()[0].source).toBe('youtube');
   });
   it('passes ordinary genres to both searches and displays summaries on click', async () => {
@@ -142,5 +147,34 @@ describe('Unified watch search', () => {
       'watch/search',
       expect.objectContaining({ page: 2 }),
     );
+  });
+  it('separates proposals and swaps country and service labels for the recipient', async () => {
+    auth.picks.mockResolvedValue({
+      connected: true,
+      picks: [
+        { id: 1, mine: true, status: 'pending', title: { ...title, id: 'own' } },
+        {
+          id: 2,
+          mine: false,
+          status: 'pending',
+          title: { ...title, id: 'partner', ownCountry: 'US', partnerCountry: 'FR' },
+        },
+      ],
+    });
+    const f = render();
+    await f.whenStable();
+    const c = f.componentInstance;
+    expect(c.pickTitles(true).map((t) => t.id)).toEqual(['own']);
+    expect(c.pickTitles(false)[0].ownCountry).toBe('FR');
+    expect(c.pickTitles(false)[0].ownServices).toEqual(['Prime Video']);
+    auth.submit.mockResolvedValue({});
+    await c.decide('partner', 'accepted');
+    expect(auth.submit).not.toHaveBeenCalled();
+    c.tab.set('partner');
+    await c.decide('partner', 'accepted');
+    expect(auth.submit).toHaveBeenCalledWith('watch/picks/2/decision', { status: 'accepted' });
+    auth.submit.mockClear();
+    await c.decide('own', 'accepted');
+    expect(auth.submit).not.toHaveBeenCalled();
   });
 });

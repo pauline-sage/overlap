@@ -200,21 +200,35 @@ describe('Account screens', () => {
   it('requests email change from Settings with the current password', async () => {
     auth.me.mockResolvedValue({ email: 'person@example.test', displayName: 'Person' });
     const fixture = await render();
-    click(fixture, 'Settings'); click(fixture, 'Change email address');
+    click(fixture, 'Settings');
+    click(fixture, 'Change email address');
     await fill(fixture, { 'new-email': 'new@example.test', 'current-password': 'abcdefghij' });
     auth.submit.mockResolvedValue({ message: 'If eligible, check your inbox.' });
     await submitForm(fixture);
-    expect(auth.submit).toHaveBeenCalledWith('change-email', { newEmail: 'new@example.test', currentPassword: 'abcdefghij' });
+    expect(auth.submit).toHaveBeenCalledWith('change-email', {
+      newEmail: 'new@example.test',
+      currentPassword: 'abcdefghij',
+    });
     expect(fixture.nativeElement.textContent).toContain('Back to account');
   });
   it('requires explicit email-change confirmation and returns to login', async () => {
-    window.history.replaceState(null, '', '/#confirm-email-change?email=old%40example.test&newEmail=new%40example.test&token=secret');
+    window.history.replaceState(
+      null,
+      '',
+      '/#confirm-email-change?email=old%40example.test&newEmail=new%40example.test&token=secret',
+    );
     const fixture = await render();
     expect(window.location.hash).toBe('');
     expect(auth.submit).not.toHaveBeenCalled();
-    auth.submit.mockResolvedValue({ message: 'Email changed. Sign in with your new email address.' });
+    auth.submit.mockResolvedValue({
+      message: 'Email changed. Sign in with your new email address.',
+    });
     await submitForm(fixture);
-    expect(auth.submit).toHaveBeenCalledWith('confirm-email-change', { email: 'old@example.test', newEmail: 'new@example.test', token: 'secret' });
+    expect(auth.submit).toHaveBeenCalledWith('confirm-email-change', {
+      email: 'old@example.test',
+      newEmail: 'new@example.test',
+      token: 'secret',
+    });
     expect(fixture.nativeElement.querySelector('#email').value).toBe('new@example.test');
   });
   it('asks for a saved name before showing the dashboard on a first session', async () => {
@@ -303,7 +317,9 @@ describe('Account screens', () => {
       click(fixture, tab);
       click(fixture, 'Overlap home');
       await fixture.whenStable();
-      expect(fixture.nativeElement.querySelector('[aria-current="page"]').getAttribute('aria-label')).toBe('Home');
+      expect(
+        fixture.nativeElement.querySelector('[aria-current="page"]').getAttribute('aria-label'),
+      ).toBe('Home');
     }
     click(fixture, 'Settings');
     click(fixture, 'Change password');
@@ -313,5 +329,4 @@ describe('Account screens', () => {
     expect(fixture.nativeElement.querySelector('app-dashboard')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('#password')).toBeNull();
   });
-
 });

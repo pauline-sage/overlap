@@ -1,0 +1,109 @@
+:host {
+  display: block;
+}
+h2 {
+  font-size: 1.4rem;
+  letter-spacing: -0.04em;
+  margin: 0 0 1.5rem;
+}
+h3 {
+  font-size: 1rem;
+}
+.photo-editor {
+  position: relative;
+  width: 8.5rem;
+  margin: 2rem auto 1.5rem;
+}
+.profile-photo {
+  display: grid;
+  place-items: center;
+  width: 8.5rem;
+  height: 8.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--accent-soft);
+  font-size: 2.5rem;
+}
+.photo-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+button,
+input {
+  font: inherit;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--surface);
+  min-height: 2.75rem;
+  padding: 0.75rem 1rem;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.profile-card > button {
+  display: block;
+  margin: 0 auto 2rem;
+}
+.icon-button {
+  width: 2.75rem;
+  padding: 0;
+  border-radius: 50%;
+}
+.connection-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+}
+.partner-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+.partner-row img,
+.partner-initial {
+  width: 3.5rem;
+  height: 3.5rem;
+  object-fit: cover;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  display: grid;
+  place-items: center;
+}
+.partner-row strong {
+  display: block;
+  margin-top: 0.3rem;
+}
+.hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.sharing {
+  margin-top: 1rem;
+}
+.sharing button {
+  margin: 0.3rem 0.5rem 0.3rem 0;
+}
+.sharing input {
+  width: 100%;
+}
+p {
+  line-height: 1.5;
+}
+[role='alert'] {
+  color: var(--error-text);
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}

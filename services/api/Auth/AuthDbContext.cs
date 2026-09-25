@@ -45,7 +45,7 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
             pick.Property(x => x.ProposedBy).HasMaxLength(255);
             pick.Property(x => x.TitleId).HasMaxLength(80);
             pick.Property(x => x.Status).HasMaxLength(16);
-            pick.Property(x => x.Content).HasMaxLength(16000);
+            pick.Property(x => x.Content).HasMaxLength(16000).HasColumnType("longtext");
             pick.HasIndex(x => new { x.PairId, x.TitleId }).IsUnique();
             pick.HasOne<Account>().WithMany().HasForeignKey(x => x.ProposedBy).OnDelete(DeleteBehavior.Cascade);
         });

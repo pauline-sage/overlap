@@ -28,10 +28,14 @@ describe('Dashboard photos and invitations', () => {
     const fixture = await render();
     fixture.nativeElement.querySelector('button.time-idea').click();
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('#dashboard-heading').textContent).toContain('Watch together');
+    expect(fixture.nativeElement.querySelector('#dashboard-heading').textContent).toContain(
+      'Watch together',
+    );
     fixture.componentInstance.navigate('home');
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('#dashboard-heading').textContent).toContain('Welcome');
+    expect(fixture.nativeElement.querySelector('#dashboard-heading').textContent).toContain(
+      'A little closer.',
+    );
     expect(fixture.nativeElement.textContent).not.toContain('Watch together');
   });
   it('generates a link only after an explicit request and can revoke it', async () => {
@@ -54,6 +58,8 @@ describe('Dashboard photos and invitations', () => {
     const fixture = await render('private');
     expect(auth.submit).toHaveBeenCalledTimes(1);
     expect(auth.submit).toHaveBeenCalledWith('together/preview', { token: 'private' });
+    fixture.componentInstance.navigate('profile');
+    fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Partner invited you');
     await fixture.componentInstance.accept();
     fixture.detectChanges();
@@ -68,7 +74,9 @@ describe('Dashboard photos and invitations', () => {
     );
     fixture.componentInstance.navigate('profile');
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('#dashboard-heading').textContent).toBe("Me's profile");
+    expect(fixture.nativeElement.querySelector('#dashboard-heading').textContent).toBe(
+      "Me's profile",
+    );
     expect(fixture.nativeElement.querySelector('[aria-label="Add or replace photo"]')).toBeTruthy();
     fixture.nativeElement.querySelector('[aria-label="Remove my photo"]').click();
     await fixture.whenStable();
@@ -105,17 +113,23 @@ describe('Dashboard photos and invitations', () => {
   });
   it.each([
     { invitationExpiresUtc: '2099-01-01T00:00:00Z', partner: null },
-    { invitationExpiresUtc: null, partner: { id: 'partner', displayName: 'Partner', hasPhoto: false } },
-  ])('does not offer another invitation for an existing invitation or connection: %j', async (state) => {
-    auth.together.mockResolvedValue({ ...status, ...state });
-    const fixture = await render();
-    expect(fixture.nativeElement.querySelector('[aria-label="Invite your person"]')).toBeNull();
-    fixture.componentInstance.navigate('profile');
-    fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).not.toContain('Invite your person');
-    await fixture.componentInstance.createInvite();
-    expect(auth.submit).not.toHaveBeenCalled();
-  });
+    {
+      invitationExpiresUtc: null,
+      partner: { id: 'partner', displayName: 'Partner', hasPhoto: false },
+    },
+  ])(
+    'does not offer another invitation for an existing invitation or connection: %j',
+    async (state) => {
+      auth.together.mockResolvedValue({ ...status, ...state });
+      const fixture = await render();
+      expect(fixture.nativeElement.querySelector('[aria-label="Invite your person"]')).toBeNull();
+      fixture.componentInstance.navigate('profile');
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).not.toContain('Invite your person');
+      await fixture.componentInstance.createInvite();
+      expect(auth.submit).not.toHaveBeenCalled();
+    },
+  );
   it('refreshes server state before creating an invitation to avoid replacing a pending link', async () => {
     const fixture = await render();
     auth.together.mockResolvedValue({ ...status, invitationExpiresUtc: '2099-01-01T00:00:00Z' });
@@ -150,5 +164,4 @@ describe('Dashboard photos and invitations', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[aria-label="Invite your person"]')).toBeTruthy();
   });
-
 });

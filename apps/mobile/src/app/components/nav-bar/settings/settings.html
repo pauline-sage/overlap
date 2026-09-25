@@ -1,0 +1,10 @@
+<section class="card" aria-labelledby="dashboard-heading">
+  <h2 id="dashboard-heading" tabindex="-1">Settings</h2>
+  <button type="button" (click)="changeEmail.emit()" [disabled]="busy()">
+    Change email address
+  </button>
+  <button type="button" (click)="changePassword.emit()" [disabled]="busy()">Change password</button>
+  <button class="sign-out" type="button" (click)="signOut.emit()" [disabled]="busy()">
+    Sign out
+  </button>
+</section>

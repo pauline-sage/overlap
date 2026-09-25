@@ -23,7 +23,7 @@ public static class PickEndpoints
     private static Task<string?> Pair(AuthDbContext db, string user) => db.PairMembers.Where(x => x.AccountId == user).Select(x => x.PairId).SingleOrDefaultAsync();
     public static void MapPicks(this WebApplication app)
     {
-        var group = app.MapGroup("/api/auth/watch/picks").RequireAuthorization().RequireRateLimiting("auth");
+        var group = app.MapGroup("/api/auth/watch/picks").RequireAuthorization().RequireRateLimiting("picks");
         group.MapGet("", async (ClaimsPrincipal user, AuthDbContext db) =>
         {
             var id = UserId(user);

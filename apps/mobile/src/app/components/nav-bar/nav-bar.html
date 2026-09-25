@@ -1,3 +1,11 @@
+@if (current() === 'settings') {
+  <app-settings
+    [busy]="disabled()"
+    (changeEmail)="changeEmail.emit()"
+    (changePassword)="changePassword.emit()"
+    (signOut)="signOut.emit()"
+  />
+}
 <nav aria-label="Main navigation">
   <button
     type="button"

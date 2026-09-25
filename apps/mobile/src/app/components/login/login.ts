@@ -74,7 +74,12 @@ export class LoginComponent {
       this.invitationToken = new URLSearchParams(fragment.slice(separator + 1)).get('token') ?? '';
       window.history.replaceState(null, '', window.location.pathname);
     }
-    if (separator >= 0 && (action === 'confirm-email' || action === 'reset-password' || action === 'confirm-email-change')) {
+    if (
+      separator >= 0 &&
+      (action === 'confirm-email' ||
+        action === 'reset-password' ||
+        action === 'confirm-email-change')
+    ) {
       const parameters = new URLSearchParams(fragment.slice(separator + 1));
       this.email = parameters.get('email') ?? '';
       this.token = parameters.get('token') ?? '';
@@ -112,7 +117,9 @@ export class LoginComponent {
     this.error.set('');
     this.password = this.currentPassword = this.passwordConfirmation = '';
     if (screen === 'change-email' || screen === 'login') this.newEmail = '';
-    queueMicrotask(() => document.getElementById(screen === 'account' ? 'dashboard-heading' : 'page-title')?.focus());
+    queueMicrotask(() =>
+      document.getElementById(screen === 'account' ? 'dashboard-heading' : 'page-title')?.focus(),
+    );
   }
   protected goHome(): void {
     if (this.busy() || this.loading()) return;
@@ -144,7 +151,10 @@ export class LoginComponent {
     this.showConfirmationHelp.set(false);
     this.error.set('');
     this.message.set('');
-    if (['confirm-email', 'reset-password', 'confirm-email-change'].includes(screen) && !this.hasLink()) {
+    if (
+      ['confirm-email', 'reset-password', 'confirm-email-change'].includes(screen) &&
+      !this.hasLink()
+    ) {
       this.error.set('This link is incomplete. Request a new email link below.');
       return;
     }
@@ -159,13 +169,15 @@ export class LoginComponent {
     const accountAtStart = this.account();
     try {
       const body =
-        screen === 'change-email' ? { newEmail: this.newEmail.trim(), currentPassword: this.currentPassword }
-        : screen === 'confirm-email-change' ? { email: this.email, newEmail: this.newEmail, token: this.token }
-        : screen === 'profile'
-          ? { displayName: this.displayName.trim() }
-          : screen === 'change-password'
-            ? { currentPassword: this.currentPassword, newPassword: this.password }
-            : { email: this.email.trim(), password: this.password, token: this.token };
+        screen === 'change-email'
+          ? { newEmail: this.newEmail.trim(), currentPassword: this.currentPassword }
+          : screen === 'confirm-email-change'
+            ? { email: this.email, newEmail: this.newEmail, token: this.token }
+            : screen === 'profile'
+              ? { displayName: this.displayName.trim() }
+              : screen === 'change-password'
+                ? { currentPassword: this.currentPassword, newPassword: this.password }
+                : { email: this.email.trim(), password: this.password, token: this.token };
       const result = await this.auth.submit<Account | AuthMessage>(screen, body);
       if (accountAtStart && !this.account()) return;
       this.busy.set(false);
@@ -173,8 +185,15 @@ export class LoginComponent {
         this.account.set(result as Account);
         this.navigate('account');
         if (screen === 'login') this.idle.start(() => this.sessionEnded(), true);
-      } else if (['reset-password', 'change-password', 'confirm-email', 'confirm-email-change'].includes(screen)) {
-        if (screen === 'confirm-email-change') { this.email = this.newEmail; this.idle.broadcastLogout(); }
+      } else if (
+        ['reset-password', 'change-password', 'confirm-email', 'confirm-email-change'].includes(
+          screen,
+        )
+      ) {
+        if (screen === 'confirm-email-change') {
+          this.email = this.newEmail;
+          this.idle.broadcastLogout();
+        }
         this.token = '';
         this.account.set(null);
         this.idle.stop();
@@ -188,7 +207,9 @@ export class LoginComponent {
         this.message.set((result as AuthMessage).message);
       }
     } catch (error) {
-      this.showConfirmationHelp.set(screen === 'login' && error instanceof HttpErrorResponse && error.status === 401);
+      this.showConfirmationHelp.set(
+        screen === 'login' && error instanceof HttpErrorResponse && error.status === 401,
+      );
       this.showError(error);
     } finally {
       this.password = this.currentPassword = this.passwordConfirmation = '';

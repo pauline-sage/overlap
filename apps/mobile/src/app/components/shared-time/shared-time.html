@@ -1,5 +1,7 @@
 @if (active()) {
-  @if (pickError()) { <p class="error" role="alert">{{ pickError() }}</p> }
+  @if (pickError()) {
+    <p class="error" role="alert">{{ pickError() }}</p>
+  }
   @if (selected(); as title) {
     <button class="back" type="button" (click)="close()">
       <span aria-hidden="true">&#8592;</span> Back
@@ -71,14 +73,53 @@
         </p>
       }
       @if (pick(title.id); as item) {
-        <p class="pick-status" role="status">{{ item.status === 'pending' ? (item.mine ? 'Waiting for ' + partnerName() : partnerName() + ' suggested this') : item.status === 'accepted' ? 'Accepted' : 'Declined' }}</p>
-        @if (!item.mine && item.status === 'pending') {
-          <div class="pick-actions"><button class="primary" type="button" (click)="decide(title.id, 'accepted')" [disabled]="pickBusy()">Accept</button><button class="more" type="button" (click)="decide(title.id, 'declined')" [disabled]="pickBusy()">Pass</button></div>
+        <p class="pick-status" role="status">
+          {{
+            item.status === 'pending'
+              ? item.mine
+                ? 'Waiting for ' + partnerName()
+                : partnerName() + ' suggested this'
+              : item.status === 'accepted'
+                ? 'Accepted'
+                : 'Declined'
+          }}
+        </p>
+        @if (!item.mine && item.status === 'pending' && tab() === 'partner') {
+          <div class="pick-actions">
+            <button
+              class="primary"
+              type="button"
+              (click)="decide(title.id, 'accepted')"
+              [disabled]="pickBusy()"
+            >
+              Accept</button
+            ><button
+              class="more"
+              type="button"
+              (click)="decide(title.id, 'declined')"
+              [disabled]="pickBusy()"
+            >
+              Pass
+            </button>
+          </div>
         }
-        @if (item.mine) { <button class="more" type="button" (click)="togglePick(title)" [disabled]="pickBusy()">Remove pick</button> }
+        @if (item.mine) {
+          <button class="more" type="button" (click)="togglePick(title)" [disabled]="pickBusy()">
+            Remove pick
+          </button>
+        }
       } @else {
-        <button class="primary" type="button" (click)="togglePick(title)" [disabled]="pickBusy() || !connected() || !picksReady()">Suggest to {{ partnerName() }}</button>
-        @if (picksReady() && !connected()) { <p class="fine">Connect with your person to share picks.</p> }
+        <button
+          class="primary"
+          type="button"
+          (click)="togglePick(title)"
+          [disabled]="pickBusy() || !connected() || !picksReady()"
+        >
+          Suggest to {{ partnerName() }}
+        </button>
+        @if (picksReady() && !connected()) {
+          <p class="fine">Connect with your person to share picks.</p>
+        }
       }
     </article>
   } @else {
@@ -87,14 +128,13 @@
     </button>
     <header><h2 id="dashboard-heading" tabindex="-1">Watch together</h2></header>
     <nav aria-label="Watch views">
-      <button
-        type="button"
-        [attr.aria-pressed]="tab() === 'discover'"
-        (click)="tab.set('discover')"
-      >
+      <button type="button" [attr.aria-pressed]="tab() === 'discover'" (click)="view('discover')">
         Discover</button
-      ><button type="button" [attr.aria-pressed]="tab() === 'picks'" (click)="tab.set('picks')">
-        Our picks <span>{{ picks().length || '' }}</span>
+      ><button type="button" [attr.aria-pressed]="tab() === 'picks'" (click)="view('picks')">
+        My picks <span>{{ pickTitles(true).length || '' }}</span>
+      </button>
+      <button type="button" [attr.aria-pressed]="tab() === 'partner'" (click)="view('partner')">
+        {{ partnerName() }}'s picks <span>{{ pickTitles(false).length || '' }}</span>
       </button>
     </nav>
     @if (tab() === 'discover') {
@@ -240,10 +280,19 @@
         }
       </div>
     } @else {
-      <p class="fine">{{ connected() ? 'Choose together. Open a pick to respond.' : 'Connect with your person to share picks.' }}</p>
+      <p class="fine">
+        {{
+          connected()
+            ? 'Choose together. Open a pick to respond.'
+            : 'Connect with your person to share picks.'
+        }}
+      </p>
     }
     <div class="posters">
-      @for (title of tab() === 'picks' ? picks() : (results() ?? []); track title.id) {
+      @for (
+        title of tab() === 'discover' ? (results() ?? []) : pickTitles(tab() === 'picks');
+        track title.id
+      ) {
         <button
           class="title-card"
           type="button"
@@ -261,7 +310,17 @@
             >{{ title.minutes ? title.minutes + ' min' : 'Length unknown'
             }}{{ title.format === 'Series' ? ' / ep. 1' : '' }}</span
           >
-          @if (tab() === 'picks') { <span class="pick-status">{{ pick(title.id)?.status === 'pending' ? (pick(title.id)?.mine ? 'Waiting for response' : 'Your turn') : pick(title.id)?.status === 'accepted' ? 'Accepted' : 'Declined' }}</span> }
+          @if (tab() !== 'discover') {
+            <span class="pick-status">{{
+              pick(title.id)?.status === 'pending'
+                ? pick(title.id)?.mine
+                  ? 'Waiting for response'
+                  : 'Your turn'
+                : pick(title.id)?.status === 'accepted'
+                  ? 'Accepted'
+                  : 'Declined'
+            }}</span>
+          }
         </button>
       }
     </div>
@@ -270,7 +329,7 @@
         {{ busy() ? 'Searching...' : 'Find more titles' }}
       </button>
     }
-    @if (tab() === 'picks' && !picks().length) {
+    @if (tab() !== 'discover' && !pickTitles(tab() === 'picks').length) {
       <p class="empty">No picks yet. Open a title and suggest it.</p>
     }
   }

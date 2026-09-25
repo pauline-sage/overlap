@@ -1,0 +1,125 @@
+<input
+  #photoPicker
+  type="file"
+  accept="image/jpeg,image/png,image/webp"
+  hidden
+  (change)="upload.emit($event)"
+/>
+
+<section class="profile-card">
+  <h2 id="dashboard-heading" tabindex="-1">{{ greetingName() }}'s profile</h2>
+
+  <div class="photo-editor">
+    @if (together()?.hasPhoto) {
+      <img class="profile-photo" [src]="photoUrl(together()!.id)" alt="Your profile photo" />
+    } @else {
+      <span class="profile-photo photo-placeholder" aria-label="No profile photo">{{
+        greetingName().charAt(0)
+      }}</span>
+    }
+    <div class="photo-actions">
+      <button
+        class="icon-button"
+        type="button"
+        (click)="photoPicker.click()"
+        [disabled]="working() || busy() || !together()"
+        aria-label="Add or replace photo"
+        title="Add or replace photo"
+      >
+        <span aria-hidden="true">&#128247;</span>
+      </button>
+      @if (together()?.hasPhoto) {
+        <button
+          class="icon-button"
+          type="button"
+          (click)="action.emit('removePhoto')"
+          [disabled]="working() || busy()"
+          aria-label="Remove my photo"
+          title="Remove my photo"
+        >
+          <span aria-hidden="true">&#128465;&#65039;</span>
+        </button>
+      }
+    </div>
+  </div>
+  <button type="button" (click)="action.emit('editProfile')" [disabled]="busy() || working()">
+    Edit display name
+  </button>
+  <div class="connection-heading">
+    <h3>Your connection</h3>
+    <button
+      class="icon-button"
+      type="button"
+      (click)="action.emit('refresh')"
+      [disabled]="working() || busy()"
+      aria-label="Refresh connection"
+      title="Refresh connection"
+    >
+      <span aria-hidden="true">&#8635;</span>
+    </button>
+  </div>
+  @if (together()?.partner; as partner) {
+    <div class="partner-row">
+      @if (partner.hasPhoto) {
+        <img [src]="photoUrl(partner.id)" alt="Your partner's photo" />
+      } @else {
+        <span class="partner-initial">{{ partner.displayName?.charAt(0) }}</span>
+      }
+      <div>
+        <span class="hint">Connected with</span><strong>{{ partner.displayName }}</strong>
+      </div>
+    </div>
+  } @else if (canInvite()) {
+    <button type="button" (click)="action.emit('createInvite')" [disabled]="working()">
+      Invite your person
+    </button>
+  }
+</section>
+
+<section class="sharing" aria-label="Your connection">
+  @if (notice()) {
+    <p role="status">{{ notice() }}</p>
+  }
+  @if (error()) {
+    <p role="alert">{{ error() }}</p>
+  }
+  @if (invitation(); as pending) {
+    <h2>{{ pending.displayName }} invited you</h2>
+    <p>Connect to share your display names and profile photos. You can leave anytime.</p>
+    <button type="button" (click)="action.emit('accept')" [disabled]="working()">
+      Accept invitation
+    </button>
+    <button type="button" (click)="action.emit('decline')" [disabled]="working()">Not now</button>
+  }
+  @if (inviteUrl() && !together()?.partner) {
+    <label for="invitation-link">Private invitation link</label>
+    <input
+      id="invitation-link"
+      readonly
+      [value]="inviteUrl()"
+      (click)="$any($event.target).select()"
+    />
+    <button type="button" (click)="action.emit('copyInvite')">Copy invitation</button>
+  }
+
+  @if (together()?.invitationExpiresUtc && !together()?.partner) {
+    <p>Invitation sent. Once your person accepts, you will appear here together.</p>
+    <p class="hint">
+      Need a new link? Revoke this invitation first. If it has expired, refresh your connection.
+    </p>
+    <button type="button" (click)="action.emit('revoke')" [disabled]="working()">
+      Revoke invitation
+    </button>
+  }
+  @if (together()?.partner) {
+    @if (showLeave()) {
+      <p>End this connection and clear your shared picks? Your accounts and photos will remain.</p>
+      <button type="button" (click)="action.emit('leave')" [disabled]="working()">
+        Yes, leave connection
+      </button>
+      <button type="button" (click)="showLeave.set(false)" [disabled]="working()">Cancel</button>
+    } @else {
+      <button type="button" (click)="showLeave.set(true)">Leave connection</button>
+    }
+  }
+</section>
