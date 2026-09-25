@@ -296,3 +296,7 @@ h1:focus {
     font-size: 0.75rem;
   }
 }
+
+.page-footer { text-align:center; }
+.page-footer a { display:inline-block; font-size:.7rem; color:var(--muted); text-underline-offset:3px; }
+.account-page { padding-bottom:calc(4rem + env(safe-area-inset-bottom)); }

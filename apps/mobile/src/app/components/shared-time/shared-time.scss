@@ -35,14 +35,14 @@ button {
   padding: 0 0.8rem;
   color: var(--text);
   font-size: 0.8rem;
-  border: 1px solid var(--line);
+  border: 0;
   border-radius: 2rem;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
 }
 header {
-  margin: 1rem 0 1.2rem;
+  margin: .5rem 0 1rem;
 }
 .eyebrow {
   text-transform: uppercase;
@@ -62,24 +62,27 @@ h2:focus {
 nav {
   display: flex;
   gap: 1.5rem;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 0;
   margin-bottom: 1.2rem;
 }
 nav button {
-  padding: 0.6rem 0;
+  padding: 0.6rem .5rem;
+  border-radius: .85rem;
   color: var(--muted);
 }
 nav button[aria-pressed='true'] {
   color: var(--text);
-  border-bottom: 2px solid var(--text);
+  background: var(--accent-soft);
+  color: var(--text);
 }
 nav span {
   font-size: 0.7rem;
 }
 .formats {
   display: flex;
-  background: var(--surface);
-  padding: 0.25rem;
+  background: transparent;
+  gap: .5rem;
+  padding: 0;
   border-radius: 2rem;
   margin-bottom: 1rem;
 }
@@ -87,6 +90,7 @@ nav span {
   flex: 1;
   border-radius: 2rem;
   font-size: 0.85rem;
+  border: 1px solid var(--line);
 }
 .formats button[aria-pressed='true'] {
   background: var(--accent);
@@ -104,10 +108,10 @@ select {
   width: 100%;
   min-width: 0;
   min-height: 48px;
-  border: 1px solid var(--line);
-  border-radius: 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 1rem;
   padding: 0.7rem;
-  background: var(--field);
+  background: var(--surface);
   color: var(--text);
   font-size: 1rem;
 }
@@ -297,8 +301,7 @@ a {
   padding: 0.6rem 0;
 }
 .fine,
-.empty,
-.credits {
+.empty {
   font-size: 0.75rem;
   line-height: 1.6;
   color: var(--muted);
@@ -313,12 +316,7 @@ a {
   border-radius: 0.8rem;
   font-size: 0.85rem;
 }
-.credits {
-  margin-top: 2rem;
-}
-.credits img {
-  max-width: 80px;
-}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -361,3 +359,5 @@ nav button {
   flex: 1;
   font-size: 0.85rem;
 }
+
+.search-line { background:var(--surface); border-radius:1rem; gap:0; padding:.15rem; } .search-line select { font-size:.8rem; color:var(--muted); } .preferences { border-block:1px solid var(--line); margin:1.2rem 0; } .formats button[aria-pressed='true'] { border-color:var(--accent); }

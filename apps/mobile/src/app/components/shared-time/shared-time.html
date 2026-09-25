@@ -168,7 +168,7 @@
         </div>
         <div class="filters">
           <div>
-            <label for="watch-genre">The mood</label
+            <label for="watch-genre">Mood</label
             ><select id="watch-genre" name="mood" [(ngModel)]="mood" (ngModelChange)="changed()">
               <option value="">Any mood</option>
               @for (item of storyMoods; track item.value) {
@@ -180,7 +180,7 @@
             </select>
           </div>
           <div>
-            <label for="watch-minutes">Time together</label
+            <label for="watch-minutes">Time available</label
             ><select
               id="watch-minutes"
               name="minutes"
@@ -333,18 +333,4 @@
       <p class="empty">No picks yet. Open a title and suggest it.</p>
     }
   }
-  <details class="credits">
-    <summary>Data & credits</summary>
-    <p>Direct video search uses YouTube. Each video links to its channel upload on YouTube.</p>
-    <a href="https://www.themoviedb.org" target="_blank" rel="noopener noreferrer"
-      ><img src="/tmdb-logo.svg" alt="TMDB" width="80"
-    /></a>
-    <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
-    <p>
-      Streaming availability by
-      <a href="https://www.justwatch.com" target="_blank" rel="noopener noreferrer">JustWatch</a>.
-      Catalogue updates can lag behind services. Results are filtered from batches ordered by
-      popularity, not the entire catalogue at once.
-    </p>
-  </details>
 }
