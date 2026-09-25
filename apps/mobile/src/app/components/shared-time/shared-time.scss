@@ -70,7 +70,7 @@ nav button {
   border-radius: .85rem;
   color: var(--muted);
 }
-nav button[aria-pressed='true'] {
+nav button[aria-selected='true'] {
   color: var(--text);
   background: var(--accent-soft);
   color: var(--text);
@@ -361,3 +361,5 @@ nav button {
 }
 
 .search-line { background:var(--surface); border-radius:1rem; gap:0; padding:.15rem; } .search-line select { font-size:.8rem; color:var(--muted); } .preferences { border-block:1px solid var(--line); margin:1.2rem 0; } .formats button[aria-pressed='true'] { border-color:var(--accent); }
+
+.watch-tabs { gap:0; border-bottom:1px solid var(--line); } .watch-tabs button { border-radius:.7rem .7rem 0 0; border-bottom:3px solid transparent; padding:.65rem .35rem; font-size:.8rem; } .watch-tabs button[aria-selected='true'] { border-bottom-color:var(--accent); background:var(--accent-soft); } .watch-tabs span { white-space:nowrap; font-size:inherit; }

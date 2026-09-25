@@ -115,6 +115,18 @@ export class SharedTimeComponent implements OnDestroy {
     this.tab.set(tab);
     void this.loadPicks();
   }
+  tabKey(event: KeyboardEvent): void {
+    const tabs = ['discover', 'picks', 'partner'] as const;
+    let index = tabs.indexOf(this.tab());
+    if (event.key === 'ArrowRight') index = (index + 1) % tabs.length;
+    else if (event.key === 'ArrowLeft') index = (index + tabs.length - 1) % tabs.length;
+    else if (event.key === 'Home') index = 0;
+    else if (event.key === 'End') index = tabs.length - 1;
+    else return;
+    event.preventDefault();
+    this.view(tabs[index]);
+    document.getElementById('watch-tab-' + tabs[index])?.focus();
+  }
   private page = 0;
   private searchVersion = 0;
   private opener: HTMLElement | null = null;

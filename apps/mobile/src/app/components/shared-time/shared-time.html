@@ -127,16 +127,13 @@
       <span aria-hidden="true">&#8592;</span> Back
     </button>
     <header><h2 id="dashboard-heading" tabindex="-1">Watch together</h2></header>
-    <nav aria-label="Watch views">
-      <button type="button" [attr.aria-pressed]="tab() === 'discover'" (click)="view('discover')">
-        Discover</button
-      ><button type="button" [attr.aria-pressed]="tab() === 'picks'" (click)="view('picks')">
-        My picks <span>{{ pickTitles(true).length || '' }}</span>
-      </button>
-      <button type="button" [attr.aria-pressed]="tab() === 'partner'" (click)="view('partner')">
-        {{ partnerName() }}'s picks <span>{{ pickTitles(false).length || '' }}</span>
-      </button>
+    <nav class="watch-tabs" role="tablist" aria-label="Watch views">
+      <button id="watch-tab-discover" role="tab" type="button" [attr.aria-selected]="tab() === 'discover'" [tabIndex]="tab() === 'discover' ? 0 : -1" aria-controls="watch-panel" (keydown)="tabKey($event)" (click)="view('discover')">Discover</button>
+      <button id="watch-tab-picks" role="tab" type="button" [attr.aria-selected]="tab() === 'picks'" [tabIndex]="tab() === 'picks' ? 0 : -1" aria-controls="watch-panel" (keydown)="tabKey($event)" (click)="view('picks')">My picks <span>({{ pickTitles(true).length }})</span></button>
+      <button id="watch-tab-partner" role="tab" type="button" [attr.aria-selected]="tab() === 'partner'" [tabIndex]="tab() === 'partner' ? 0 : -1" aria-controls="watch-panel" (keydown)="tabKey($event)" (click)="view('partner')">{{ partnerName() }}'s picks <span>({{ pickTitles(false).length }})</span></button>
     </nav>
+    <section id="watch-panel" role="tabpanel" [attr.aria-labelledby]="'watch-tab-' + tab()" tabindex="0">
+
     @if (tab() === 'discover') {
       <form (ngSubmit)="search()">
         <div class="formats" role="group" aria-label="Movie or series">
@@ -332,5 +329,6 @@
     @if (tab() !== 'discover' && !pickTitles(tab() === 'picks').length) {
       <p class="empty">No picks yet. Open a title and suggest it.</p>
     }
+    </section>
   }
 }
