@@ -31,3 +31,14 @@ button:focus-visible{outline:2px solid var(--clay);outline-offset:3px}
 .idea .card-arrow{margin-left:auto;flex-shrink:0}
 .news-count{display:inline-block;margin-left:.3rem;padding:.15rem .4rem;border-radius:1rem;background:var(--accent);color:var(--on-accent);font:600 .6rem 'Segoe UI',sans-serif;white-space:nowrap}
 #dashboard-heading:focus{outline:none}
+
+.first-steps{padding:1.25rem;margin-bottom:1.5rem;border:1px solid var(--line);border-radius:1.5rem;background:var(--surface);box-shadow:var(--shadow)}
+.guide-eyebrow{font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;margin:0 0 .65rem}
+.first-steps h2{font-size:1.25rem;line-height:1.35;margin:0 0 1.25rem}
+.first-steps ol{padding-left:1.3rem;margin:0}
+.first-steps li{padding-left:.3rem;margin:0 0 1rem;font-size:.85rem}
+.first-steps li::marker{color:var(--muted)}
+.first-steps p{font-size:.8rem;margin:.35rem 0}
+.guide-actions{display:grid;gap:.35rem;margin-top:1rem}
+.guide-actions button:first-child{background:var(--accent);color:var(--on-accent);display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.guide-actions button:last-child{background:transparent;border:0;color:var(--muted)}

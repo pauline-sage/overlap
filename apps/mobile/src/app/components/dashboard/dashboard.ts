@@ -20,6 +20,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly sharing = inject(SharingService);
   private readonly sharedTime = viewChild(SharedTimeComponent);
   openPartnerPicks(): void { this.navigate('home'); this.openSharedTime(); this.sharedTime()?.view('partner'); }
+  readonly firstSteps = signal(false);
+  finishFirstSteps(settings=false):void {
+    this.firstSteps.set(false);
+    if(settings) this.navigate('settings');
+  }
+  private welcomeConnection():void {
+    this.firstSteps.set(true);
+    void this.sharing.load(true);
+    queueMicrotask(()=>document.getElementById('first-steps-heading')?.focus());
+  }
   readonly coffee = signal(false);
   readonly outingProposal=signal<OutingUpdate|null>(null);
   pickYours(proposal:OutingUpdate):void {this.navigate('home');this.outingProposal.set(proposal);this.coffee.set(true);}
@@ -69,7 +79,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     try {
       const status = await this.auth.together();
       if (!this.destroyed) {
+        const justConnected=!!this.together() && !this.together()?.partner && !!status.partner;
         this.together.set(status);
+        if(justConnected) this.welcomeConnection();
         this.photoVersion.update((version) => version + 1);
         this.presenceKnown.set(true);
       }
@@ -196,6 +208,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     await this.run(async () => {
       await this.auth.submit('together/accept', { token: this.invitationToken() });
       this.decline();
+      this.navigate('home');
+      this.welcomeConnection();
       this.inviteUrl.set('');
       this.together.set(await this.auth.together());
       this.notice.set('You’re connected!');

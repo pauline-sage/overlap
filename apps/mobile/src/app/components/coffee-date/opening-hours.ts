@@ -5,10 +5,10 @@ export function readableHours(value:string):{days:string;hours:string}[] {
   return value.split(';').filter(Boolean).map(part=>{
     const match=part.trim().match(/^((?:Mo|Tu|We|Th|Fr|Sa|Su)(?:[-,](?:Mo|Tu|We|Th|Fr|Sa|Su))*)\s+((?:[0-9]{2}:[0-9]{2}-[0-9]{2}:[0-9]{2})(?:,[0-9]{2}:[0-9]{2}-[0-9]{2}:[0-9]{2})*|off|closed)$/);
     if(!match)return {days:'As listed',hours:part.trim()};
-    const days=match[1].replace(/Mo|Tu|We|Th|Fr|Sa|Su/g,d=>names[d]).replaceAll('-',' � ').replaceAll(',',', ');
+    const days=match[1].replace(/Mo|Tu|We|Th|Fr|Sa|Su/g,d=>names[d]).replaceAll('-',' – ').replaceAll(',',', ');
     const hours=match[2]==='off'||match[2]==='closed'?'Closed':match[2].split(',').map(span=>{
-      const [start,end]=span.split('-');return start+' � '+end+(end<start?' (+1 day)':'');
-    }).join(' � ');
+      const [start,end]=span.split('-');return start+' – '+end+(end<start?' (+1 day)':'');
+    }).join(' – ');
     return {days,hours};
   });
 }

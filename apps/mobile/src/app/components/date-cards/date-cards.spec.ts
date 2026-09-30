@@ -6,8 +6,8 @@ import { readableHours } from '../coffee-date/opening-hours';
 describe('Activity cards and hours',()=>{
   it('formats day ranges and overnight hours without guessing special rules',()=>{
     expect(readableHours('Su-Th 11:30-23:00; Fr,Sa 11:30-00:00')).toEqual([
-      {days:'Sun � Thu',hours:'11:30 � 23:00'},
-      {days:'Fri, Sat',hours:'11:30 � 00:00 (+1 day)'}
+      {days:'Sun – Thu',hours:'11:30 – 23:00'},
+      {days:'Fri, Sat',hours:'11:30 – 00:00 (+1 day)'}
     ]);
     expect(readableHours('PH off')[0]).toEqual({days:'As listed',hours:'PH off'});
   });

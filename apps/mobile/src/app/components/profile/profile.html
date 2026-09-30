@@ -5,7 +5,7 @@
     <h2 id="partner-heading" tabindex="-1">{{ partner.displayName || 'Your partner' }}'s profile</h2>
     <div class="photo-editor">
       @if (partner.hasPhoto) { <img class="profile-photo" [src]="photoUrl(partner.id)" [alt]="partner.displayName || 'Your partner'" /> }
-      @else { <span class="profile-photo" aria-label="No profile photo">{{ partner.displayName?.charAt(0) || '?' }}</span> }
+      @else { <span class="profile-photo" aria-label="No profile photo">{{ partner.displayName?.charAt(0) || '' }}</span> }
       <span class="presence-dot" [hidden]="partner.online == null" [class.online]="partner.online" role="img" [attr.aria-label]="partner.online === undefined ? 'Status unavailable' : partner.online ? 'Online' : 'Away'"></span>
     </div>
     <p class="partner-caption">Connected with you</p>

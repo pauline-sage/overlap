@@ -42,7 +42,7 @@
 @if(step()===2) {
   <form (ngSubmit)="search()">
     <fieldset [disabled]="busy() || locating()">
-      <div class="search-context">{{activity}} <span>&middot;</span> @if(proposal();as date) {{{date.venue?.startUtc | date:'EEE, d MMM ? HH:mm'}} <small>In your device's timezone</small>} @else {{{when==='now' ? 'Now' : when==='hour' ? 'In one hour' : date+' ? '+hour+':'+minute}}}</div>
+      <div class="search-context">{{activity}} <span>&middot;</span> @if(proposal();as date) {{{date.venue?.startUtc | date:'EEE, d MMM · HH:mm'}} <small>In your device's timezone</small>} @else {{{when==='now' ? 'Now' : when==='hour' ? 'In one hour' : date+' · '+hour+':'+minute}}}</div>
       <label class="eyebrow" for="area">City or address</label>
       <div class="area-search">
         <input id="area" name="area" [(ngModel)]="text" (ngModelChange)="edit()" placeholder="Where would you like to go?" maxlength="200" (keydown.enter)="$event.preventDefault();findArea()" />
@@ -77,7 +77,7 @@
           <p class="hours" [class.unknown]="place.hoursStatus!=='listed-open'"><span aria-hidden="true">&#9679;</span> {{place.hoursStatus==='listed-open' ? 'Listed open for your visit' : 'Check opening hours'}}</p>
           <div class="venue-links"><a [href]="place.mapUrl" target="_blank" rel="noopener noreferrer">Map &#8599;</a>@if(place.website) { <a [href]="place.website" target="_blank" rel="noopener noreferrer">Website &#8599;</a> }</div>
           @if(place.hours) { <app-opening-hours [hours]="place.hours" /> }
-          <button class="choose-place" type="button" (click)="choosePlace(match)">{{picked()?.place?.id===place.id ? 'Your choice ?' : 'Choose this place'}}</button>
+          <button class="choose-place" type="button" (click)="choosePlace(match)">{{picked()?.place?.id===place.id ? 'Selected' : 'Choose this place'}}</button>
         </article>
       }
       <p class="fine">Among {{results.examined}} nearby listings checked, not an exhaustive total. Confirm hours before going. Distances are straight-line distances.</p>
