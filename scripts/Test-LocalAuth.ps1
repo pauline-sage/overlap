@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 $workspace = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$base = 'http://127.0.0.1:4200'
+$base = 'http://localhost:1201'
 $inbox = 'http://127.0.0.1:8025'
 $email = 'smoke-' + [Guid]::NewGuid().ToString('N') + '@example.test'
 $password = [Guid]::NewGuid().ToString('N') + '-initial'

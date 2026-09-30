@@ -12,9 +12,9 @@ export interface AuthMessage {
 export interface TogetherStatus {
   id: string;
   hasPhoto: boolean;
-  online?: boolean;
+  online?: boolean | null;
   invitationExpiresUtc: string | null;
-  partner: { id: string; displayName: string | null; hasPhoto: boolean; online?: boolean } | null;
+  partner: { id: string; displayName: string | null; hasPhoto: boolean; online?: boolean | null } | null;
 }
 
 @Injectable({ providedIn: 'root' })

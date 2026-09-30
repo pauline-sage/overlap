@@ -75,7 +75,7 @@
       @if (pick(title.id); as item) {
         <p class="pick-status" role="status">
           {{
-            item.status === 'pending'
+            !item.shared ? 'Only you' : item.status === 'pending'
               ? item.mine
                 ? 'Waiting for ' + partnerName()
                 : partnerName() + ' suggested this'
@@ -104,21 +104,24 @@
           </div>
         }
         @if (item.mine) {
+          <p class="fine">Sharing sends this title and its viewing-service information to your partner. Your search history is not shared.</p>
+          <button class="primary" type="button" (click)="sharePick(title, !item.shared)" [disabled]="pickBusy() || (!item.shared && !connected())">{{item.shared ? 'Make private' : 'Share with your person'}}</button>
           <button class="more" type="button" (click)="togglePick(title)" [disabled]="pickBusy()">
             Remove pick
           </button>
         }
       } @else {
+        <p class="fine">Only you can see saved picks until you explicitly share them.</p>
         <button
           class="primary"
           type="button"
           (click)="togglePick(title)"
-          [disabled]="pickBusy() || !connected() || !picksReady()"
+          [disabled]="pickBusy() || !picksReady()"
         >
           {{ pickBusy() ? 'Adding...' : 'Add to your picks' }}
         </button>
         @if (picksReady() && !connected()) {
-          <p class="fine">Accept a partner invitation in Profile &amp; connection to enable shared picks.</p>
+          <p class="fine">Saved picks stay private. Connect with someone to share selected titles.</p>
         }
       }
     </article>
@@ -280,7 +283,7 @@
       <p class="fine">
         {{
           connected()
-            ? 'Choose together. Open a pick to respond.'
+            ? tab() === 'picks' ? 'Only you, unless you choose to share.' : 'Picks your partner chose to share with you.'
             : 'Connect with your person to share picks.'
         }}
       </p>
@@ -309,7 +312,7 @@
           >
           @if (tab() !== 'discover') {
             <span class="pick-status">{{
-              pick(title.id)?.status === 'pending'
+              !pick(title.id)?.shared ? 'Only you' : pick(title.id)?.status === 'pending'
                 ? pick(title.id)?.mine
                   ? 'Waiting for response'
                   : 'Your turn'
@@ -327,7 +330,7 @@
       </button>
     }
     @if (tab() !== 'discover' && !pickTitles(tab() === 'picks').length) {
-      <p class="empty">No picks yet. Open a title and suggest it.</p>
+      <p class="empty">No picks yet. Open a title to save it privately.</p>
     }
     </section>
   }

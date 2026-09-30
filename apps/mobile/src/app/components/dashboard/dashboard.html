@@ -6,7 +6,7 @@
   (change)="uploadPhoto($event)"
 />
 
-@if (page() === 'home' && !watching()) {
+@if (page() === 'home' && !watching() && !coffee()) {
   <section class="hero" aria-labelledby="dashboard-heading">
     <div class="orbit">
       <div class="person-slot">
@@ -44,6 +44,7 @@
             ><span
               class="presence-dot"
               [class.online]="presenceKnown() && partner.online"
+              [hidden]="partner.online == null"
               aria-hidden="true"
             ></span>
           </div>
@@ -93,7 +94,7 @@
     (upload)="uploadPhoto($event)"
   />
 }
-@if (page() === 'home' && !watching()) {
+@if (page() === 'home' && !watching() && !coffee()) {
   @if (error()) {
     <p role="alert">{{ error() }}</p>
   }
@@ -101,7 +102,8 @@
     <button type="button" (click)="navigate('profile')">Review invitation</button>
   }
 }
-@if (page() === 'home' && !watching()) {
+@if (page() === 'home' && !watching() && !coffee()) {
+
   <section class="next" aria-labelledby="next-title">
     <div class="section-heading">
       <h2 id="next-title">What's next?</h2>
@@ -114,12 +116,12 @@
             <path d="m10 8 6 4-6 4Z" /></svg
         ></span>
         <span
-          ><strong>Find your shared time</strong
+          ><strong>Find your shared time @if(sharing.state()?.unreadPicks) { <span class="news-count">{{sharing.state()?.unreadPicks}} new</span> }</strong
           ><span class="idea-description">Find a film or series to watch together.</span></span
         >
         <span aria-hidden="true">&#8599;</span>
       </button>
-      <div class="idea coffee-idea">
+      <button class="idea coffee-idea" type="button" (click)="openCoffee()">
         <span class="idea-icon coffee" aria-hidden="true"
           ><svg
             viewBox="0 0 24 24"
@@ -133,10 +135,10 @@
             /></svg
         ></span>
         <div>
-          <h3>Make it a coffee date</h3>
-          <p>Coming soon</p>
+          <h3>Make it a coffee date @if(sharing.state()?.unreadOutings) { <span class="news-count">{{sharing.state()?.unreadOutings}} new</span> }</h3>
+          <p>Coffee, drinks or a bite, together.</p>
         </div>
-      </div>
+      </button>
     </div>
   </section>
 }
@@ -146,10 +148,12 @@
   [partnerName]="together()?.partner?.displayName || 'Your person'"
   (back)="navigate('home')"
 />
+@if(coffee() && page() === 'home'){<app-coffee-date [proposal]="outingProposal()" [partnerName]="together()?.partner?.displayName || 'Your person'" (back)="navigate(outingProposal() ? 'dates' : 'home')" />}
 <app-nav-bar
   [current]="page()"
   [disabled]="busy()"
   (navigate)="navigate($event)"
+  (openPicks)="openPartnerPicks()" (pickYours)="pickYours($event)"
   (changeEmail)="changeEmail.emit()"
   (changePassword)="changePassword.emit()"
   (signOut)="signOut.emit()"

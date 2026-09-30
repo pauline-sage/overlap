@@ -1,3 +1,4 @@
+import { PrivacyNoticeComponent } from '../privacy-notice/privacy-notice';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal, viewChild } from '@angular/core';
 import { IdleSessionService } from '../../idle-session.service';
@@ -20,7 +21,7 @@ type Screen =
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule, DashboardComponent],
+  imports: [PrivacyNoticeComponent, FormsModule, DashboardComponent],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })

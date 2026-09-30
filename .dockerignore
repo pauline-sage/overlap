@@ -35,3 +35,6 @@ services/api/**
 
 !services/api/Watch/
 !services/api/Watch/**
+
+!services/api/Outings/
+!services/api/Outings/**

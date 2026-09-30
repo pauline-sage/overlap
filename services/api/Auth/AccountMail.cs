@@ -10,6 +10,14 @@ public sealed class AccountMail(AuthDbContext db, IDataProtectionProvider protec
 {
     public const string ProtectionPurpose = "Overlap.AccountEmails.v1";
 
+    public void QueueRegistrationNotice(string email)
+    {
+        var recipient = config["Email:RegistrationNotificationTo"];
+        if (string.IsNullOrWhiteSpace(recipient)) return;
+        Queue(recipient, "New Overlap registration",
+            $"A new account was created on {config["Auth:PublicAppUrl"]}.\n\nEmail: {email}\nCreated at: {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC\n\nEmail confirmation is still pending.");
+    }
+
     public void Queue(string recipient, string subject, string body, bool containsLink = false)
     {
         var now = DateTime.UtcNow;

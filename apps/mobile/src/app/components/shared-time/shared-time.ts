@@ -25,6 +25,7 @@ interface SharedPick {
   id: number;
   status: 'pending' | 'accepted' | 'declined';
   mine: boolean;
+  shared: boolean;
   title: WatchTitle;
 }
 interface PickList {
@@ -108,7 +109,7 @@ export class SharedTimeComponent implements OnDestroy {
     }
   });
   pickTitles(mine: boolean): WatchTitle[] {
-    return this.picks().filter((t) => this.pick(t.id)?.mine === mine);
+    return this.picks().filter((_, index) => this.sharedPicks()[index]?.mine === mine);
   }
   view(tab: 'discover' | 'picks' | 'partner'): void {
     this.selected.set(null);
@@ -274,6 +275,8 @@ export class SharedTimeComponent implements OnDestroy {
       this.applyPicks(list);
       this.pickError.set('');
     } catch (error) {
+      if(this.tab() === 'partner') this.selected.set(null);
+      this.sharedPicks.set([]); this.picks.set([]); this.picksReady.set(false);
       this.pickError.set(this.message(error));
     } finally {
       this.loadingPicks = false;
@@ -284,6 +287,7 @@ export class SharedTimeComponent implements OnDestroy {
     this.connected.set(list.connected);
     this.picksReady.set(true);
     this.sharedPicks.set(list.picks);
+    if(this.tab() === 'partner' && this.selected() && !list.picks.some(p => !p.mine && p.title.id === this.selected()?.id)) this.selected.set(null);
     this.picks.set(
       list.picks.map((p) =>
         p.mine
@@ -301,7 +305,11 @@ export class SharedTimeComponent implements OnDestroy {
     );
   }
   pick(id: string): SharedPick | undefined {
-    return this.sharedPicks().find((p) => p.title.id === id);
+    return this.sharedPicks().find((p) => p.title.id === id && p.mine === (this.tab() !== 'partner'));
+  }
+  async sharePick(title: WatchTitle, shared: boolean): Promise<void> {
+    const pick = this.pick(title.id);
+    if(pick?.mine) await this.changePick('watch/picks/'+pick.id+'/share', {shared});
   }
   async togglePick(title: WatchTitle): Promise<void> {
     const pick = this.pick(title.id);

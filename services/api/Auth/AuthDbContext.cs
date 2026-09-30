@@ -8,6 +8,9 @@ namespace Overlap.Api.Auth;
 public sealed class Account : IdentityUser
 {
     public string? DisplayName { get; set; }
+    public bool ShareDisplayName { get; set; }
+    public bool SharePhoto { get; set; }
+    public bool SharePresence { get; set; }
     public byte[]? Photo { get; set; }
     public string? InvitationHash { get; set; }
     public DateTime? InvitationExpiresUtc { get; set; }
@@ -40,13 +43,35 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        builder.Entity<Overlap.Api.Outings.OutingUpdate>(update => {
+            update.HasKey(x => new { x.PairId, x.SenderId });
+            update.Property(x => x.PairId).HasMaxLength(32);
+            update.Property(x => x.SenderId).HasMaxLength(255);
+            update.Property(x => x.Revision).HasMaxLength(32);
+            update.Property(x => x.CancelledBy).HasMaxLength(255);
+            update.Property(x => x.CancellationReason).HasMaxLength(500);
+            update.Property(x => x.ReplyKind).HasMaxLength(16);
+            update.Property(x => x.ReplyRevision).HasMaxLength(32);
+            update.Property(x => x.ReplyVenueJson).HasMaxLength(4000);
+            update.Property(x => x.VenueJson).HasMaxLength(4000);
+            update.HasOne<Account>().WithMany().HasForeignKey(x => x.SenderId).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<SharingGrant>(grant => {
+            grant.HasKey(x => new { x.PairId, x.SenderId, x.Category });
+            grant.Property(x => x.PairId).HasMaxLength(32);
+            grant.Property(x => x.SenderId).HasMaxLength(255);
+            grant.Property(x => x.Category).HasMaxLength(16);
+            grant.Property(x => x.Status).HasMaxLength(16);
+            grant.HasOne<Account>().WithMany().HasForeignKey(x => x.SenderId).OnDelete(DeleteBehavior.Cascade);
+        });
         builder.Entity<Overlap.Api.Watch.SharedPick>(pick => {
             pick.Property(x => x.PairId).HasMaxLength(32);
             pick.Property(x => x.ProposedBy).HasMaxLength(255);
             pick.Property(x => x.TitleId).HasMaxLength(80);
+            pick.Property(x => x.Revision).HasMaxLength(32);
             pick.Property(x => x.Status).HasMaxLength(16);
             pick.Property(x => x.Content).HasMaxLength(16000).HasColumnType("longtext");
-            pick.HasIndex(x => new { x.PairId, x.TitleId }).IsUnique();
+            pick.HasIndex(x => new { x.ProposedBy, x.TitleId }).IsUnique();
             pick.HasOne<Account>().WithMany().HasForeignKey(x => x.ProposedBy).OnDelete(DeleteBehavior.Cascade);
         });
         builder.Entity<Account>().Property(x => x.DisplayName).HasMaxLength(50);

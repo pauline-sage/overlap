@@ -6,6 +6,14 @@
     (signOut)="signOut.emit()"
   />
 }
+@if(current() === 'notifications') {
+  <h2 id="dashboard-heading" tabindex="-1">Notifications</h2>
+  <app-sharing [notifications]="true" (openPicks)="openPicks.emit()" (pickYours)="pickYours.emit($event)" />
+}
+@if(current() === 'dates') {
+  <h2 id="dashboard-heading" tabindex="-1">Dates</h2>
+  <app-date-cards (openPicks)="openPicks.emit()" (pickYours)="pickYours.emit($event)" />
+}
 <footer class="dock">
 <nav aria-label="Main navigation">
   <button
@@ -26,6 +34,11 @@
       <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z" /></svg
     >Home
   </button>
+  <button type="button" aria-label="Dates" [attr.aria-current]="current() === 'dates' ? 'page' : null" [disabled]="disabled()" (click)="navigate.emit('dates'); sharing.load()">
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4M17 3v4M3 11h18M8 15h3"/></svg>
+    Dates
+  </button>
+
   <button
     type="button"
     aria-label="Profile"
@@ -44,6 +57,9 @@
       <circle cx="12" cy="8" r="4" />
       <path d="M4 21v-2a8 8 0 0 1 16 0v2" /></svg
     >Profile
+  </button>
+  <button type="button" [attr.aria-label]="'Notifications, ' + sharing.count() + ' pending'" [attr.aria-current]="current() === 'notifications' ? 'page' : null" [disabled]="disabled()" (click)="navigate.emit('notifications'); sharing.load()">
+    <span class="bell"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 17h14l-2-3V9a5 5 0 0 0-10 0v5l-2 3ZM10 20h4" /></svg>@if(sharing.count()) { <span class="badge">{{sharing.count()}}</span> }</span>Notifications
   </button>
   <button
     type="button"

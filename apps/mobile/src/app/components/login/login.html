@@ -127,6 +127,7 @@
           #authForm="ngForm"
           [attr.aria-busy]="busy()"
         >
+          @if(screen() === 'register') { <app-privacy-notice /> }
           <fieldset [disabled]="busy()">
             @if (screen() === 'profile') {
               <p class="intro">

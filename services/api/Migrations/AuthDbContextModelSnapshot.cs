@@ -235,6 +235,15 @@ namespace Overlap.Api.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("longtext");
 
+                    b.Property<bool>("ShareDisplayName")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("SharePhoto")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("SharePresence")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("tinyint(1)");
 
@@ -306,6 +315,91 @@ namespace Overlap.Api.Migrations
                     b.ToTable("PendingEmails");
                 });
 
+            modelBuilder.Entity("Overlap.Api.Auth.SharingGrant", b =>
+                {
+                    b.Property<string>("PairId")
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("SenderId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.HasKey("PairId", "SenderId", "Category");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("SharingGrant");
+                });
+
+            modelBuilder.Entity("Overlap.Api.Outings.OutingUpdate", b =>
+                {
+                    b.Property<string>("PairId")
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("SenderId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("CancelledBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<bool>("OnMyWay")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("ReplyKind")
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<string>("ReplyRevision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<bool>("ReplySeen")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("ReplyVenueJson")
+                        .HasMaxLength(4000)
+                        .HasColumnType("varchar(4000)");
+
+                    b.Property<string>("Revision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<bool>("Seen")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime>("UpdatedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("VenueJson")
+                        .HasMaxLength(4000)
+                        .HasColumnType("varchar(4000)");
+
+                    b.HasKey("PairId", "SenderId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("OutingUpdate");
+                });
+
             modelBuilder.Entity("Overlap.Api.Watch.SharedPick", b =>
                 {
                     b.Property<long>("Id")
@@ -322,8 +416,10 @@ namespace Overlap.Api.Migrations
                     b.Property<DateTime>("CreatedUtc")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<bool>("IsShared")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("PairId")
-                        .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("varchar(32)");
 
@@ -331,6 +427,17 @@ namespace Overlap.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
+
+                    b.Property<bool>("RecipientHasNews")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Revision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<bool>("SenderHasNews")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -344,9 +451,7 @@ namespace Overlap.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProposedBy");
-
-                    b.HasIndex("PairId", "TitleId")
+                    b.HasIndex("ProposedBy", "TitleId")
                         .IsUnique();
 
                     b.ToTable("SharedPick");
@@ -408,6 +513,24 @@ namespace Overlap.Api.Migrations
                     b.HasOne("Overlap.Api.Auth.Account", null)
                         .WithMany()
                         .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Auth.SharingGrant", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Outings.OutingUpdate", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

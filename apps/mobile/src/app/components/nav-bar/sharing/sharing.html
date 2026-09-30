@@ -1,0 +1,30 @@
+@if (sharing.error()) {
+  <p role="alert">{{ sharing.error() }}</p>
+  <button type="button" (click)="sharing.load()">Retry</button>
+}
+@if (sharing.state(); as state) {
+  @if (notifications()) {
+    <app-date-cards [notifications]="true" (openPicks)="openPicks.emit()" (pickYours)="pickYours.emit($event)" />
+  } @else {
+    <p class="hint intro">{{ state.connected ? 'Choose what your partner can see. Change this at any time.' : 'Connect with your person to choose what to share.' }}</p>
+    <div class="preferences">
+      @for (category of categories; track category.key) {
+        <label class="preference">
+          <span class="copy">
+            <strong>{{ category.label }}</strong>
+            <span class="hint">{{ category.description }}</span>
+          </span>
+          <span class="control">
+            <input type="checkbox" role="switch" [attr.aria-label]="'Share ' + category.label"
+              [checked]="outgoing(category.key) === 'accepted'"
+              [disabled]="sharing.busy() || !state.connected"
+              (change)="toggle(category.key, $event)" />
+            <span class="track" aria-hidden="true"></span>
+            <span class="state">{{ outgoing(category.key) === 'accepted' ? 'Shared' : 'Private' }}</span>
+          </span>
+        </label>
+      }
+    </div>
+    <p class="hint location">Your search history stays private. Outing locations are chosen separately for each search.</p>
+  }
+}

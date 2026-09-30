@@ -34,7 +34,7 @@ public static class TogetherEndpoints
             if (owner is null || owner.Id == UserId(principal)) return Invalid("This invitation is invalid, expired, or belongs to you.");
             if (await db.PairMembers.AnyAsync(x => x.AccountId == owner.Id || x.AccountId == UserId(principal)))
                 return Invalid("One of you is already connected. Leave that connection before joining another.");
-            return Results.Ok(new { displayName = owner.DisplayName ?? "Your person", expiresUtc = owner.InvitationExpiresUtc });
+            return Results.Ok(new { displayName = "Your person", expiresUtc = owner.InvitationExpiresUtc });
         });
         group.MapPost("/accept", Accept);
         group.MapPost("/leave", async (ClaimsPrincipal principal, AuthDbContext db) =>
@@ -42,9 +42,12 @@ public static class TogetherEndpoints
             var pair = await db.PairMembers.Where(x => x.AccountId == UserId(principal)).Select(x => x.PairId).SingleOrDefaultAsync();
             if (pair is not null) {
                 await using var transaction = await db.Database.BeginTransactionAsync();
-                await db.Set<Overlap.Api.Watch.SharedPick>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
+                await db.Set<Overlap.Api.Watch.SharedPick>().Where(x => x.PairId == pair).ExecuteUpdateAsync(s => s.SetProperty(x => x.PairId, (string?)null).SetProperty(x => x.IsShared, false).SetProperty(x => x.Status, "pending"));
+                await db.Set<Overlap.Api.Outings.OutingUpdate>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
+                await db.Set<SharingGrant>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
                 await db.PairMembers.Where(x => x.PairId == pair).ExecuteDeleteAsync();
                 await transaction.CommitAsync();
+
             }
             return Results.NoContent();
         });
@@ -53,13 +56,15 @@ public static class TogetherEndpoints
     private static async Task<IResult> Status(ClaimsPrincipal principal, AuthDbContext db, OnlinePresence presence)
     {
         var id = UserId(principal);
-        presence.Seen(id);
-        var own = await db.Users.Where(x => x.Id == id).Select(x => new { x.DisplayName, HasPhoto = x.Photo != null, x.InvitationExpiresUtc }).SingleAsync();
+        var own = await db.Users.Where(x => x.Id == id).Select(x => new { x.DisplayName, HasPhoto = x.Photo != null, x.InvitationExpiresUtc, x.SharePresence }).SingleAsync();
+        if (own.SharePresence) presence.Seen(id); else presence.Leave(id);
         var pair = await db.PairMembers.Where(x => x.AccountId == id).Select(x => x.PairId).SingleOrDefaultAsync();
         var partnerId = pair is null ? null : await db.PairMembers.Where(x => x.PairId == pair && x.AccountId != id).Select(x => x.AccountId).SingleOrDefaultAsync();
-        var partner = await db.Users.Where(x => x.Id == partnerId).Select(x => new { x.Id, x.DisplayName, HasPhoto = x.Photo != null }).SingleOrDefaultAsync();
+        var profileAllowed = partnerId is not null && await PrivacyEndpoints.Allowed(db,pair,partnerId,"profile");
+        var presenceAllowed = partnerId is not null && await PrivacyEndpoints.Allowed(db,pair,partnerId,"presence");
+        var partner = await db.Users.Where(x => x.Id == partnerId).Select(x => new { x.Id, DisplayName = profileAllowed && x.ShareDisplayName ? x.DisplayName : null, HasPhoto = profileAllowed && x.SharePhoto && x.Photo != null, x.SharePresence }).SingleOrDefaultAsync();
         return Results.Ok(new { id, own.HasPhoto, online = true, invitationExpiresUtc = own.InvitationExpiresUtc > DateTime.UtcNow ? own.InvitationExpiresUtc : null,
-            partner = partner is null ? null : new { partner.Id, partner.DisplayName, partner.HasPhoto, online = presence.IsOnline(partner.Id) } });
+            partner = partner is null ? null : new { partner.Id, partner.DisplayName, partner.HasPhoto, online = presenceAllowed && partner.SharePresence ? (bool?)presence.IsOnline(partner.Id) : null } });
     }
 
     private static async Task<IResult> Photo(string id, ClaimsPrincipal principal, AuthDbContext db)
@@ -68,7 +73,9 @@ public static class TogetherEndpoints
         if (id != caller)
         {
             var pair = await db.PairMembers.Where(x => x.AccountId == caller).Select(x => x.PairId).SingleOrDefaultAsync();
-            if (pair is null || !await db.PairMembers.AnyAsync(x => x.AccountId == id && x.PairId == pair)) return Results.NotFound();
+            if (pair is null || !await db.PairMembers.AnyAsync(x => x.AccountId == id && x.PairId == pair) ||
+                !await db.Users.AnyAsync(x => x.Id == id && x.SharePhoto) ||
+                !await PrivacyEndpoints.Allowed(db,pair,id,"profile")) return Results.NotFound();
         }
         var photo = await db.Users.Where(x => x.Id == id).Select(x => x.Photo).SingleOrDefaultAsync();
         return photo is null ? Results.NotFound() : Results.File(photo, "image/png");

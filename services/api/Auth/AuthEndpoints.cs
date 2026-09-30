@@ -95,6 +95,7 @@ public static class AuthEndpoints
             var user = new Account { UserName = email, Email = email, LastLinkEmailUtc = DateTime.UtcNow };
             var result = await users.CreateAsync(user, request.Password!);
             if (!result.Succeeded) return GenericEmail();
+            mail.QueueRegistrationNotice(email);
             var token = await users.GenerateEmailConfirmationTokenAsync(user);
             mail.Queue(email, "Confirm your Overlap account",
                 $"Confirm your email to finish creating your account:\n\n{mail.Link("confirm-email", email, token)}\n\nThis link expires in one hour. If you didn't request this, ignore this email.", true);

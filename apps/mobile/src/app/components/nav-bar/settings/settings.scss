@@ -1,34 +1,10 @@
-:host {
-  display: block;
-}
-h2 {
-  font-size: 1.4rem;
-  margin: 0 0 1.5rem;
-}
-button {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 1rem;
-  margin: 0.75rem 0;
-  min-height: 3rem;
-  font: inherit;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 1rem;
-  cursor: pointer;
-}
-button:disabled {
-  opacity: 0.5;
-}
-.sign-out {
-  background: transparent;
-  border: 0;
-  color: var(--muted);
-  text-align: center;
-}
-button:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
+:host { display: block; }
+h2 { font-size: 1.4rem; margin: 0 0 1.75rem; }
+h3 { font-size: .8rem; font-weight: 500; color: var(--muted); margin: 0 0 .75rem; }
+.account-actions { border: 1px solid var(--line); border-radius: 1rem; overflow: hidden; background: var(--surface); }
+button { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; text-align: left; padding: 1rem; min-height: 3.5rem; font: inherit; color: var(--text); background: transparent; border: 0; cursor: pointer; }
+.account-actions button + button { border-top: 1px solid var(--line); }
+button span { color: var(--muted); }
+button:disabled { opacity: .5; }
+.sign-out { justify-content: center; color: var(--muted); margin-top: 1.5rem; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }

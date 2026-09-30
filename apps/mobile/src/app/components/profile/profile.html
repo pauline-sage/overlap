@@ -6,7 +6,7 @@
     <div class="photo-editor">
       @if (partner.hasPhoto) { <img class="profile-photo" [src]="photoUrl(partner.id)" [alt]="partner.displayName || 'Your partner'" /> }
       @else { <span class="profile-photo" aria-label="No profile photo">{{ partner.displayName?.charAt(0) || '?' }}</span> }
-      <span class="presence-dot" [class.online]="partner.online" role="img" [attr.aria-label]="partner.online === undefined ? 'Status unavailable' : partner.online ? 'Online' : 'Away'"></span>
+      <span class="presence-dot" [hidden]="partner.online == null" [class.online]="partner.online" role="img" [attr.aria-label]="partner.online === undefined ? 'Status unavailable' : partner.online ? 'Online' : 'Away'"></span>
     </div>
     <p class="partner-caption">Connected with you</p>
   </section>
@@ -99,7 +99,7 @@
   }
   @if (invitation(); as pending) {
     <h2>{{ pending.displayName }} invited you</h2>
-    <p>Connect to share your display names and profile photos. You can leave anytime.</p>
+    <p>Connect privately. You choose what to share with your partner from your profile.</p>
     <button type="button" (click)="action.emit('accept')" [disabled]="working()">
       Accept invitation
     </button>
@@ -127,7 +127,7 @@
   }
   @if (together()?.partner) {
     @if (showLeave()) {
-      <p>End this connection and clear your shared picks? Your accounts and photos will remain.</p>
+      <p>End this connection and stop all sharing? Each person keeps their own private picks and profile.</p>
       <button type="button" (click)="action.emit('leave')" [disabled]="working()">
         Yes, leave connection
       </button>

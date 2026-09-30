@@ -177,13 +177,13 @@ describe('Unified watch search', () => {
     await c.decide('own', 'accepted');
     expect(auth.submit).not.toHaveBeenCalled();
   });
-  it('explains the disabled add button when no partner invitation has been accepted', async () => {
+  it('allows saving private picks without a connection', async () => {
     auth.picks.mockResolvedValue({connected:false,picks:[]});
     const f=render(); await f.whenStable();
     f.componentInstance.selected.set(title); f.detectChanges();
     const button=[...f.nativeElement.querySelectorAll('button')].find((b:any)=>b.textContent.includes('Add to your picks')) as HTMLButtonElement;
-    expect(button.disabled).toBe(true);
-    expect(f.nativeElement.textContent).toContain('Accept a partner invitation');
+    expect(button.disabled).toBe(false);
+    expect(f.nativeElement.textContent).toContain('Saved picks stay private');
   });
   it('does not drop a click while a background refresh is pending', async () => {
     const f=render(); await f.whenStable(); const c=f.componentInstance;

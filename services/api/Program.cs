@@ -1,3 +1,4 @@
+using Overlap.Api.Outings;
 using Overlap.Api.Watch;
 using System.Threading.RateLimiting;
 using System.Security.Cryptography.X509Certificates;
@@ -17,7 +18,11 @@ if (await DeploymentCommands.RunAsync(args, builder.Configuration)) return;
 builder.Services.AddProblemDetails();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<OnlinePresence>();
+
 builder.Services.AddSingleton<TmdbCache>();
+builder.Services.AddHttpClient<GeoapifyPlaces>(client => client.Timeout = TimeSpan.FromSeconds(12))
+    .RemoveAllLoggers()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 builder.Services.AddHttpClient<YouTubeSearch>(client => client.Timeout = TimeSpan.FromSeconds(12))
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 builder.Services.AddHttpClient<TmdbCatalog>(client => client.Timeout = TimeSpan.FromSeconds(12))
@@ -51,6 +56,11 @@ if (authConfigured)
         (!builder.Environment.IsDevelopment() && uri.Scheme != "https") ||
         (uri.Scheme != "https" && !(uri.Scheme == "http" && uri.IsLoopback)))
         throw new InvalidOperationException("Auth:PublicAppUrl must be HTTPS (HTTP loopback is allowed in Development).");
+    var notificationTo = builder.Configuration["Email:RegistrationNotificationTo"];
+    if (!string.IsNullOrWhiteSpace(notificationTo) &&
+        (notificationTo.Length > 254 || notificationTo.Any(char.IsControl) ||
+         !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(notificationTo)))
+        throw new InvalidOperationException("Email:RegistrationNotificationTo must be a valid email address.");
     var transport = builder.Configuration["Email:Transport"] ?? "Smtp";
     if (transport is not ("Smtp" or "Mailjet"))
         throw new InvalidOperationException("Email:Transport must be Smtp or Mailjet.");
@@ -200,8 +210,13 @@ if (authConfigured)
     });
     app.MapAuth();
     app.MapTogether();
+    app.MapPrivacy();
     app.MapWatch();
     app.MapPicks();
+    app.MapOutings();
+    app.MapOutingUpdates();
+    app.MapOutingReplies();
+    app.MapReadNotifications();
 }
 else
 {

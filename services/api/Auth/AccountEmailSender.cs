@@ -13,6 +13,8 @@ public sealed class AccountEmailSender(HttpClient http, IConfiguration config, I
     public async Task SendAsync(AccountEmail email, long id, CancellationToken cancellationToken)
     {
         var from = MailboxAddress.Parse(config["Email:From"]!);
+        if (string.IsNullOrWhiteSpace(from.Name)) from = new MailboxAddress("Overlap", from.Address);
+        var html = AccountEmailTemplate.Render(email, config["Auth:PublicAppUrl"]);
         if (config["Email:Transport"] == "Mailjet")
         {
             using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.mailjet.com/v3.1/send");
@@ -21,7 +23,8 @@ public sealed class AccountEmailSender(HttpClient http, IConfiguration config, I
             request.Content = JsonContent.Create(new { Messages = new[] { new {
                 From = new { Email = from.Address, Name = from.Name },
                 To = new[] { new { Email = email.Recipient } },
-                Subject = email.Subject, TextPart = email.Body
+                Subject = email.Subject, TextPart = email.Body, HTMLPart = html,
+                TrackOpens = "disabled", TrackClicks = "disabled"
             } } }, options: new JsonSerializerOptions { PropertyNamingPolicy = null });
             using var response = await http.SendAsync(request, cancellationToken);
             response.EnsureSuccessStatusCode();
@@ -36,7 +39,7 @@ public sealed class AccountEmailSender(HttpClient http, IConfiguration config, I
         message.To.Add(MailboxAddress.Parse(email.Recipient));
         message.Subject = email.Subject;
         message.MessageId = $"overlap-{id}@{from.Domain}";
-        message.Body = new TextPart("plain") { Text = email.Body };
+        message.Body = new BodyBuilder { TextBody = email.Body, HtmlBody = html }.ToMessageBody();
         using var smtp = new SmtpClient { Timeout = 15000 };
         var host = config["Email:Host"]!;
         var localCapture = environment.IsDevelopment() && config.GetValue<bool>("Email:LocalCapture")

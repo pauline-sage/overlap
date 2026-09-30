@@ -87,7 +87,7 @@ try {
             AccountsMigration = "Server=127.0.0.1;Port=3307;Database=overlap;User=overlap_migrate;Password=$migrationPassword;SslMode=Required"
         }
         Database = @{ ServerVersion = '8.4.11-mysql' }
-        Auth = @{ PublicAppUrl = 'http://127.0.0.1:4200' }
+        Auth = @{ PublicAppUrl = 'http://localhost:1201' }
         Email = @{ Host = '127.0.0.1'; Port = 1025; From = 'Overlap <accounts@overlap.test>'; LocalCapture = $true }
     }
     [IO.File]::WriteAllText($localConfig, ($config | ConvertTo-Json -Depth 4), $utf8)

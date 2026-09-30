@@ -48,7 +48,7 @@ public sealed partial class TogetherTests
         Assert.Equal(JsonValueKind.Null, before.GetProperty("partner").ValueKind);
         (await Post(second, "together/accept", new { token })).EnsureSuccessStatusCode();
         var after = await first.GetFromJsonAsync<JsonElement>("/api/auth/together/");
-        Assert.Equal("second", after.GetProperty("partner").GetProperty("displayName").GetString());
+        Assert.Equal(JsonValueKind.Null, after.GetProperty("partner").GetProperty("displayName").ValueKind);
         Assert.Equal(HttpStatusCode.BadRequest, (await Post(second, "together/accept", new { token })).StatusCode);
         (await Post(second, "together/leave", new { })).EnsureSuccessStatusCode();
         using var scope = factory.Services.CreateScope();
@@ -81,6 +81,7 @@ public sealed partial class TogetherTests
         Assert.Equal(HttpStatusCode.NotFound, (await second.GetAsync($"/api/auth/together/photo/{id}")).StatusCode);
         var token = await Invite(first);
         (await Post(second, "together/accept", new { token })).EnsureSuccessStatusCode();
+        await EnableSharing(first, "profile");
         Assert.Equal(HttpStatusCode.OK, (await second.GetAsync($"/api/auth/together/photo/{id}")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await stranger.GetAsync($"/api/auth/together/photo/{id}")).StatusCode);
         (await Post(first, "together/photo", new { pixels = (string?)null })).EnsureSuccessStatusCode();

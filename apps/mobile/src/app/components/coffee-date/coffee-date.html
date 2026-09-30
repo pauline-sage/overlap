@@ -1,0 +1,97 @@
+<button class="back" type="button" (click)="goBack()">&#8592; Back</button>
+<div class="progress" aria-label="Search progress">
+  @for(label of ['The mood','The place','Your picks'];track $index) {
+    <span [class.active]="step()===$index+1" [class.done]="step()>$index+1" [attr.aria-current]="step()===$index+1 ? 'step' : null"><i>{{$index+1}}</i>{{label}}</span>
+  }
+</div>
+<h2 id="dashboard-heading" tabindex="-1">{{step()===1 ? 'What feels good?' : step()===2 ? 'Where shall we look?' : 'Somewhere for you.'}}</h2>
+<p class="intro">{{step()===1 ? 'A little time for something you enjoy.' : step()===2 ? 'Stay close, or explore a little further.' : 'Pick a place. Keep it yours, or let your partner know.'}}</p>
+@if(sharing.error()) {<p class="error" role="alert">{{sharing.error()}}</p>}
+@if(error()) { <p class="error" role="alert">{{error()}}</p> }
+@if(notice()) { <p class="notice" role="status">{{notice()}}</p> }
+
+@if(step()===1) {
+  <section class="step-content">
+    <app-outing-choice label="I'm in the mood for" [value]="activity" [options]="moodOptions" (valueChange)="activity=$event;changed()" />
+    <details class="more-options">
+      <summary>Choose another time (optional)</summary>
+      <app-outing-choice label="When" [value]="when" [options]="whenOptions" (valueChange)="when=$event;changed()" />
+    @if(when==='later') {
+      <div class="schedule">
+        <p class="eyebrow">Choose your day</p>
+        <app-outing-calendar [value]="date" (valueChange)="date=$event;changed()" />
+        <div class="row time">
+          <app-outing-choice label="Hour" [value]="hour" [options]="hourOptions" (valueChange)="hour=$event;changed()" />
+          <app-outing-choice label="Minutes" [value]="minute" [options]="minuteOptions" (valueChange)="minute=$event;changed()" />
+        </div>
+        <p class="fine">{{date || 'Select a day'}} &middot; {{hour}}:{{minute}} in the local time of your search location.</p>
+      </div>
+    }
+    </details>
+    <button class="primary" type="button" (click)="next()">Choose where <span aria-hidden="true">&#8594;</span></button>
+  </section>
+}
+@if(step()===2) {
+  <form (ngSubmit)="search()">
+    <fieldset [disabled]="busy() || locating()">
+      <div class="search-context">{{activity}} <span>&middot;</span> @if(proposal();as date) {{{date.venue?.startUtc | date:'EEE, d MMM ? HH:mm'}} <small>In your device's timezone</small>} @else {{{when==='now' ? 'Now' : when==='hour' ? 'In one hour' : date+' ? '+hour+':'+minute}}}</div>
+      <label class="eyebrow" for="area">City or address</label>
+      <div class="area-search">
+        <input id="area" name="area" [(ngModel)]="text" (ngModelChange)="edit()" placeholder="Where would you like to go?" maxlength="200" (keydown.enter)="$event.preventDefault();findArea()" />
+        <button type="button" (click)="findArea()" aria-label="Find this city or address">&#8594;</button>
+      </div>
+      @if(choices.length) {
+        <ul class="area-choices" aria-label="Choose your location">
+          @for(choice of choices;track choice.token) { <li><button type="button" (click)="choose(choice)">{{choice.name}} <span>&#8250;</span></button></li> }
+        </ul>
+      }
+      <button class="locate" type="button" (click)="useLocation()"><span aria-hidden="true">&#9678;</span> {{locating() ? 'Finding your location...' : 'Use my current location'}}</button>
+      @if(area) { <p class="selection"><span aria-hidden="true">&#10003;</span> Location selected <small>{{area.timeZone}}</small></p> }
+      <app-outing-choice label="Search nearby" [value]="''+radius" [options]="radiusOptions" (valueChange)="radius=+$event;changed()" />
+      <details class="more-options"><summary>Search preferences</summary>
+        <label class="check"><input type="checkbox" name="unknownHours" [(ngModel)]="includeUnknownHours" (ngModelChange)="changed()" />Include places whose hours need checking</label>
+      </details>
+      <button class="primary" type="submit">{{busy() ? 'Finding your places...' : 'Find my places'}} <span aria-hidden="true">&#8594;</span></button>
+      <p class="fine privacy-hint">Your search location stays private.</p>
+    </fieldset>
+  </form>
+}
+@if(step()===3) {
+  @if(result();as results) {
+    <section aria-live="polite">
+      <div class="result-summary"><strong>{{results.places.length}}</strong><div>places for your {{activity.toLowerCase()}}<small>{{results.localStart}}</small></div></div>
+      @if(!results.places.length) { <p class="fine">Try a wider radius, another time or include places with unconfirmed hours.</p><button class="secondary" type="button" (click)="step.set(2)">Adjust search</button> }
+      @for(match of results.places;track match.place.id) {
+        @let place=match.place;
+        <article class="venue" [class.chosen]="picked()?.place?.id===place.id">
+          <div class="venue-heading"><h3>{{place.name}}</h3><span>{{place.distanceKm | number:'1.0-1'}} km</span></div>
+          <p class="address">{{place.address}}</p>
+          <p class="hours" [class.unknown]="place.hoursStatus!=='listed-open'"><span aria-hidden="true">&#9679;</span> {{place.hoursStatus==='listed-open' ? 'Listed open for your visit' : 'Check opening hours'}}</p>
+          <div class="venue-links"><a [href]="place.mapUrl" target="_blank" rel="noopener noreferrer">Map &#8599;</a>@if(place.website) { <a [href]="place.website" target="_blank" rel="noopener noreferrer">Website &#8599;</a> }</div>
+          @if(place.hours) { <app-opening-hours [hours]="place.hours" /> }
+          <button class="choose-place" type="button" (click)="choosePlace(match)">{{picked()?.place?.id===place.id ? 'Your choice ?' : 'Choose this place'}}</button>
+        </article>
+      }
+      <p class="fine">Among {{results.examined}} nearby listings checked, not an exhaustive total. Confirm hours before going. Distances are straight-line distances.</p>
+      @if(picked();as chosen) {
+        <section class="share-card" id="place-sharing" tabindex="-1">
+          <p class="eyebrow">Your choice</p><h3>{{chosen.place.name}}</h3>
+          @if(proposal()) {
+            <p class="fine">Share this place for your date. Your search position stays private.</p>
+            <button class="primary" type="button" [disabled]="sharing.busy()" (click)="confirmPlace(chosen.shareToken)">Let my partner know</button>
+          } @else if(sharing.state()?.connected) {
+            <p class="fine">Let your partner know? Only this place is shared, never your search position.</p>
+            <div class="share-actions"><button class="secondary" type="button" [disabled]="sending()" (click)="share('venue',chosen.shareToken)">Share this place</button><button type="button" (click)="share('clear')">Keep it private</button></div>
+            <details><summary>Send an update instead</summary><button type="button" [disabled]="sending()" (click)="share('on-my-way')">I'm on my way</button></details>
+          } @else { <p class="fine">Your choice stays private.</p> }
+        </section>
+      }
+    </section>
+  }
+}
+<details class="privacy-note">
+  <summary>Privacy &amp; search information</summary>
+  <p>City, address or one-time device location: your search position is not saved to your account or sent to your partner. Geoapify receives the location needed to find places.</p>
+  <p>Sharing a place sends its name, address and map link only. �I'm on my way� contains no location tracking. Updates remain until you remove them or disconnect.</p>
+</details>
+<footer class="credits"><a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer">Geoapify</a> &middot; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">&copy; OpenStreetMap contributors</a></footer>

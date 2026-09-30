@@ -1,10 +1,12 @@
 <section class="card" aria-labelledby="dashboard-heading">
   <h2 id="dashboard-heading" tabindex="-1">Settings</h2>
-  <button type="button" (click)="changeEmail.emit()" [disabled]="busy()">
-    Change email address
-  </button>
-  <button type="button" (click)="changePassword.emit()" [disabled]="busy()">Change password</button>
-  <button class="sign-out" type="button" (click)="signOut.emit()" [disabled]="busy()">
-    Sign out
-  </button>
+  <h3>Share with your partner</h3>
+  <app-sharing />
+  <h3>Account</h3>
+  <div class="account-actions">
+    <button type="button" aria-label="Change email address" (click)="changeEmail.emit()" [disabled]="busy()">Change email address <span aria-hidden="true">&#8250;</span></button>
+    <button type="button" aria-label="Change password" (click)="changePassword.emit()" [disabled]="busy()">Change password <span aria-hidden="true">&#8250;</span></button>
+  </div>
+  <app-privacy-notice />
+  <button class="sign-out" type="button" (click)="signOut.emit()" [disabled]="busy()">Sign out</button>
 </section>

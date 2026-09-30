@@ -1,5 +1,8 @@
+
+import { OutingUpdate, SharingService } from '../nav-bar/sharing/sharing.service';
+import { CoffeeDateComponent } from '../coffee-date/coffee-date';
 import { ProfileComponent, ProfileAction } from '../profile/profile';
-import { Component, inject, input, output, signal, OnInit, OnDestroy, NgZone } from '@angular/core';
+import { Component, inject, input, output, signal, viewChild, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService, TogetherStatus } from '../../auth.service';
 import { SharedTimeComponent } from '../shared-time/shared-time';
@@ -7,11 +10,19 @@ import { DashboardPage, NavBarComponent } from '../nav-bar/nav-bar';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [NavBarComponent, SharedTimeComponent, ProfileComponent],
+  providers: [SharingService],
+  imports: [ NavBarComponent, SharedTimeComponent, ProfileComponent, CoffeeDateComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  readonly sharing = inject(SharingService);
+  private readonly sharedTime = viewChild(SharedTimeComponent);
+  openPartnerPicks(): void { this.navigate('home'); this.openSharedTime(); this.sharedTime()?.view('partner'); }
+  readonly coffee = signal(false);
+  readonly outingProposal=signal<OutingUpdate|null>(null);
+  pickYours(proposal:OutingUpdate):void {this.navigate('home');this.outingProposal.set(proposal);this.coffee.set(true);}
+  openCoffee():void { this.outingProposal.set(null); this.watching.set(false);this.coffee.set(true);queueMicrotask(()=>document.getElementById('dashboard-heading')?.focus()); }
   readonly watching = signal(false);
   openSharedTime(): void {
     this.watching.set(true);
@@ -21,6 +32,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly sessionExpired = output<void>();
   navigate(page: DashboardPage): void {
     this.watching.set(false);
+    this.coffee.set(false);
     this.page.set(page);
     queueMicrotask(() => document.getElementById('dashboard-heading')?.focus());
   }
@@ -68,8 +80,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.checkingPresence = false;
     }
   }
-  presenceLabel(online: boolean | undefined): string {
-    return !this.presenceKnown() || online === undefined
+  presenceLabel(online: boolean | null | undefined): string {
+    return !this.presenceKnown() || online == null
       ? 'Status unavailable'
       : online
         ? 'Online'

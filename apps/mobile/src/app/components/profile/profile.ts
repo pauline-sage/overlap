@@ -1,4 +1,5 @@
 import { Component, input, output, signal, effect } from '@angular/core';
+
 import { TogetherStatus } from '../../auth.service';
 export type ProfileAction =
   | 'removePhoto'

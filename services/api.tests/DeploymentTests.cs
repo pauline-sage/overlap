@@ -90,6 +90,9 @@ public sealed class DeploymentTests
         var message = json.RootElement.GetProperty("Messages")[0];
         Assert.Equal("recipient@example.test", message.GetProperty("To")[0].GetProperty("Email").GetString());
         Assert.Equal("Body", message.GetProperty("TextPart").GetString());
+        Assert.Contains("<!doctype html>", message.GetProperty("HTMLPart").GetString());
+        Assert.Equal("disabled", message.GetProperty("TrackOpens").GetString());
+        Assert.Equal("disabled", message.GetProperty("TrackClicks").GetString());
     }
 
     [Fact]

@@ -22,7 +22,8 @@ namespace Overlap.Api.Tests;
 public sealed class AuthFactory : WebApplicationFactory<Program>
 {
     private readonly SqliteConnection connection = new("Data Source=:memory:");
-    public AuthFactory() => connection.Open();
+    private readonly bool unlimitedAuthRequests;
+    public AuthFactory(bool unlimitedAuthRequests = false) { this.unlimitedAuthRequests = unlimitedAuthRequests; connection.Open(); }
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
@@ -30,11 +31,22 @@ public sealed class AuthFactory : WebApplicationFactory<Program>
         {
             ["ConnectionStrings:Accounts"] = "Server=127.0.0.1;Database=tests;User=test",
             ["Auth:PublicAppUrl"] = "http://localhost",
-            ["Email:Host"] = "127.0.0.1", ["Email:From"] = "accounts@overlap.test",
+            ["Email:RegistrationNotificationTo"] = "", ["Email:Host"] = "127.0.0.1", ["Email:From"] = "accounts@overlap.test",
             ["Email:Port"] = "1025", ["Email:LocalCapture"] = "true"
         }) builder.UseSetting(setting.Key, setting.Value);
+        builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(
+            new Dictionary<string, string?> { ["Email:RegistrationNotificationTo"] = "" }));
         builder.ConfigureServices(services =>
         {
+            // Consent scenarios compress many user interactions into one test-server IP.
+            if (unlimitedAuthRequests)
+            {
+                services.RemoveAll<IConfigureOptions<Microsoft.AspNetCore.RateLimiting.RateLimiterOptions>>();
+                services.Configure<Microsoft.AspNetCore.RateLimiting.RateLimiterOptions>(options => {
+                    foreach(var policy in new[] { "auth", "email", "picks", "watch" })
+                        options.AddPolicy(policy, _ => System.Threading.RateLimiting.RateLimitPartition.GetNoLimiter("consent-test"));
+                });
+            }
             services.RemoveAll<DbContextOptions<AuthDbContext>>();
             services.RemoveAll<IDbContextOptionsConfiguration<AuthDbContext>>();
             services.AddDbContext<AuthDbContext>(options => options.UseSqlite(connection));
@@ -81,6 +93,28 @@ public sealed class AuthTests
         request.Headers.Add("X-XSRF-TOKEN", token);
         return await client.SendAsync(request);
     }
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task RegistrationNotifiesOwnerOnceOnlyWhenConfigured(bool enabled)
+    {
+        using var factory = new AuthFactory(); using var client = factory.Client();
+        factory.Services.GetRequiredService<IConfiguration>()["Email:RegistrationNotificationTo"] = enabled ? "owner@example.test" : "";
+        (await Post(client, "register", new { email = Email, password = Password })).EnsureSuccessStatusCode();
+        (await Post(client, "register", new { email = Email, password = Password })).EnsureSuccessStatusCode();
+        var messages = await factory.Emails();
+        Assert.Single(messages, x => x.Recipient == Email);
+        var notices = messages.Where(x => x.Subject == "New Overlap registration").ToList();
+        Assert.Equal(enabled ? 1 : 0, notices.Count);
+        if (enabled)
+        {
+            Assert.Equal("owner@example.test", notices[0].Recipient);
+            Assert.Contains(Email, notices[0].Body);
+            Assert.DoesNotContain(Password, notices[0].Body);
+            Assert.DoesNotContain("token=", notices[0].Body);
+        }
+    }
+
     private static async Task RegisterAndConfirm(AuthFactory factory, HttpClient client)
     {
         (await Post(client, "register", new { email = Email, password = Password })).EnsureSuccessStatusCode();
