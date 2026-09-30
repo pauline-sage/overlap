@@ -13,6 +13,8 @@ public sealed class OutingUpdate
     public string? CancelledBy { get; set; }
     public string? CancellationReason { get; set; }
     public bool OnMyWay { get; set; }
+    public string? SenderDismissedRevision { get; set; }
+    public string? RecipientDismissedRevision { get; set; }
     public string Revision { get; set; } = "";
     public bool Seen { get; set; }
     public DateTime UpdatedUtc { get; set; }

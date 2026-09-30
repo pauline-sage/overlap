@@ -47,6 +47,8 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
             update.HasKey(x => new { x.PairId, x.SenderId });
             update.Property(x => x.PairId).HasMaxLength(32);
             update.Property(x => x.SenderId).HasMaxLength(255);
+            update.Property(x => x.SenderDismissedRevision).HasMaxLength(32);
+            update.Property(x => x.RecipientDismissedRevision).HasMaxLength(32);
             update.Property(x => x.Revision).HasMaxLength(32);
             update.Property(x => x.CancelledBy).HasMaxLength(255);
             update.Property(x => x.CancellationReason).HasMaxLength(500);

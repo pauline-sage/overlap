@@ -51,13 +51,14 @@
         <div class="reply-actions"><button type="button" [disabled]="sharing.busy()" (click)="pickYours.emit(update)">{{update.replyKind==='picked' ? 'Change my place' : 'Pick yours'}}</button><button type="button" [disabled]="sharing.busy() || update.replyKind==='surprise'" (click)="sharing.reply(update.revision,'surprise')">Surprise</button></div>
         <p class="when">Choose your own place, or join and decide when you get there.</p>
       }
-      @if(update.unread) { <button class="read" type="button" [disabled]="sharing.busy()" (click)="sharing.markRead(update.mine ? 'outing-reply' : 'outing',update.mine ? update.replyRevision! : update.revision)">Mark as read</button> }
+      @if(notifications()) {<button class="read" type="button" [disabled]="sharing.busy()" (click)="sharing.markRead(update.mine ? 'outing-reply' : 'outing',update.mine ? (update.replyRevision || update.revision) : update.revision,undefined,true)">Dismiss</button>}
+      @if(update.unread) { <button class="read" type="button" [disabled]="sharing.busy()" (click)="sharing.markRead(update.mine ? 'outing-reply' : 'outing',update.mine ? (update.replyRevision || update.revision) : update.revision)">Mark as read</button> }
     </article>
   }
   }
   @if(!notifications() && state.moviePicks?.length) { <h2>Watch picks</h2> }
   @for(pick of state.moviePicks || [];track pick.id) {
-    @if(!notifications() || pick.shared) {
+    @if(!notifications() || (pick.shared && !pick.dismissed)) {
       <article class="date-card film-card" [class.new]="pick.unread">
         <div class="card-top"><span class="category">{{pick.title.format || 'Watch'}} pick</span>@if(pick.unread){<span class="new-label">New</span>}</div>
         <div class="film">
@@ -65,9 +66,10 @@
           <div><h3>{{pick.title.title}}</h3><p>{{pick.mine ? 'Your pick' : (state.partnerName || 'Your partner') + "'s pick"}}</p><span class="status">{{!pick.shared ? 'Private' : pick.status==='accepted' ? 'Accepted' : pick.status==='declined' ? 'Passed' : 'Awaiting a response'}}</span><p class="when">Time not scheduled</p></div>
         </div>
         <div class="links"><button type="button" (click)="openPicks.emit()">View in Watch &#8599;</button></div>
+        @if(notifications()){<button class="read" type="button" [disabled]="sharing.busy()" (click)="sharing.markRead('pick',pick.revision,pick.id,true)">Dismiss</button>}
         @if(pick.unread){<button class="read" type="button" [disabled]="sharing.busy()" (click)="sharing.markRead('pick',pick.revision,pick.id)">Mark as read</button>}
       </article>
     }
   }
-  @if(notifications() && !state.outingUpdates?.length && !state.moviePicks?.length) { <p class="when">No shared updates yet.</p> }
+  @if(notifications() && !groups()[0].updates.length && !visibleMovieNotifications()) { <p class="when">No shared updates yet.</p> }
 }

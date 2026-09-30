@@ -11,8 +11,8 @@ describe('Activity cards and hours',()=>{
     ]);
     expect(readableHours('PH off')[0]).toEqual({days:'As listed',hours:'PH off'});
   });
-  it('confirms cancellation with an optional message and separates cancelled dates',async()=>{
-    const update={mine:true,revision:'proposal',cancelled:false,venue:{activity:'Coffee',startUtc:new Date(Date.now()+3600000).toISOString(),name:'Cafe'}};
+  it('confirms cancellation with an optional message and removes cancelled dates while keeping the cancellation notification',async()=>{
+    const update={mine:true,revision:'proposal',cancelled:false,dismissed:false,venue:{activity:'Coffee',startUtc:new Date(Date.now()+3600000).toISOString(),name:'Cafe'}};
     const sharing={error:signal(''),busy:signal(false),cancel:vi.fn().mockResolvedValue(true),state:signal({outingUpdates:[update]})};
     TestBed.configureTestingModule({imports:[DateCardsComponent],providers:[{provide:SharingService,useValue:sharing}]});
     const f=TestBed.createComponent(DateCardsComponent);f.detectChanges();
@@ -23,7 +23,12 @@ describe('Activity cards and hours',()=>{
     expect(sharing.cancel).toHaveBeenCalledWith('proposal','Something came up');
     update.cancelled=true;f.detectChanges();
     expect(f.componentInstance.groups().find(x=>x.label==='Upcoming dates')?.updates).toHaveLength(0);
+    expect(f.nativeElement.querySelector('.date-card')).toBeNull();
+    f.componentRef.setInput('notifications',true);f.detectChanges();
     expect(f.nativeElement.textContent).toContain('Cancelled by');
+    update.dismissed=true;sharing.state.set({outingUpdates:[{...update}]});f.detectChanges();
+    expect(f.nativeElement.querySelector('.date-card')).toBeNull();
+    expect(f.nativeElement.textContent).toContain('No shared updates yet.');
     expect(f.nativeElement.querySelector('.reply-actions')).toBeNull();
     f.destroy();
   });

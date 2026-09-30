@@ -33,6 +33,10 @@ public static class PrivacyEndpoints
             var receivedPicks = await db.Set<Overlap.Api.Watch.SharedPick>().CountAsync(x => pair != null && x.PairId == pair && x.ProposedBy != id && x.IsShared && x.Status == "pending" && db.Set<SharingGrant>().Any(g => g.PairId == pair && g.SenderId == x.ProposedBy && g.Category == "picks" && g.Status == "accepted"));
             var outingUpdates = await db.Set<Overlap.Api.Outings.OutingUpdate>().AsNoTracking()
                 .Where(x => pair != null && x.PairId == pair).ToListAsync();
+            outingUpdates = outingUpdates.Where(x => {
+                var venue = x.VenueJson == null ? null : System.Text.Json.JsonSerializer.Deserialize<Overlap.Api.Outings.SharedVenue>(x.VenueJson);
+                return !x.OnMyWay && venue?.Activity != null && venue.StartUtc != null;
+            }).ToList();
             var partnerId = await db.PairMembers.Where(x => pair != null && x.PairId == pair && x.AccountId != id).Select(x => x.AccountId).SingleOrDefaultAsync();
             var partnerName = partnerId != null && await Allowed(db,pair,partnerId,"profile")
                 ? await db.Users.Where(x => x.Id == partnerId && x.ShareDisplayName).Select(x => x.DisplayName).SingleOrDefaultAsync() : null;
@@ -41,10 +45,10 @@ public static class PrivacyEndpoints
             return Results.Ok(new { connected = pair != null, receivedPicks, partnerName,
                 unreadOutings = outingUpdates.Count(x => x.SenderId == id ? !x.ReplySeen : !x.Seen),
                 unreadPicks = picks.Count(x => x.IsShared && x.PairId == pair && (x.ProposedBy == id ? x.SenderHasNews : x.RecipientHasNews)),
-                moviePicks = picks.Select(x => new { x.Id, x.Revision, mine = x.ProposedBy == id, x.Status,
+                moviePicks = picks.Select(x => new { x.Id, x.Revision, dismissed = (x.ProposedBy == id ? x.SenderDismissedRevision : x.RecipientDismissedRevision) == x.Revision, mine = x.ProposedBy == id, x.Status,
                     unread = x.IsShared && x.PairId == pair && (x.ProposedBy == id ? x.SenderHasNews : x.RecipientHasNews),
                     shared = x.IsShared, title = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(x.Content) }),
-                outingUpdates = outingUpdates.Select(x => new { mine = x.SenderId == id, x.OnMyWay, x.UpdatedUtc, x.Revision, unread = x.SenderId == id ? !x.ReplySeen : !x.Seen,
+                outingUpdates = outingUpdates.Select(x => new { dismissed = x.SenderId == id ? x.SenderDismissedRevision == (x.ReplyRevision == "" ? x.Revision : x.ReplyRevision) : x.RecipientDismissedRevision == x.Revision, mine = x.SenderId == id, x.OnMyWay, x.UpdatedUtc, x.Revision, unread = x.SenderId == id ? !x.ReplySeen : !x.Seen,
                     cancelled = x.CancelledBy != null, cancelledByMe = x.CancelledBy == id, x.CancellationReason, x.ReplyKind, x.ReplyRevision,
                     replyVenue = x.ReplyVenueJson == null ? null : System.Text.Json.JsonSerializer.Deserialize<Overlap.Api.Outings.SharedVenue>(x.ReplyVenueJson),
                     venue = x.VenueJson == null ? null : System.Text.Json.JsonSerializer.Deserialize<Overlap.Api.Outings.SharedVenue>(x.VenueJson) }),

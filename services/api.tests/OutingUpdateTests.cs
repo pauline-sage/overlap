@@ -36,8 +36,11 @@ public sealed partial class TogetherTests
             Assert.Equal(0,(await actor.GetFromJsonAsync<JsonElement>("/api/auth/privacy")).GetProperty("unreadOutings").GetInt32());
             Assert.Equal(HttpStatusCode.Conflict,(await Post(second,"outings/reply",new {proposalRevision=update.GetProperty("revision").GetString(),kind="surprise"})).StatusCode);
             Assert.Equal(HttpStatusCode.Conflict,(await Post(actor,"outings/cancel",new {proposalRevision=revision})).StatusCode);
-            (await Post(recipient,"privacy/read",new {kind=ownerCancels?"outing":"outing-reply",revision=update.GetProperty("revision").GetString()})).EnsureSuccessStatusCode();
-            Assert.Equal(0,(await recipient.GetFromJsonAsync<JsonElement>("/api/auth/privacy")).GetProperty("unreadOutings").GetInt32());
+            (await Post(recipient,"privacy/read",new {kind=ownerCancels?"outing":"outing-reply",revision=update.GetProperty("revision").GetString(),dismiss=true})).EnsureSuccessStatusCode();
+            var afterDismiss=await recipient.GetFromJsonAsync<JsonElement>("/api/auth/privacy");
+            Assert.Equal(0,afterDismiss.GetProperty("unreadOutings").GetInt32());
+            Assert.True(afterDismiss.GetProperty("outingUpdates")[0].GetProperty("dismissed").GetBoolean());
+            Assert.False((await actor.GetFromJsonAsync<JsonElement>("/api/auth/privacy")).GetProperty("outingUpdates")[0].GetProperty("dismissed").GetBoolean());
         }
     }
     [Fact]
@@ -103,10 +106,8 @@ public sealed partial class TogetherTests
         Assert.Single((await second.GetFromJsonAsync<JsonElement>("/api/auth/privacy")).GetProperty("outingUpdates").EnumerateArray());
         (await Post(first,"outings/update",new {kind="on-my-way"})).EnsureSuccessStatusCode();
         partner=await second.GetFromJsonAsync<JsonElement>("/api/auth/privacy");
-        Assert.True(partner.GetProperty("outingUpdates")[0].GetProperty("onMyWay").GetBoolean());
-        (await Post(second,"privacy/read",new {kind="outing",revision})).EnsureSuccessStatusCode();
-        Assert.Equal(1,(await second.GetFromJsonAsync<JsonElement>("/api/auth/privacy")).GetProperty("unreadOutings").GetInt32());
-        Assert.Equal(JsonValueKind.Null,partner.GetProperty("outingUpdates")[0].GetProperty("venue").ValueKind);
+        Assert.Empty(partner.GetProperty("outingUpdates").EnumerateArray());
+        Assert.Equal(0,partner.GetProperty("unreadOutings").GetInt32());
         (await Post(first,"outings/update",new {kind="clear"})).EnsureSuccessStatusCode();
         Assert.Empty((await second.GetFromJsonAsync<JsonElement>("/api/auth/privacy")).GetProperty("outingUpdates").EnumerateArray());
         (await Post(first,"outings/update",new {kind="on-my-way"})).EnsureSuccessStatusCode();

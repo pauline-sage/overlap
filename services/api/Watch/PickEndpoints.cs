@@ -15,6 +15,8 @@ public sealed class SharedPick
     public required string Content { get; set; }
     public string Status { get; set; } = "pending";
     public DateTime CreatedUtc { get; set; }
+    public string? SenderDismissedRevision { get; set; }
+    public string? RecipientDismissedRevision { get; set; }
     public string Revision { get; set; } = "";
     public bool SenderHasNews { get; set; }
     public bool RecipientHasNews { get; set; }

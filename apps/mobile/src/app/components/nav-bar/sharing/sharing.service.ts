@@ -4,8 +4,8 @@ import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../../auth.service';
 export type Category = 'profile' | 'presence' | 'picks';
 interface Grant { category: Category; status: 'pending' | 'accepted' | 'declined' | 'withdrawn'; }
-export interface OutingUpdate { cancelled?:boolean; cancelledByMe?:boolean; cancellationReason?:string; replyKind?: 'picked'|'surprise'; replyRevision?: string; replyVenue?: OutingUpdate['venue']; mine: boolean; onMyWay: boolean; updatedUtc: string; revision: string; unread: boolean; venue: { name: string; address: string; mapUrl: string; website?: string; activity?: string; startUtc?: string; timeZone?: string } | null; }
-export interface MoviePick { id:number;revision:string;mine:boolean;status:string;unread:boolean;shared:boolean;title:{title:string;format:string;poster?:string;ownLink:string;partnerLink:string}; }
+export interface OutingUpdate { dismissed?:boolean; cancelled?:boolean; cancelledByMe?:boolean; cancellationReason?:string; replyKind?: 'picked'|'surprise'; replyRevision?: string; replyVenue?: OutingUpdate['venue']; mine: boolean; onMyWay: boolean; updatedUtc: string; revision: string; unread: boolean; venue: { name: string; address: string; mapUrl: string; website?: string; activity?: string; startUtc?: string; timeZone?: string } | null; }
+export interface MoviePick { dismissed?:boolean; id:number;revision:string;mine:boolean;status:string;unread:boolean;shared:boolean;title:{title:string;format:string;poster?:string;ownLink:string;partnerLink:string}; }
 interface SharingState { partnerName?:string;unreadOutings?:number;unreadPicks?:number;moviePicks?:MoviePick[]; connected: boolean; incoming: Grant[]; outgoing: Grant[]; receivedPicks: number; outingUpdates?: OutingUpdate[]; }
 @Injectable()
 export class SharingService implements OnDestroy {
@@ -30,10 +30,10 @@ export class SharingService implements OnDestroy {
     catch(error) { this.error.set(error instanceof HttpErrorResponse ? error.error?.title || 'Unable to update sharing.' : 'Unable to update sharing.'); }
     finally { this.busy.set(false); }
   }
-  async markRead(kind:'outing'|'outing-reply'|'pick', revision:string, id?:number):Promise<void> {
+  async markRead(kind:'outing'|'outing-reply'|'pick', revision:string, id?:number, dismiss=false):Promise<void> {
     if(this.busy())return;
     this.busy.set(true);
-    try { await this.auth.submit('privacy/read',{kind,revision,id});await this.load(true); }
+    try { await this.auth.submit('privacy/read',{kind,revision,id,dismiss});await this.load(true); }
     catch { this.error.set('Unable to mark this update as read.'); }
     finally { this.busy.set(false); }
   }

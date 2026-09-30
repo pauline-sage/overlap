@@ -20,8 +20,12 @@ public sealed class GeoapifyPlaces(HttpClient http,IConfiguration config)
     private static string? Text(JsonElement e,string key)=>e.TryGetProperty(key,out var v)&&v.ValueKind==JsonValueKind.String?v.GetString():null;
     public async Task<OutingArea[]> Areas(string text,CancellationToken ct) {
         using var doc=await Get("v1/geocode/search?text="+Uri.EscapeDataString(text)+"&limit=5",ct);
+        var features = doc.RootElement.GetProperty("features").EnumerateArray().ToArray();
+        using var cityDoc = features.Length > 0 && features.All(f => Text(f.GetProperty("properties"),"result_type") is "state" or "country" or "county")
+            ? await Get("v1/geocode/search?text="+Uri.EscapeDataString(text)+"&type=city&limit=5",ct) : null;
+        if (cityDoc is not null) features = cityDoc.RootElement.GetProperty("features").EnumerateArray().ToArray();
         var result=new List<OutingArea>();
-        foreach(var feature in doc.RootElement.GetProperty("features").EnumerateArray()) {
+        foreach(var feature in features) {
             var p=feature.GetProperty("properties");
             if(!p.TryGetProperty("timezone",out var zone)||Text(zone,"name") is not string id)continue;
             result.Add(new(Text(p,"formatted")??text,p.GetProperty("lat").GetDouble(),p.GetProperty("lon").GetDouble(),id));

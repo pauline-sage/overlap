@@ -362,6 +362,10 @@ namespace Overlap.Api.Migrations
                     b.Property<bool>("OnMyWay")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<string>("RecipientDismissedRevision")
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
                     b.Property<string>("ReplyKind")
                         .HasMaxLength(16)
                         .HasColumnType("varchar(16)");
@@ -385,6 +389,10 @@ namespace Overlap.Api.Migrations
 
                     b.Property<bool>("Seen")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("SenderDismissedRevision")
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
 
                     b.Property<DateTime>("UpdatedUtc")
                         .HasColumnType("datetime(6)");
@@ -428,6 +436,9 @@ namespace Overlap.Api.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("RecipientDismissedRevision")
+                        .HasColumnType("longtext");
+
                     b.Property<bool>("RecipientHasNews")
                         .HasColumnType("tinyint(1)");
 
@@ -435,6 +446,9 @@ namespace Overlap.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("varchar(32)");
+
+                    b.Property<string>("SenderDismissedRevision")
+                        .HasColumnType("longtext");
 
                     b.Property<bool>("SenderHasNews")
                         .HasColumnType("tinyint(1)");
