@@ -1,11 +1,10 @@
+@if(active() && (busy() || pickBusy())) {<app-loading-indicator [label]="busy() ? 'Finding something to watch...' : 'Updating your picks...'" />}
 @if (active()) {
   @if (pickError()) {
     <p class="error" role="alert">{{ pickError() }}</p>
   }
   @if (selected(); as title) {
-    <button class="back" type="button" (click)="close()">
-      <span aria-hidden="true">&#8592;</span> Back
-    </button>
+    <button class="back" type="button" (click)="close()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg><span>Back</span></button>
     <article class="detail">
       <div class="detail-cover" [class.video-cover]="title.source === 'youtube'">
         @if (title.poster) {
@@ -126,9 +125,7 @@
       }
     </article>
   } @else {
-    <button class="back" type="button" (click)="back.emit()">
-      <span aria-hidden="true">&#8592;</span> Back
-    </button>
+    <button class="back" type="button" (click)="back.emit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg><span>Back</span></button>
     <header><h2 id="dashboard-heading" tabindex="-1">Watch together</h2></header>
     <nav class="watch-tabs" role="tablist" aria-label="Watch views">
       <button id="watch-tab-discover" role="tab" type="button" [attr.aria-selected]="tab() === 'discover'" [tabIndex]="tab() === 'discover' ? 0 : -1" aria-controls="watch-panel" (keydown)="tabKey($event)" (click)="view('discover')">Discover</button>

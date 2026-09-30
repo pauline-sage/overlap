@@ -1,3 +1,4 @@
+import { LoadingIndicatorComponent } from '../loading-indicator';
 import { Component, effect, inject, input, output, signal, untracked, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -47,7 +48,7 @@ interface WatchResults {
 }
 @Component({
   selector: 'app-shared-time',
-  imports: [FormsModule],
+  imports: [LoadingIndicatorComponent,FormsModule],
   templateUrl: './shared-time.html',
   styleUrl: './shared-time.scss',
 })

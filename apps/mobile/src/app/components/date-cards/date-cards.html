@@ -1,3 +1,4 @@
+@if(sharing.busy()) {<app-loading-indicator [label]="'Updating your date...'" />}
 @if(sharing.error()) {<p role="alert">{{sharing.error()}}</p>}
 @if(sharing.state();as state) {
   @for(group of groups();track group.label) {
@@ -6,19 +7,20 @@
     @for(update of group.updates;track update.mine) {
     <article class="date-card" [class.new]="update.unread">
       @if(update.venue;as venue) {
-        <div class="card-top"><span class="category">{{venue.activity ? venue.activity + ' date' : 'Shared place'}}</span>@if(update.unread) {<span class="new-label">New</span>}</div>
+        <div class="card-top"><span class="category">{{venue.activity || 'An outing'}}</span>@if(update.unread) {<span class="new-label">New</span>}</div>
         <div class="occasion">
           <div class="day-tile">
             @if(venue.startUtc) { <strong>{{venue.startUtc | date:'dd'}}</strong><span>{{venue.startUtc | date:'MMM'}}</span> }
             @else { <strong>&#9675;</strong><span>Place</span> }
           </div>
-          <div><h3>{{venue.activity ? venue.activity + ' date' : 'Shared place'}}</h3><p class="partner">With {{state.partnerName || 'your partner'}}</p>
-            @if(venue.startUtc) { <p class="date-time"><span>{{venue.startUtc | date:'EEEE, d MMMM'}}</span><strong>{{venue.startUtc | date:'HH:mm'}}</strong></p><small>In your device's timezone</small> }
+          <div><h3>{{venue.activity || 'An outing'}} with {{state.partnerName || 'your partner'}}</h3>
+            @if(venue.startUtc) { <p class="date-time"><span>{{venue.startUtc | date:'EEEE, d MMMM'}}</span><strong>at {{venue.startUtc | date:'HH:mm'}}</strong></p><small>For you &middot; {{deviceZone}}</small>
+              @if(venue.timeZone && venue.timeZone!==deviceZone) {<p class="when">{{localTime(venue.startUtc,venue.timeZone)}} at {{update.mine ? 'your' : (state.partnerName || 'your partner') + "?s"}} place &middot; {{venue.timeZone}}</p>} }
             @else { <p class="when">No time selected</p> }
           </div>
         </div>
-        <div class="place"><span class="detail-label">Place</span><h4>{{venue.name}}</h4><p>{{venue.address}}</p><span class="picked-by">{{update.mine ? 'You picked' : (state.partnerName || 'Your partner') + ' picked'}}</span></div>
-        <div class="links"><a [href]="venue.mapUrl" target="_blank" rel="noopener noreferrer">View place &#8599;</a>@if(venue.website) {<a [href]="venue.website" target="_blank" rel="noopener noreferrer">Website &#8599;</a>}</div>
+        <div class="place"><span class="detail-label">{{update.mine ? 'Your place' : (state.partnerName || 'Your partner') + "?s place"}}</span><h4>{{venue.name}}</h4><p>{{venue.address}}</p><span class="picked-by">{{update.mine ? 'You picked' : (state.partnerName || 'Your partner') + ' picked'}}</span></div>
+        <div class="place-actions"><a [href]="venue.mapUrl" target="_blank" rel="noopener noreferrer">View place &#8599;</a>@if(!update.cancelled && cancelling!==update.revision) {<button class="cancel-date" type="button" [disabled]="sharing.busy()" (click)="startCancellation(update)">Cancel date</button>}</div><div class="links">@if(venue.website) {<a [href]="venue.website" target="_blank" rel="noopener noreferrer">Website &#8599;</a>}</div>
       } @else if(update.onMyWay) {
         <div class="card-top"><span class="category">On the way</span>@if(update.unread){<span class="new-label">New</span>}</div>
         <h3>{{update.mine ? "You're on your way" : (state.partnerName || 'Your partner') + ' is on their way'}}</h3>
@@ -33,16 +35,16 @@
         @if(cancelling===update.revision) {
           <form class="cancellation" (ngSubmit)="cancel(update)">
             <label [for]="'reason-'+update.revision">Message to your partner (optional)</label>
-            <textarea [id]="'reason-'+update.revision" name="reason" [(ngModel)]="reason" maxlength="500" rows="3" placeholder="Let them know why, if you?d like"></textarea>
+            <textarea [id]="'reason-'+update.revision" name="reason" [(ngModel)]="reason" maxlength="500" rows="3" placeholder="Let them know why, if you'd like"></textarea>
             <div class="reply-actions"><button type="submit" [disabled]="sharing.busy()">Confirm cancellation</button><button type="button" [disabled]="sharing.busy()" (click)="cancelling=null">Keep date</button></div>
           </form>
-        } @else {<button class="cancel-date" type="button" [disabled]="sharing.busy()" (click)="startCancellation(update)">Cancel date</button>}
+        }
       }
-      @if(!update.cancelled && update.replyKind) {
+      @if(update.replyKind) {
         <div class="reply">
-          <span class="detail-label">{{update.mine ? (state.partnerName || 'Your partner') : 'You'}}</span>
+          <span class="detail-label">{{update.mine ? (state.partnerName || 'Your partner') + "?s place" : 'Your place'}}</span>
           @if(update.replyKind==='surprise') {<h4>It's a surprise</h4><p>Joining the date, choosing a place later.</p>}
-          @else if(update.replyVenue;as picked) {<h4>{{picked.name}}</h4><p>{{picked.address}}</p><div class="links"><a [href]="picked.mapUrl" target="_blank" rel="noopener noreferrer">View place &#8599;</a>@if(picked.website){<a [href]="picked.website" target="_blank" rel="noopener noreferrer">Website &#8599;</a>}</div>}
+          @else if(update.replyVenue;as picked) {<h4>{{picked.name}}</h4><p>{{picked.address}}</p><div class="place-actions"><a [href]="picked.mapUrl" target="_blank" rel="noopener noreferrer">View place &#8599;</a>@if(picked.website){<a [href]="picked.website" target="_blank" rel="noopener noreferrer">Website &#8599;</a>}</div>}
         </div>
       }
       @if(canReply(update)) {

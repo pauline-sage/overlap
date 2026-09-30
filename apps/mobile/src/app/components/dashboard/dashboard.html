@@ -1,3 +1,4 @@
+@if(working()) {<app-loading-indicator [label]="'Updating...'" />}
 <input
   #photoPicker
   type="file"
@@ -8,6 +9,7 @@
 
 @if (page() === 'home' && !watching() && !coffee()) {
   <section class="hero" aria-labelledby="dashboard-heading">
+    <p class="home-eyebrow">YOUR LITTLE CORNER</p>
     <div class="orbit">
       <div class="person-slot">
         <div class="portrait">
@@ -68,15 +70,8 @@
         }
       </div>
     </div>
-    <h2 id="dashboard-heading" tabindex="-1">A little closer.</h2>
-    <button
-      class="connection-shortcut"
-      type="button"
-      (click)="navigate('profile')"
-      aria-label="Open your profile and connection"
-    >
-      {{ 'Profile & connection' }} <span aria-hidden="true">&#8599;</span>
-    </button>
+    <h2 id="dashboard-heading" tabindex="-1">Close, wherever you are.</h2>
+    <p class="home-intro">Different places. A little time together.</p>
   </section>
 }
 @if (page() === 'profile') {
@@ -106,8 +101,9 @@
 
   <section class="next" aria-labelledby="next-title">
     <div class="section-heading">
-      <h2 id="next-title">What's next?</h2>
+      <h2 id="next-title">Make a little time</h2>
     </div>
+    <p class="section-intro">What feels good today?</p>
     <div class="idea-grid">
       <button class="idea time-idea" type="button" (click)="openSharedTime()">
         <span class="idea-icon" aria-hidden="true"
@@ -116,10 +112,10 @@
             <path d="m10 8 6 4-6 4Z" /></svg
         ></span>
         <span
-          ><strong>Find your shared time @if(sharing.state()?.unreadPicks) { <span class="news-count">{{sharing.state()?.unreadPicks}} new</span> }</strong
-          ><span class="idea-description">Find a film or series to watch together.</span></span
+          ><strong>Stay in together @if(sharing.state()?.unreadPicks) { <span class="news-count">{{sharing.state()?.unreadPicks}} new</span> }</strong
+          ><span class="idea-description">A film, a series, and your favourite company.</span></span
         >
-        <span aria-hidden="true">&#8599;</span>
+        <span class="card-arrow" aria-hidden="true">&#8594;</span>
       </button>
       <button class="idea coffee-idea" type="button" (click)="openCoffee()">
         <span class="idea-icon coffee" aria-hidden="true"
@@ -135,9 +131,10 @@
             /></svg
         ></span>
         <div>
-          <h3>Make it a coffee date @if(sharing.state()?.unreadOutings) { <span class="news-count">{{sharing.state()?.unreadOutings}} new</span> }</h3>
-          <p>Coffee, drinks or a bite, together.</p>
+          <h3>Step out together @if(sharing.state()?.unreadOutings) { <span class="news-count">{{sharing.state()?.unreadOutings}} new</span> }</h3>
+          <p>Your own places. A shared coffee, drink or bite.</p>
         </div>
+        <span class="card-arrow" aria-hidden="true">&#8594;</span>
       </button>
     </div>
   </section>
@@ -148,7 +145,7 @@
   [partnerName]="together()?.partner?.displayName || 'Your person'"
   (back)="navigate('home')"
 />
-@if(coffee() && page() === 'home'){<app-coffee-date [proposal]="outingProposal()" [partnerName]="together()?.partner?.displayName || 'Your person'" (back)="navigate(outingProposal() ? 'dates' : 'home')" />}
+@if(coffee() && page() === 'home'){<app-coffee-date (shared)="navigate('home')" [proposal]="outingProposal()" [partnerName]="together()?.partner?.displayName || 'Your person'" (back)="navigate(outingProposal() ? 'dates' : 'home')" />}
 <app-nav-bar
   [current]="page()"
   [disabled]="busy()"

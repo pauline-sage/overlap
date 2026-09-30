@@ -17,7 +17,7 @@ public static class OutingTime
             if (own.IsInvalidTime(local)) throw new ArgumentException("That local time does not exist because the clocks change. Choose another time.");
             if (own.IsAmbiguousTime(local)) throw new ArgumentException("That local time occurs twice because the clocks change. Choose a time outside the clock change.");
             start = new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(local, own));
-            if (start < now.AddMinutes(-1) || start > now.AddDays(90)) throw new ArgumentException("Choose a time within the next 90 days.");
+            if (start < now || start > now.AddDays(90)) throw new ArgumentException("Choose a future time within the next 90 days.");
         }
         var end = start.AddMinutes(request.Minutes);
         string Local(DateTimeOffset instant, TimeZoneInfo zone) => TimeZoneInfo.ConvertTime(instant, zone).ToString("yyyy-MM-dd HH:mm zzz", CultureInfo.InvariantCulture);

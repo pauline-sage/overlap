@@ -29,16 +29,22 @@ describe('Activity cards and hours',()=>{
   });
   it('shows partner, date and venue links and acknowledges only this revision',()=>{
     const sharing={error:signal(''),reply:vi.fn(),busy:signal(false),markRead:vi.fn(),state:signal({partnerName:'Lina',outingUpdates:[{
-      mine:false,unread:true,revision:'new-version',venue:{name:'Cafe',address:'Public address',activity:'Lunch',startUtc:new Date(Date.now()+3600000).toISOString(),website:'https://example.test',mapUrl:'https://www.openstreetmap.org'}
+      mine:false,unread:true,revision:'new-version',replyKind:'picked',replyVenue:{name:'My cafe',address:'My public venue',mapUrl:'https://example.test/my-cafe'},venue:{name:'Cafe',address:'Public address',activity:'Lunch',startUtc:new Date(Date.now()+3600000).toISOString(),website:'https://example.test',mapUrl:'https://www.openstreetmap.org'}
     }]})};
     TestBed.configureTestingModule({imports:[DateCardsComponent],providers:[{provide:SharingService,useValue:sharing}]});
     const f=TestBed.createComponent(DateCardsComponent);f.detectChanges();
-    expect(f.nativeElement.querySelector('h3').textContent).toBe('Lunch date');
-    expect(f.nativeElement.textContent).toContain('With Lina');
+    expect(f.nativeElement.querySelector('h3').textContent).toBe('Lunch with Lina');
+    expect(f.nativeElement.textContent).toContain('with Lina');
     expect(f.nativeElement.querySelector('.date-time strong')).not.toBeNull();
+    expect(f.componentInstance.localTime('2026-10-01T16:00:00Z','America/New_York')).toContain('12:00');
+    expect(f.componentInstance.localTime('2026-10-01T16:00:00Z','Europe/Paris')).toContain('18:00');
+    expect(f.componentInstance.localTime('2026-03-15T16:00:00Z','America/New_York')).toContain('12:00');
+    expect(f.componentInstance.localTime('2026-03-15T16:00:00Z','Europe/Paris')).toContain('17:00');
     expect(f.nativeElement.querySelector('.place h4').textContent).toBe('Cafe');
     expect(f.nativeElement.textContent).toContain('Lina picked');
-    expect(f.nativeElement.querySelectorAll('a').length).toBe(2);
+    expect(f.nativeElement.querySelectorAll('a').length).toBe(3);
+    expect(f.nativeElement.querySelector('.reply h4').textContent).toBe('My cafe');
+    expect(f.nativeElement.querySelector('.place-actions .cancel-date')).not.toBeNull();
     f.nativeElement.querySelector('.read').click();
     expect(sharing.markRead).toHaveBeenCalledWith('outing','new-version');
     const proposal=f.componentInstance.sharing.state()!.outingUpdates![0];

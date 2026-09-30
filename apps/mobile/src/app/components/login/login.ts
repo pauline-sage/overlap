@@ -1,3 +1,4 @@
+import { LoadingIndicatorComponent } from '../loading-indicator';
 import { PrivacyNoticeComponent } from '../privacy-notice/privacy-notice';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal, viewChild } from '@angular/core';
@@ -21,7 +22,7 @@ type Screen =
 
 @Component({
   selector: 'app-login',
-  imports: [PrivacyNoticeComponent, FormsModule, DashboardComponent],
+  imports: [LoadingIndicatorComponent,PrivacyNoticeComponent, FormsModule, DashboardComponent],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })

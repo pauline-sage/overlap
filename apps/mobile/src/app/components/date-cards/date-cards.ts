@@ -1,15 +1,21 @@
+import { LoadingIndicatorComponent } from '../loading-indicator';
 import { Component, inject, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { SharingService, OutingUpdate } from '../nav-bar/sharing/sharing.service';
 
 @Component({
-  selector:'app-date-cards',imports:[DatePipe,FormsModule],templateUrl:'./date-cards.html',styleUrl:'./date-cards.scss'
+  selector:'app-date-cards',imports: [LoadingIndicatorComponent,DatePipe,FormsModule],templateUrl:'./date-cards.html',styleUrl:'./date-cards.scss'
 })
 export class DateCardsComponent {
   readonly sharing=inject(SharingService);
   readonly notifications=input(false);
   readonly pickYours=output<OutingUpdate>(); readonly openPicks=output<void>();
+  readonly deviceZone=Intl.DateTimeFormat().resolvedOptions().timeZone;
+  localTime(instant:string, zone:string):string {
+    try {return new Intl.DateTimeFormat('en-GB',{timeZone:zone,weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(instant));}
+    catch {return 'Time unavailable';}
+  }
   cancelling:string|null=null;
   reason='';
   startCancellation(update:OutingUpdate):void {this.cancelling=update.revision;this.reason='';}

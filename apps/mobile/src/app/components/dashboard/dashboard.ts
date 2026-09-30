@@ -1,3 +1,4 @@
+import { LoadingIndicatorComponent } from '../loading-indicator';
 
 import { OutingUpdate, SharingService } from '../nav-bar/sharing/sharing.service';
 import { CoffeeDateComponent } from '../coffee-date/coffee-date';
@@ -11,7 +12,7 @@ import { DashboardPage, NavBarComponent } from '../nav-bar/nav-bar';
 @Component({
   selector: 'app-dashboard',
   providers: [SharingService],
-  imports: [ NavBarComponent, SharedTimeComponent, ProfileComponent, CoffeeDateComponent],
+  imports: [LoadingIndicatorComponent, NavBarComponent, SharedTimeComponent, ProfileComponent, CoffeeDateComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })

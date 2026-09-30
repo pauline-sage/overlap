@@ -2,8 +2,7 @@
   display: block;
 }
 h2 {
-  font-size: 1.4rem;
-  letter-spacing: -0.04em;
+  font-size: 1.8rem; letter-spacing: -0.04em;
   margin: 0 0 1.5rem;
 }
 h3 {
@@ -109,7 +108,7 @@ p {
 }
 
 .profile-card > .partner-row { display:flex; width:100%; text-align:left; margin:0; padding:1rem; }
-.partner-arrow { margin-left:auto; font-size:1.5rem; color:var(--muted); }
+.partner-arrow { margin-left:auto; font-size:1.2rem; color:var(--muted); }
 .partner-profile .back { background:transparent; border:0; padding-left:0; margin-bottom:1rem; }
 .partner-caption { text-align:center; color:var(--muted); font-size:.85rem; }
 .presence-dot { position:absolute; right:.4rem; bottom:.4rem; width:1rem; height:1rem; border:3px solid var(--canvas); border-radius:50%; background:var(--muted); }

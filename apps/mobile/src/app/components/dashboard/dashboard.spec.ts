@@ -34,7 +34,7 @@ describe('Dashboard photos and invitations', () => {
     fixture.componentInstance.navigate('home');
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('#dashboard-heading').textContent).toContain(
-      'A little closer.',
+      'Close, wherever you are.',
     );
     expect(fixture.nativeElement.textContent).not.toContain('Watch together');
   });
@@ -103,7 +103,7 @@ describe('Dashboard photos and invitations', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Change password');
     expect(fixture.nativeElement.textContent).toContain('Sign out');
-    expect(fixture.nativeElement.textContent).not.toContain('A little closer.');
+    expect(fixture.nativeElement.textContent).not.toContain('Close, wherever you are.');
     fixture.nativeElement.querySelector('button[aria-label="Profile"]').click();
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Edit display name');

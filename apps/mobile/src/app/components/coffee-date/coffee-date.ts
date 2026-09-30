@@ -1,3 +1,4 @@
+import { LoadingIndicatorComponent } from '../loading-indicator';
 import { OpeningHoursComponent } from './opening-hours';
 import { OutingChoiceComponent, OutingCalendarComponent } from './outing-controls';
 import { Component, inject, input, output, signal, OnDestroy, OnInit } from '@angular/core';
@@ -12,19 +13,20 @@ interface SearchResult {
   localStart: string; localEnd: string;
   places: {place:Place;shareToken:string}[]; examined: number; checkedUtc: string;
 }
-@Component({selector:'app-coffee-date', imports:[DatePipe, OpeningHoursComponent, FormsModule, DecimalPipe, OutingChoiceComponent, OutingCalendarComponent], templateUrl:'./coffee-date.html', styleUrl:'./coffee-date.scss'})
+@Component({selector:'app-coffee-date', imports: [LoadingIndicatorComponent,DatePipe, OpeningHoursComponent, FormsModule, DecimalPipe, OutingChoiceComponent, OutingCalendarComponent], templateUrl:'./coffee-date.html', styleUrl:'./coffee-date.scss'})
 export class CoffeeDateComponent implements OnDestroy, OnInit {
   readonly proposal=input<OutingUpdate|null>(null);
   ngOnInit():void {const proposal=this.proposal();if(proposal){this.activity=proposal.venue?.activity || 'Coffee';this.step.set(2);}}
-  async confirmPlace(token:string):Promise<void> {const proposal=this.proposal();if(proposal && await this.sharing.reply(proposal.revision,'picked',token))this.back.emit();}
+  async confirmPlace(token:string):Promise<void> {const proposal=this.proposal();if(proposal && await this.sharing.reply(proposal.revision,'picked',token))this.shared.emit();}
   readonly partnerName = input('Your person');
   readonly back = output<void>();
+  readonly shared = output<void>();
   private readonly auth = inject(AuthService);
   readonly sharing = inject(SharingService);
   readonly activities = ['Coffee','Beer','Drinks','Breakfast','Lunch','Dinner'];
   readonly hours = Array.from({length:24}, (_, i) => String(i).padStart(2, '0'));
   readonly minuteChoices = ['00','15','30','45'];
-  activity = 'Coffee'; when = 'now'; date = ''; hour = '12'; minute = '00'; minutes = 60; includeUnknownHours = false;
+  activity = 'Coffee'; when = 'now'; date = ''; hour = '12'; minute = '00'; minutes = 60; includeUnknownHours = true;
   text = ''; radius = 3; choices: Area[] = []; area: Area | null = null;
   readonly busy = signal(false); readonly locating = signal(false); readonly error = signal('');
   readonly result = signal<SearchResult | null>(null);
@@ -35,7 +37,7 @@ export class CoffeeDateComponent implements OnDestroy, OnInit {
   readonly moodOptions = this.activities.map(value=>({value,label:value}));
   readonly hourOptions = this.hours.map(value=>({value,label:value}));
   readonly minuteOptions = this.minuteChoices.map(value=>({value,label:value}));
-  readonly whenOptions = [{value:'now',label:'Now'},{value:'hour',label:'In one hour'},{value:'later',label:'Choose a date'}];
+  readonly whenOptions = [{value:'now',label:'Now'},{value:'hour',label:'In one hour'},{value:'later',label:'Plan a date'}];
   readonly radiusOptions = [1,3,5,10].map(value=>({value:String(value),label:'Within '+value+' km'}));
   choosePlace(match: SearchResult['places'][number]):void {
     this.picked.set(match);this.notice.set('');
@@ -94,13 +96,14 @@ export class CoffeeDateComponent implements OnDestroy, OnInit {
     } catch (error) { this.failed(error); }
     finally { this.busy.set(false); }
   }
-  async share(kind: 'venue' | 'on-my-way' | 'clear', venueToken?: string): Promise<void> {
+  async share(kind: 'venue' | 'clear', venueToken?: string): Promise<void> {
     if (this.sending()) return;
     this.sending.set(true); this.error.set(''); this.notice.set('');
     try {
       await this.auth.submit('outings/update', {kind,venueToken});
-      this.notice.set(kind === 'clear' ? 'Update removed.' : kind === 'venue' ? 'Place shared with your partner.' : 'Your partner can see that you are on your way.');
+      this.notice.set(kind === 'clear' ? 'Update removed.' : 'Place shared with your partner.');
       await this.sharing.load(true);
+      if(kind === 'venue') this.shared.emit();
     } catch (error) { this.failed(error); }
     finally { this.sending.set(false); }
   }

@@ -14,7 +14,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: .65rem;
 }
 .brand {
   border: 0;
@@ -71,7 +71,7 @@ h1 {
 }
 .steps {
   font-size: 0.75rem;
-  color: var(--accent);
+  color: var(--muted);
   display: flex;
   gap: 0.6rem;
 }
@@ -299,4 +299,8 @@ h1:focus {
 
 .page-footer { text-align:center; }
 .page-footer a { display:inline-block; font-size:.7rem; color:var(--muted); text-underline-offset:3px; }
-.account-page { padding-bottom:calc(4rem + env(safe-area-inset-bottom)); }
+.account-page { padding-bottom:calc(5.5rem + env(safe-area-inset-bottom)); }
+
+.header-actions {display:flex;align-items:center;gap:.4rem;flex-shrink:0;}
+.logout-button {display:grid;place-items:center;width:2.75rem;height:2.75rem;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--text);}
+.logout-button svg {width:1.15rem;height:1.15rem;}

@@ -1,3 +1,4 @@
+@if(busy() || loading()) {<app-loading-indicator [label]="loading() ? 'Getting things ready...' : 'Working...'" />}
 <main
   class="auth-page"
   [class.login-page]="screen() === 'login'"
@@ -14,8 +15,9 @@
       <span class="brand-mark" aria-hidden="true"><i></i><i></i></span> overlap
     </button>
     @if (account(); as person) {
-      <span class="header-welcome">Welcome, {{ person.displayName }}</span>
+      <span class="header-welcome">Hi, {{ person.displayName }}</span>
     }
+    <div class="header-actions">
     <button
       class="theme-toggle"
       type="button"
@@ -25,6 +27,12 @@
     >
       <span aria-hidden="true">{{ theme() === 'dark' ? '☀' : '☾' }}</span>
     </button>
+    @if(account()) {
+      <button class="logout-button" type="button" (click)="logout()" [disabled]="busy() || loading()" aria-label="Log out" title="Log out">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H4v16h5M14 8l4 4-4 4M8 12h12" /></svg>
+      </button>
+    }
+    </div>
   </header>
   <section class="auth-panel" aria-labelledby="page-title">
     <h1 id="page-title" tabindex="-1" [class.sr-only]="screen() === 'account'">
@@ -34,7 +42,7 @@
       <p role="status">Getting things ready…</p>
     } @else {
       @if (screen() === 'login') {
-        <p class="intro">A little closer, wherever you are.</p>
+        <p class="intro">A little space for you and your person. Come on in.</p>
         @if (invitationToken) {
           <p class="notice success">
             You have an invitation. Sign in or create an account, then review it on your dashboard.

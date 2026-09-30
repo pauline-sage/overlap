@@ -1,20 +1,20 @@
 .dock {
   position: fixed;
-  bottom: 0;
+  bottom: max(.6rem, env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
-  width: min(100%, 30rem);
-  padding: .3rem .5rem env(safe-area-inset-bottom);
+  width: min(calc(100% - 1.5rem), 29rem);
+  padding: .4rem;
   border: 1px solid var(--line);
-  border-bottom: 0;
-  border-radius: 1.25rem 1.25rem 0 0;
+  box-shadow: var(--shadow);
+  border-radius: 1.6rem;
   background: var(--surface);
 
   z-index: 10;
 }
 button {
   flex: 1;
-  min-height: 2.75rem;
+  min-height: 3.1rem;
   border: 0;
   border-radius: 1rem;
   background: transparent;
@@ -34,8 +34,8 @@ svg {
   stroke-width: 1.7;
 }
 button[aria-current] {
-  color: var(--on-accent);
-  background: var(--accent);
+  color: var(--text);
+  background: var(--accent-soft);
   font-weight: 600;
 }
 button:focus-visible {
@@ -51,3 +51,5 @@ nav { display:flex; gap:.25rem; }
 
 
 .bell{position:relative;display:flex}.badge{position:absolute;top:-.25rem;left:1rem;background:var(--accent);color:var(--on-accent);border:1px solid var(--line);border-radius:1rem;padding:0 .25rem;font-size:.6rem;min-width:.8rem}
+
+h2 {font-size:1.8rem;font-weight:700;letter-spacing:-.04em;margin:0 0 1.5rem;}

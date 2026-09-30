@@ -1,7 +1,8 @@
+import { LoadingIndicatorComponent } from '../../loading-indicator';
 ﻿import { DateCardsComponent } from '../../date-cards/date-cards';
 import { Component, inject, input, output } from '@angular/core';
 import { OutingUpdate, SharingService, Category } from './sharing.service';
-@Component({selector:'app-sharing',imports:[DateCardsComponent],templateUrl:'./sharing.html',styleUrl:'./sharing.scss'})
+@Component({selector:'app-sharing',imports: [LoadingIndicatorComponent,DateCardsComponent],templateUrl:'./sharing.html',styleUrl:'./sharing.scss'})
 export class SharingComponent {
   readonly notifications=input(false); readonly pickYours=output<OutingUpdate>(); readonly openPicks=output<void>(); readonly sharing=inject(SharingService);
   readonly categories: {key:Category;label:string;description:string}[] = [

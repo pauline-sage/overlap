@@ -39,21 +39,21 @@ public sealed class GeoapifyPlaces(HttpClient http,IConfiguration config)
     }
     public async Task<Venue[]> Nearby(OutingArea area,int radius,string category,OutingWindow window,CancellationToken ct) {
         var position=FormattableString.Invariant($"{area.Lon},{area.Lat}");
-        using var doc=await Get($"v2/places?categories={category}&filter=circle:{position},{radius*1000}&bias=proximity:{position}&limit=6",ct);
-        var result=new List<Venue>();
-        foreach(var feature in doc.RootElement.GetProperty("features").EnumerateArray()) {
-            var p=feature.GetProperty("properties");var id=Text(p,"place_id");if(id is null)continue;
+        using var doc=await Get($"v2/places?categories={category}&filter=circle:{position},{radius*1000}&bias=proximity:{position}&limit=20",ct);
+        var result=new System.Collections.Concurrent.ConcurrentBag<Venue>();
+        await Parallel.ForEachAsync(doc.RootElement.GetProperty("features").EnumerateArray().ToArray(), new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = ct }, async (feature, token) => {
+            var p=feature.GetProperty("properties");var id=Text(p,"place_id");if(id is null)return;
             var lat=p.GetProperty("lat").GetDouble();var lon=p.GetProperty("lon").GetDouble();
-            var distance=OutingMatch.Distance(area.Lat,area.Lon,lat,lon);if(distance>radius)continue;
+            var distance=OutingMatch.Distance(area.Lat,area.Lon,lat,lon);if(distance>radius)return;
             string? hours=null,website=null,venueZone=null;
             try {
-                using var detail=await Get("v2/place-details?id="+Uri.EscapeDataString(id)+"&features=details",ct);
+                using var detail=await Get("v2/place-details?id="+Uri.EscapeDataString(id)+"&features=details",token);
                 var d=detail.RootElement.GetProperty("features").EnumerateArray().Select(x=>x.GetProperty("properties")).FirstOrDefault();
                 if(d.ValueKind==JsonValueKind.Object){hours=Text(d,"opening_hours");website=Text(d,"website"); if(d.TryGetProperty("timezone",out var zone))venueZone=Text(zone,"name");}
             } catch(HttpRequestException) { /* Keep the real listing, with explicitly unknown hours. */ }
             if(!Uri.TryCreate(website,UriKind.Absolute,out var site)||site.Scheme is not ("https" or "http"))website=null;
             result.Add(new(id,Text(p,"name")??"Unnamed venue",Text(p,"formatted")??area.Name,Math.Round(distance,2),hours,venueZone is null ? "unknown" : VenueHours.Assess(hours,venueZone,window.StartUtc,window.EndUtc),FormattableString.Invariant($"https://www.openstreetmap.org/?mlat={lat}&mlon={lon}#map=18/{lat}/{lon}"),website));
-        }
-        return result.ToArray();
+        });
+        return result.OrderBy(x => x.DistanceKm).ToArray();
     }
 }

@@ -9,6 +9,12 @@ namespace Overlap.Api.Tests;
 
 public sealed class OutingTests
 {
+    [Theory]
+    [InlineData("2026-09-29T12:00")]
+    [InlineData("2026-09-30T13:59")]
+    [InlineData("2026-09-30T14:00")]
+    public void RejectsPastDatesAndTimes(string local) =>
+        Assert.Throws<ArgumentException>(() => OutingTime.Resolve(new(local,"Europe/Paris","Europe/Paris",60),DateTimeOffset.Parse("2026-09-30T12:00:30Z")));
     [Fact]
     public void SameInstantUsesDifferentDatesAndOffsets()
     {

@@ -1,3 +1,4 @@
+@if(!notifications() && sharing.busy()) {<app-loading-indicator [label]="'Saving your preferences...'" />}
 @if (sharing.error()) {
   <p role="alert">{{ sharing.error() }}</p>
   <button type="button" (click)="sharing.load()">Retry</button>
