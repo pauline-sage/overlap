@@ -5,7 +5,7 @@
 }
 @if (sharing.state(); as state) {
   @if (notifications()) {
-    <app-date-cards [notifications]="true" (openPicks)="openPicks.emit()" (pickYours)="pickYours.emit($event)" />
+    <app-date-cards class="notification-feed" [notifications]="true" (openPicks)="openPicks.emit()" (pickYours)="pickYours.emit($event)" />
   } @else {
     <p class="hint intro">{{ state.connected ? 'Choose what your partner can see. Change this at any time.' : 'Connect with your person to choose what to share.' }}</p>
     <div class="preferences">

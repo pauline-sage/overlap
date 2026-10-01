@@ -79,5 +79,7 @@
       </article>
     }
   }
-  @if(notifications() && !groups()[0].updates.length && !visibleMovieNotifications()) { <p class="when">No shared updates yet.</p> }
+  @if(notifications() && !groups()[0].updates.length && !visibleMovieNotifications()) {
+    <div class="notification-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 5h16v14H4zM4 13h5l2 3h2l2-3h5" /></svg><strong>No shared updates yet.</strong><p class="when">Shared places, watch picks and replies will appear here.</p></div>
+  }
 }

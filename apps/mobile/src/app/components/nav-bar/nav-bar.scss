@@ -53,3 +53,8 @@ nav { display:flex; gap:.25rem; }
 .bell{position:relative;display:flex}.badge{position:absolute;top:-.25rem;left:1rem;background:var(--accent);color:var(--on-accent);border:1px solid var(--line);border-radius:1rem;padding:0 .25rem;font-size:.6rem;min-width:.8rem}
 
 h2 {font-size:1.8rem;font-weight:700;letter-spacing:-.04em;margin:0 0 1.5rem;}
+.notifications-header{display:flex;align-items:center;gap:.85rem;flex-wrap:wrap;margin-bottom:1.5rem;padding:1.3rem 1rem;border:1px solid var(--line);border-radius:1.75rem;background:radial-gradient(ellipse at top left,color-mix(in srgb,var(--accent) 24%,transparent),transparent 70%),radial-gradient(ellipse at bottom right,color-mix(in srgb,var(--clay) 16%,transparent),transparent 65%),var(--hero)}
+.notifications-header h2{font-size:1.55rem;margin:0}
+.notifications-header p{font-size:.78rem;line-height:1.5;margin:.35rem 0 0;color:var(--muted)}
+.notifications-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:1rem;background:var(--surface);color:var(--text);flex-shrink:0}
+.unread-count{font-size:.7rem;padding:.35rem .65rem;border-radius:2rem;background:var(--accent);color:var(--on-accent)}

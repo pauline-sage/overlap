@@ -20,6 +20,7 @@
 />
 
 <section class="profile-card">
+  <div class="profile-intro">
   <h2 id="dashboard-heading" tabindex="-1">{{ greetingName() }}'s profile</h2>
 
   <div class="photo-editor">
@@ -39,7 +40,7 @@
         aria-label="Add or replace photo"
         title="Add or replace photo"
       >
-        <span aria-hidden="true">&#128247;</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 7h4l2-3h4l2 3h4v13H4z" /><circle cx="12" cy="13" r="3.5" /></svg>
       </button>
       @if (together()?.hasPhoto) {
         <button
@@ -50,7 +51,7 @@
           aria-label="Remove my photo"
           title="Remove my photo"
         >
-          <span aria-hidden="true">&#128465;&#65039;</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7" /></svg>
         </button>
       }
     </div>
@@ -58,6 +59,8 @@
   <button type="button" (click)="action.emit('editProfile')" [disabled]="busy() || working()">
     Edit display name
   </button>
+  </div>
+  <div class="connection-card">
   <div class="connection-heading">
     <h3>Your connection</h3>
     <button
@@ -88,6 +91,7 @@
       Invite your person
     </button>
   }
+  </div>
 </section>
 
 <section class="sharing" aria-label="Your connection">
