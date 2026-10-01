@@ -38,3 +38,6 @@ services/api/**
 
 !services/api/Outings/
 !services/api/Outings/**
+
+!services/api/Books/
+!services/api/Books/**
