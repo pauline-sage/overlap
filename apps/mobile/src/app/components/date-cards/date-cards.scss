@@ -17,3 +17,11 @@
 .place-actions a:first-child{background:var(--accent-soft)}
 .place-actions a:hover,.place-actions button:hover{border-color:var(--muted)}
 .reply h4,.place h4{overflow-wrap:anywhere}
+
+.date-card.compact{padding:.85rem 1rem;border-radius:1rem}
+.past-summary{width:100%;display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:44px;text-align:left;color:var(--text);padding:0}
+.past-summary strong,.past-summary .when{display:block}
+.past-summary strong{font-size:.9rem}
+.past-summary svg{flex-shrink:0}
+.past-summary svg.expanded{transform:rotate(90deg)}
+.compact>div:not([hidden]){border-top:1px solid var(--line);margin-top:1rem;padding-top:1rem}

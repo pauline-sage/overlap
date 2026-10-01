@@ -36,7 +36,10 @@ public static class PickEndpoints
             var id = UserId(user);
             var pair = await Pair(db, id);
             var picks = await db.Set<SharedPick>().AsNoTracking().Where(x => x.ProposedBy == id || (pair != null && x.PairId == pair && x.IsShared && db.Set<SharingGrant>().Any(g => g.PairId == pair && g.SenderId == x.ProposedBy && g.Category == "picks" && g.Status == "accepted"))).OrderByDescending(x => x.Id).ToListAsync();
-            return Results.Ok(new { connected = pair is not null, picks = picks.Select(x => new { x.Id, x.Status, shared = x.IsShared, mine = x.ProposedBy == id, x.CreatedUtc, title = JsonSerializer.Deserialize<JsonElement>(x.Content) }) });
+            var watched = await db.Set<WatchedTitle>().AsNoTracking().Where(x => pair != null && x.PairId == pair).OrderByDescending(x => x.Id).ToListAsync();
+            return Results.Ok(new { connected = pair is not null,
+                watched = watched.Select(x => new { x.Id, mine = x.AddedBy == id, x.AddedUtc, title = JsonSerializer.Deserialize<JsonElement>(x.Content) }),
+                picks = picks.Select(x => new { x.Id, x.Status, shared = x.IsShared, mine = x.ProposedBy == id, x.CreatedUtc, title = JsonSerializer.Deserialize<JsonElement>(x.Content) }) });
         });
         group.MapPost("", async (JsonElement title, ClaimsPrincipal user, AuthDbContext db) =>
         {

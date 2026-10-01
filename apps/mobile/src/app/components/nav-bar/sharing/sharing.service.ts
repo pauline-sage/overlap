@@ -2,7 +2,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../../auth.service';
-export type Category = 'profile' | 'presence' | 'picks';
+export type Category = 'profile' | 'presence' | 'picks' | 'books';
 interface Grant { category: Category; status: 'pending' | 'accepted' | 'declined' | 'withdrawn'; }
 export interface OutingUpdate { dismissed?:boolean; cancelled?:boolean; cancelledByMe?:boolean; cancellationReason?:string; replyKind?: 'picked'|'surprise'; replyRevision?: string; replyVenue?: OutingUpdate['venue']; mine: boolean; onMyWay: boolean; updatedUtc: string; revision: string; unread: boolean; venue: { name: string; address: string; mapUrl: string; website?: string; activity?: string; startUtc?: string; timeZone?: string } | null; }
 export interface MoviePick { dismissed?:boolean; id:number;revision:string;mine:boolean;status:string;unread:boolean;shared:boolean;title:{title:string;format:string;poster?:string;ownLink:string;partnerLink:string}; }

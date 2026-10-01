@@ -76,6 +76,30 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
             pick.HasIndex(x => new { x.ProposedBy, x.TitleId }).IsUnique();
             pick.HasOne<Account>().WithMany().HasForeignKey(x => x.ProposedBy).OnDelete(DeleteBehavior.Cascade);
         });
+        builder.Entity<Overlap.Api.Watch.WatchedTitle>(watched => {
+            watched.Property(x => x.PairId).HasMaxLength(32);
+            watched.Property(x => x.AddedBy).HasMaxLength(255);
+            watched.Property(x => x.TitleId).HasMaxLength(80);
+            watched.Property(x => x.Content).HasMaxLength(16000).HasColumnType("longtext");
+            watched.HasIndex(x => new { x.PairId, x.TitleId }).IsUnique();
+            watched.HasOne<Account>().WithMany().HasForeignKey(x => x.AddedBy).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<Overlap.Api.Books.ReadingEntry>(entry => {
+            entry.Property(x => x.PairId).HasMaxLength(32);
+            entry.Property(x => x.AddedBy).HasMaxLength(255);
+            entry.Property(x => x.BookId).HasMaxLength(40);
+            entry.Property(x => x.Content).HasColumnType("longtext");
+            entry.Property(x => x.Status).HasMaxLength(16);
+            entry.Property(x => x.Scope).HasMaxLength(255);
+            entry.HasIndex(x => new { x.PairId, x.BookId, x.Scope }).IsUnique();
+            entry.HasOne<Account>().WithMany().HasForeignKey(x => x.AddedBy).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<Overlap.Api.Books.BookRating>(rating => {
+            rating.HasKey(x => new { x.EntryId, x.AccountId });
+            rating.Property(x => x.AccountId).HasMaxLength(255);
+            rating.HasOne<Overlap.Api.Books.ReadingEntry>().WithMany().HasForeignKey(x => x.EntryId).OnDelete(DeleteBehavior.Cascade);
+            rating.HasOne<Account>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Cascade);
+        });
         builder.Entity<Account>().Property(x => x.DisplayName).HasMaxLength(50);
         builder.Entity<Account>().Property(x => x.InvitationHash).HasMaxLength(64);
         builder.Entity<Account>().HasIndex(x => x.InvitationHash).IsUnique();

@@ -13,7 +13,7 @@ public sealed record SharingCategory(string Category);
 
 public static class PrivacyEndpoints
 {
-    private static readonly string[] Categories = ["profile", "presence", "picks"];
+    private static readonly string[] Categories = ["profile", "presence", "picks", "books"];
     private static string Id(ClaimsPrincipal user) => user.FindFirstValue(ClaimTypes.NameIdentifier)!;
     private static Task<string?> Pair(AuthDbContext db, string id) => db.PairMembers.Where(x => x.AccountId == id).Select(x => x.PairId).SingleOrDefaultAsync();
     public static Task<bool> Allowed(AuthDbContext db, string? pair, string sender, string category) =>

@@ -20,7 +20,7 @@ describe('Owner sharing preferences', () => {
   it('enables sharing directly, with old pending requests off', async () => {
     const f = TestBed.createComponent(SharingComponent); await f.whenStable(); f.detectChanges();
     const controls = f.nativeElement.querySelectorAll('input[role="switch"]');
-    expect(controls.length).toBe(3);
+    expect(controls.length).toBe(4);
     expect(controls[1].checked).toBe(false);
     expect(f.nativeElement.textContent).not.toContain('Request sharing');
     controls[0].click(); await f.whenStable();
@@ -34,6 +34,14 @@ describe('Owner sharing preferences', () => {
     expect(control.checked).toBe(true);
     control.click(); await f.whenStable();
     expect(auth.submit).toHaveBeenCalledWith('privacy/cancel', { category: 'profile' });
+    f.destroy();
+  });
+  it('keeps book interests private by default and lets the owner share them', async () => {
+    const f=TestBed.createComponent(SharingComponent);await f.whenStable();f.detectChanges();
+    const control=f.nativeElement.querySelectorAll('input[role="switch"]')[3];
+    expect(control.checked).toBe(false);
+    control.click();await f.whenStable();
+    expect(auth.submit).toHaveBeenCalledWith('privacy/request',{category:'books'});
     f.destroy();
   });
   it('restores the saved state if the request fails', async () => {

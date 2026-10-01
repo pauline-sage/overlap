@@ -1,0 +1,106 @@
+@if (busy() || saving()) { <app-loading-indicator [label]="busy() ? 'Finding books...' : 'Updating your bookshelf...'" /> }
+@if (recommending()) { <app-loading-indicator label="Finding recommendations..." /> }
+@if (shelfError()) { <p class="error" role="alert">{{ shelfError() }}</p> }
+@if (selected(); as book) {
+  <button class="back" type="button" (click)="selected.set(null)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg><span>Back</span></button>
+  <article>
+    <div class="cover detail-cover">
+      @if (book.coverId) { <img [src]="'https://covers.openlibrary.org/b/id/'+book.coverId+'-L.jpg?default=false'" [alt]="book.title+' cover'" (error)="imageFailed($event)" /> }
+      @else { <span>No cover available</span> }
+    </div>
+    <h2 id="read-detail-heading" tabindex="-1">{{ book.title }}</h2>
+    <p>{{ book.authors.join(', ') || 'Author unavailable' }}</p>
+    @if (book.year) { <p class="fine">First published {{ book.year }}</p> }
+    <p class="fine">{{ book.subjects.slice(0, 6).join(' / ') }}</p>
+    <section class="book-summary" aria-label="Book summary" aria-live="polite">
+      @if (summaryBusy()) { <app-loading-indicator label="Loading summary..." /> }
+      @else if (summaryError()) { <p class="fine">{{ summaryError() }}</p> }
+      @else { <p>{{ summary() || 'No summary available for this book.' }}</p> }
+    </section>
+    <a class="catalogue-link" [href]="'https://openlibrary.org'+book.id" target="_blank" rel="noopener noreferrer">Book details and editions &#8599;</a>
+    <p class="fine">Check the edition and language before getting a copy. Catalogue listings do not guarantee borrowing or purchase availability.</p>
+    <div class="book-actions">
+    @if (entry(book.id); as item) {
+      <p class="reading-status" role="status">{{ item.status === 'read' ? 'Already read together' : item.mine === false ? "On your person's bookshelf" : 'On your bookshelf' }}</p>
+      @if (item.status === 'read') {
+        <button class="secondary" type="button" (click)="save(book, 'planned')" [disabled]="saving()">Move to the bookshelf</button>
+      } @else {
+        <button class="primary" type="button" (click)="save(book, 'read')" [disabled]="saving()">Already read together</button>
+        @if (item.mine === false) {
+          <button class="secondary" type="button" (click)="save(book, 'planned')" [disabled]="saving()">Add to my bookshelf</button>
+        } @else {
+          <button class="secondary" type="button" (click)="remove(book)" [disabled]="saving()">Remove from bookshelf</button>
+        }
+      }
+    } @else {
+      <button class="primary" type="button" (click)="save(book, 'planned')" [disabled]="saving() || !ready() || !connected()">Add to bookshelf</button>
+      <button class="secondary" type="button" (click)="save(book, 'read')" [disabled]="saving() || !ready() || !connected()">Already read together</button>
+      @if (!connected()) { <p class="fine">Connect with your person to save books together.</p> }
+    }
+    </div>
+    @if (entry(book.id); as item) {
+      @if (item.status === 'read') {
+        <app-book-rating [title]="book.title" [rating]="item.ownRating ?? null" [partnerRating]="item.partnerRating ?? null" [disabled]="saving()" (rate)="rate(book, $event)" />
+      }
+    }
+  </article>
+} @else {
+  <button class="back" type="button" (click)="back.emit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg><span>Back</span></button>
+  <h2 id="dashboard-heading" tabindex="-1">Read together</h2>
+  <nav role="tablist" aria-label="Book views">
+    <button id="read-tab-discover" role="tab" type="button" [attr.aria-selected]="tab() === 'discover'" [tabIndex]="tab() === 'discover' ? 0 : -1" aria-controls="read-panel" (keydown)="tabKey($event)" (click)="view('discover')">Discover</button>
+    <button id="read-tab-planned" role="tab" type="button" [attr.aria-selected]="tab() === 'planned'" [tabIndex]="tab() === 'planned' ? 0 : -1" aria-controls="read-panel" (keydown)="tabKey($event)" (click)="view('planned')">Bookshelf ({{ entries('planned').length }})</button>
+    <button id="read-tab-read" role="tab" type="button" [attr.aria-selected]="tab() === 'read'" [tabIndex]="tab() === 'read' ? 0 : -1" aria-controls="read-panel" (keydown)="tabKey($event)" (click)="view('read')">Read together ({{ entries('read').length }})</button>
+    <button id="read-tab-recommended" role="tab" type="button" [attr.aria-selected]="tab() === 'recommended'" [tabIndex]="tab() === 'recommended' ? 0 : -1" aria-controls="read-panel" (keydown)="tabKey($event)" (click)="view('recommended')">Recommended books</button>
+  </nav>
+  <section id="read-panel" role="tabpanel" [attr.aria-labelledby]="'read-tab-'+tab()" tabindex="0">
+    @if (tab() === 'discover') {
+      <form (ngSubmit)="search()">
+        <label for="book-query">Title or author</label>
+        <input id="book-query" name="query" type="search" maxlength="120" placeholder="Find your next shared read..." [(ngModel)]="query" (ngModelChange)="changed()" />
+        <div class="filters">
+          <div><label for="book-genre">Genre</label><select id="book-genre" name="genre" [(ngModel)]="genre" (ngModelChange)="changed()"><option value="">Any genre</option>@for (item of genres; track item) { <option [value]="item.toLowerCase()">{{ item }}</option> }</select></div>
+          <div><label for="book-language">Edition language</label><select id="book-language" name="language" [(ngModel)]="language" (ngModelChange)="changed()"><option value="">Any language</option><option value="en">English</option><option value="fr">French</option></select></div>
+        </div>
+        @if (entries('read').length) {
+          <label for="book-seed">Inspired by a book we've read</label>
+          <select id="book-seed" name="basedOn" [(ngModel)]="basedOn" (ngModelChange)="changed()"><option [ngValue]="null">No previous book</option>@for (item of entries('read'); track item.id) { <option [ngValue]="item.id">{{ item.book.title }}</option> }</select>
+        }
+        <button class="primary" type="submit" [disabled]="busy()">Find something to read <span aria-hidden="true">&#8599;</span></button>
+      </form>
+      @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+      @if (explanation()) { <p class="fine" role="status">{{ explanation() }}</p> }
+      <p class="fine">Catalogue suggestions. Already-read books are excluded when browsing; search by title or author to find them again.</p>
+    } @else if (tab() === 'recommended') {
+      <p class="fine" role="status">{{ recommendationExplanation() }}</p>
+      @if (recommendationError()) { <p class="error" role="alert">{{ recommendationError() }}</p> }
+      <button class="secondary" type="button" (click)="recommend()" [disabled]="recommending()">Refresh recommendations</button>
+    } @else if (tab() === 'planned') {
+      <p class="fine">{{ sharingBooks() ? 'Your bookshelf is shared with your person.' : 'Your bookshelf is private. You can share it in Settings.' }} Books your person shares appear here too.</p>
+    } @else { <p class="fine">Books you've read together. Each of you can give your own rating.</p> }
+    <div class="books" aria-live="polite" [attr.aria-busy]="busy()">
+      @for (book of displayed(); track book.id) {
+        <div class="book-item">
+        <button class="book-card" type="button" (click)="open(book)" [attr.aria-label]="'Details for '+book.title">
+          <span class="cover"><span class="fallback" aria-hidden="true">{{ book.title }}</span>@if (book.coverId) { <img [src]="'https://covers.openlibrary.org/b/id/'+book.coverId+'-M.jpg?default=false'" alt="" loading="lazy" (error)="imageFailed($event)" /> }</span>
+          <strong>{{ book.title }}</strong><span class="fine">{{ book.authors.join(', ') || 'Author unavailable' }}</span>
+          @if (tab() !== 'read') {
+            @if (entry(book.id); as item) { <span class="fine">{{ item.status === 'read' ? 'Read together' : item.mine === false ? "On your person's bookshelf" : 'On your bookshelf' }}</span> }
+          }
+          @if (tab() === 'recommended') { <span class="fine">{{ recommendationReasons()[book.id] }}</span> }
+        </button>
+        @if (tab() === 'read') {
+          <button class="remove-read" type="button" (click)="remove(book)" [disabled]="saving()" [attr.aria-label]="'Remove '+book.title+' from read together'" title="Remove from read together"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="m7 7 10 10M17 7 7 17" /></svg></span></button>
+          @if (entry(book.id); as item) {
+            <app-book-rating [title]="book.title" [rating]="item.ownRating ?? null" [partnerRating]="item.partnerRating ?? null" [disabled]="saving()" (rate)="rate(book, $event)" />
+          }
+        }
+        </div>
+      }
+    </div>
+    @if (!displayed().length && tab() !== 'recommended' && (tab() !== 'discover' || results())) { <p class="empty">{{ tab() === 'discover' ? 'No books in this batch. Try another title, genre or language.' : tab() === 'read' ? 'No shared reads yet. Find a book and choose Already read.' : 'Your bookshelf is empty. Discover a book to add.' }}</p> }
+    @if (tab() === 'recommended' && !recommending() && !recommendationError() && !displayed().length && entries('read').length) { <p class="empty">No new matches in this catalogue batch. Try Discover or rate another book you enjoyed.</p> }
+    @if (tab() === 'discover' && hasMore()) { <button class="secondary" type="button" (click)="search(true)" [disabled]="busy()">Find more books</button> }
+  </section>
+}
+<p class="credits">Book data and covers from <a href="https://openlibrary.org" target="_blank" rel="noopener noreferrer">Open Library</a>.</p>

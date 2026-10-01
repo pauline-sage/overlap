@@ -8,5 +8,20 @@
     <button type="button" aria-label="Change password" (click)="changePassword.emit()" [disabled]="busy()">Change password <span aria-hidden="true">&#8250;</span></button>
   </div>
   <app-privacy-notice />
-  <button class="sign-out" type="button" (click)="signOut.emit()" [disabled]="busy()">Sign out</button>
+  @if(deleting()){<app-loading-indicator label="Deleting your account..." />}
+  <div class="delete-account">
+    @if(confirming()) {
+      <form (ngSubmit)="deleteAccount()" aria-labelledby="delete-heading">
+        <h3 id="delete-heading">Delete your account permanently?</h3>
+        <p>Your profile, photo and saved picks will be deleted, and your connection will end. Your partner keeps their account. This cannot be undone.</p>
+        <fieldset [disabled]="deleting()">
+          <label for="delete-password">Current password</label>
+          <input id="delete-password" name="deletePassword" type="password" autocomplete="current-password" [(ngModel)]="password" required maxlength="128" />
+          @if(error()){<p role="alert">{{error()}}</p>}
+          <button class="danger" type="submit" [disabled]="!password">Yes, delete my account</button>
+          <button type="button" (click)="cancelDeletion()">Keep my account</button>
+        </fieldset>
+      </form>
+    } @else {<button class="danger" type="button" [disabled]="busy()" (click)="confirming.set(true)">Delete my account</button>}
+  </div>
 </section>

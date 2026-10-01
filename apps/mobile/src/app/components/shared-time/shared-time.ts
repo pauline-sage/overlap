@@ -32,6 +32,7 @@ interface SharedPick {
 interface PickList {
   connected: boolean;
   picks: SharedPick[];
+  watched?: { id: number; mine: boolean; addedUtc: string; title: WatchTitle }[];
 }
 interface YouTubeVideo {
   id: string;
@@ -90,6 +91,7 @@ export class SharedTimeComponent implements OnDestroy {
   readonly selected = signal<WatchTitle | null>(null);
   readonly picks = signal<WatchTitle[]>([]);
   readonly sharedPicks = signal<SharedPick[]>([]);
+  readonly watched = signal<NonNullable<PickList['watched']>>([]);
   readonly connected = signal(false);
   readonly picksReady = signal(false);
   readonly pickBusy = signal(false);
@@ -98,7 +100,7 @@ export class SharedTimeComponent implements OnDestroy {
   private loadingPicks = false;
   private pickVersion = 0;
   private disposed = false;
-  readonly tab = signal<'discover' | 'picks' | 'partner'>('discover');
+  readonly tab = signal<'discover' | 'picks' | 'partner' | 'watched'>('discover');
   private readonly resetDetail = effect(() => {
     clearInterval(this.poll);
     if (!this.active()) this.selected.set(null);
@@ -112,13 +114,13 @@ export class SharedTimeComponent implements OnDestroy {
   pickTitles(mine: boolean): WatchTitle[] {
     return this.picks().filter((_, index) => this.sharedPicks()[index]?.mine === mine);
   }
-  view(tab: 'discover' | 'picks' | 'partner'): void {
+  view(tab: 'discover' | 'picks' | 'partner' | 'watched'): void {
     this.selected.set(null);
     this.tab.set(tab);
     void this.loadPicks();
   }
   tabKey(event: KeyboardEvent): void {
-    const tabs = ['discover', 'picks', 'partner'] as const;
+    const tabs = ['discover', 'picks', 'partner', 'watched'] as const;
     let index = tabs.indexOf(this.tab());
     if (event.key === 'ArrowRight') index = (index + 1) % tabs.length;
     else if (event.key === 'ArrowLeft') index = (index + tabs.length - 1) % tabs.length;
@@ -276,7 +278,8 @@ export class SharedTimeComponent implements OnDestroy {
       this.applyPicks(list);
       this.pickError.set('');
     } catch (error) {
-      if(this.tab() === 'partner') this.selected.set(null);
+      if(this.tab() === 'partner' || this.tab() === 'watched') this.selected.set(null);
+      this.watched.set([]);
       this.sharedPicks.set([]); this.picks.set([]); this.picksReady.set(false);
       this.pickError.set(this.message(error));
     } finally {
@@ -288,6 +291,8 @@ export class SharedTimeComponent implements OnDestroy {
     this.connected.set(list.connected);
     this.picksReady.set(true);
     this.sharedPicks.set(list.picks);
+    this.watched.set(list.watched ?? []);
+    if(this.tab() === 'watched' && this.selected() && !this.watched().some(w => w.title.id === this.selected()?.id)) this.selected.set(null);
     if(this.tab() === 'partner' && this.selected() && !list.picks.some(p => !p.mine && p.title.id === this.selected()?.id)) this.selected.set(null);
     this.picks.set(
       list.picks.map((p) =>
@@ -307,6 +312,24 @@ export class SharedTimeComponent implements OnDestroy {
   }
   pick(id: string): SharedPick | undefined {
     return this.sharedPicks().find((p) => p.title.id === id && p.mine === (this.tab() !== 'partner'));
+  }
+  watchedEntry(id: string): NonNullable<PickList['watched']>[number] | undefined {
+    return this.watched().find(item => item.title.id === id);
+  }
+  watchedTitles(): WatchTitle[] {
+    return this.watched().map(item => item.mine ? item.title : {
+      ...item.title,
+      ownCountry: item.title.partnerCountry, partnerCountry: item.title.ownCountry,
+      ownServices: item.title.partnerServices, partnerServices: item.title.ownServices,
+      ownLink: item.title.partnerLink, partnerLink: item.title.ownLink,
+    });
+  }
+  async markWatched(title: WatchTitle): Promise<void> {
+    await this.changePick('watch/watched', title);
+  }
+  async removeWatched(id: string): Promise<void> {
+    const entry = this.watchedEntry(id);
+    if(entry) await this.changePick('watch/watched/' + entry.id + '/remove', {});
   }
   async sharePick(title: WatchTitle, shared: boolean): Promise<void> {
     const pick = this.pick(title.id);

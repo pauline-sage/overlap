@@ -71,6 +71,7 @@
           verified by this catalogue.
         </p>
       }
+      @if (tab() !== 'watched') {
       @if (pick(title.id); as item) {
         <p class="pick-status" role="status">
           {{
@@ -123,6 +124,19 @@
           <p class="fine">Saved picks stay private. Connect with someone to share selected titles.</p>
         }
       }
+      }
+      @if (title.format === 'Movie' || title.format === 'Series') {
+        <div class="watched-actions">
+          @if (watchedEntry(title.id)) {
+            <p class="pick-status" role="status">Watched together</p>
+            <button class="more" type="button" (click)="removeWatched(title.id)" [disabled]="pickBusy()">Remove from watched together</button>
+          } @else {
+            <p class="fine">Add this title to your shared history. Both of you can see and manage it.</p>
+            <button class="primary" type="button" (click)="markWatched(title)" [disabled]="pickBusy() || !picksReady() || !connected()">Mark as watched together</button>
+            @if (!connected()) { <p class="fine">Connect with your person to keep a shared watch history.</p> }
+          }
+        </div>
+      }
     </article>
   } @else {
     <button class="back" type="button" (click)="back.emit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg><span>Back</span></button>
@@ -131,6 +145,7 @@
       <button id="watch-tab-discover" role="tab" type="button" [attr.aria-selected]="tab() === 'discover'" [tabIndex]="tab() === 'discover' ? 0 : -1" aria-controls="watch-panel" (keydown)="tabKey($event)" (click)="view('discover')">Discover</button>
       <button id="watch-tab-picks" role="tab" type="button" [attr.aria-selected]="tab() === 'picks'" [tabIndex]="tab() === 'picks' ? 0 : -1" aria-controls="watch-panel" (keydown)="tabKey($event)" (click)="view('picks')">My picks <span>({{ pickTitles(true).length }})</span></button>
       <button id="watch-tab-partner" role="tab" type="button" [attr.aria-selected]="tab() === 'partner'" [tabIndex]="tab() === 'partner' ? 0 : -1" aria-controls="watch-panel" (keydown)="tabKey($event)" (click)="view('partner')">{{ partnerName() }}'s picks <span>({{ pickTitles(false).length }})</span></button>
+      <button id="watch-tab-watched" role="tab" type="button" [attr.aria-selected]="tab() === 'watched'" [tabIndex]="tab() === 'watched' ? 0 : -1" aria-controls="watch-panel" (keydown)="tabKey($event)" (click)="view('watched')">Watched together <span>({{ watched().length }})</span></button>
     </nav>
     <section id="watch-panel" role="tabpanel" [attr.aria-labelledby]="'watch-tab-' + tab()" tabindex="0">
 
@@ -276,6 +291,8 @@
           }
         }
       </div>
+    } @else if (tab() === 'watched') {
+      <p class="fine">Movies and series you've watched together. Open a title to remove it from this shared history.</p>
     } @else {
       <p class="fine">
         {{
@@ -287,7 +304,7 @@
     }
     <div class="posters">
       @for (
-        title of tab() === 'discover' ? (results() ?? []) : pickTitles(tab() === 'picks');
+        title of tab() === 'discover' ? (results() ?? []) : tab() === 'watched' ? watchedTitles() : pickTitles(tab() === 'picks');
         track title.id
       ) {
         <button
@@ -307,7 +324,10 @@
             >{{ title.minutes ? title.minutes + ' min' : 'Length unknown'
             }}{{ title.format === 'Series' ? ' / ep. 1' : '' }}</span
           >
-          @if (tab() !== 'discover') {
+          @if (tab() === 'watched' || watchedEntry(title.id)) {
+            <span class="pick-status">Watched together</span>
+          }
+          @if (tab() === 'picks' || tab() === 'partner') {
             <span class="pick-status">{{
               !pick(title.id)?.shared ? 'Only you' : pick(title.id)?.status === 'pending'
                 ? pick(title.id)?.mine
@@ -326,7 +346,10 @@
         {{ busy() ? 'Searching...' : 'Find more titles' }}
       </button>
     }
-    @if (tab() !== 'discover' && !pickTitles(tab() === 'picks').length) {
+    @if (tab() === 'watched' && !watched().length) {
+      <p class="empty">No shared watches yet. Open a movie or series and mark it as watched together.</p>
+    }
+    @if ((tab() === 'picks' || tab() === 'partner') && !pickTitles(tab() === 'picks').length) {
       <p class="empty">No picks yet. Open a title to save it privately.</p>
     }
     </section>

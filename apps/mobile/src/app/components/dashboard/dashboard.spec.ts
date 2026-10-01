@@ -28,6 +28,9 @@ describe('Dashboard photos and invitations', () => {
     const fixture = await render();
     fixture.nativeElement.querySelector('button.time-idea').click();
     fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#dashboard-heading').textContent).toContain('Stay in together');
+    fixture.nativeElement.querySelector('button.watch-choice').click();
+    fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('#dashboard-heading').textContent).toContain(
       'Watch together',
     );

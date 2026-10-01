@@ -357,3 +357,6 @@ nav button {
 
 .title-card .meta { display:block; }
 .title-card .pick-status { display:block; margin-top:.55rem; color:var(--muted); font-size:.75rem; line-height:1.4; }
+.watch-tabs { flex-wrap:nowrap; overflow-x:auto; }
+.watch-tabs button { flex:1 0 auto; min-height:44px; white-space:nowrap; }
+.watched-actions { margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--line); }

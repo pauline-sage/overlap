@@ -341,6 +341,75 @@ namespace Overlap.Api.Migrations
                     b.ToTable("SharingGrant");
                 });
 
+            modelBuilder.Entity("Overlap.Api.Books.BookRating", b =>
+                {
+                    b.Property<long>("EntryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("AccountId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("Stars")
+                        .HasColumnType("int");
+
+                    b.HasKey("EntryId", "AccountId");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("BookRating");
+                });
+
+            modelBuilder.Entity("Overlap.Api.Books.ReadingEntry", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AddedBy")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("BookId")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PairId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<DateTime>("UpdatedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AddedBy");
+
+                    b.HasIndex("PairId", "BookId", "Scope")
+                        .IsUnique();
+
+                    b.ToTable("ReadingEntry");
+                });
+
             modelBuilder.Entity("Overlap.Api.Outings.OutingUpdate", b =>
                 {
                     b.Property<string>("PairId")
@@ -471,6 +540,47 @@ namespace Overlap.Api.Migrations
                     b.ToTable("SharedPick");
                 });
 
+            modelBuilder.Entity("Overlap.Api.Watch.WatchedTitle", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AddedBy")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("AddedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(16000)
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PairId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("TitleId")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AddedBy");
+
+                    b.HasIndex("PairId", "TitleId")
+                        .IsUnique();
+
+                    b.ToTable("WatchedTitle");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -540,6 +650,30 @@ namespace Overlap.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Overlap.Api.Books.BookRating", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Overlap.Api.Books.ReadingEntry", null)
+                        .WithMany()
+                        .HasForeignKey("EntryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Books.ReadingEntry", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AddedBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Overlap.Api.Outings.OutingUpdate", b =>
                 {
                     b.HasOne("Overlap.Api.Auth.Account", null)
@@ -554,6 +688,15 @@ namespace Overlap.Api.Migrations
                     b.HasOne("Overlap.Api.Auth.Account", null)
                         .WithMany()
                         .HasForeignKey("ProposedBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Watch.WatchedTitle", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AddedBy")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

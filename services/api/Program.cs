@@ -1,5 +1,6 @@
 using Overlap.Api.Outings;
 using Overlap.Api.Watch;
+using Overlap.Api.Books;
 using System.Threading.RateLimiting;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -20,6 +21,10 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<OnlinePresence>();
 
 builder.Services.AddSingleton<TmdbCache>();
+builder.Services.AddSingleton<BookCatalogCache>();
+builder.Services.AddHttpClient<BookCatalog>(client => client.Timeout = TimeSpan.FromSeconds(15))
+    .RemoveAllLoggers()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 builder.Services.AddHttpClient<GeoapifyPlaces>(client => client.Timeout = TimeSpan.FromSeconds(12))
     .RemoveAllLoggers()
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
@@ -209,10 +214,13 @@ if (authConfigured)
         await next();
     });
     app.MapAuth();
+    app.MapAccountDeletion();
     app.MapTogether();
     app.MapPrivacy();
     app.MapWatch();
     app.MapPicks();
+    app.MapWatched();
+    app.MapBooks();
     app.MapOutings();
     app.MapOutingUpdates();
     app.MapOutingReplies();

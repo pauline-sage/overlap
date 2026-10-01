@@ -199,4 +199,30 @@ describe('Unified watch search', () => {
     expect(c.pickBusy()).toBe(false);
   });
 
+  it('marks a title as watched and displays the shared history independently of picks', async () => {
+    const f = render(); await f.whenStable(); const c = f.componentInstance;
+    c.selected.set(title);
+    auth.submit.mockResolvedValue({});
+    auth.picks.mockResolvedValue({connected:true,picks:[],watched:[{id:7,mine:true,addedUtc:'2026-10-01T12:00:00Z',title}]});
+    await c.markWatched(title);
+    expect(auth.submit).toHaveBeenCalledWith('watch/watched',title);
+    c.view('watched'); await f.whenStable(); f.detectChanges();
+    expect(f.nativeElement.textContent).toContain('Watched together');
+    expect(f.nativeElement.querySelectorAll('.title-card').length).toBe(1);
+    expect(c.picks()).toEqual([]);
+    f.nativeElement.querySelector('.title-card').click(); f.detectChanges();
+    expect(f.nativeElement.textContent).toContain('Remove from watched together');
+    expect(f.nativeElement.textContent).not.toContain('Add to your picks');
+    auth.picks.mockResolvedValue({connected:true,picks:[],watched:[]});
+    await c.removeWatched(title.id); f.detectChanges();
+    expect(auth.submit).toHaveBeenCalledWith('watch/watched/7/remove',{});
+    expect(f.nativeElement.textContent).toContain('No shared watches yet');
+  });
+  it('includes watched history in keyboard tab navigation', async () => {
+    const f = render(); await f.whenStable(); const c = f.componentInstance;
+    c.tabKey(new KeyboardEvent('keydown',{key:'End'}));
+    expect(c.tab()).toBe('watched');
+    c.tabKey(new KeyboardEvent('keydown',{key:'ArrowRight'}));
+    expect(c.tab()).toBe('discover');
+  });
 });

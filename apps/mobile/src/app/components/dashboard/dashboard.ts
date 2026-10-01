@@ -7,12 +7,13 @@ import { Component, inject, input, output, signal, viewChild, OnInit, OnDestroy,
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService, TogetherStatus } from '../../auth.service';
 import { SharedTimeComponent } from '../shared-time/shared-time';
+import { ReadTogetherComponent } from '../read-together/read-together';
 import { DashboardPage, NavBarComponent } from '../nav-bar/nav-bar';
 
 @Component({
   selector: 'app-dashboard',
   providers: [SharingService],
-  imports: [LoadingIndicatorComponent, NavBarComponent, SharedTimeComponent, ProfileComponent, CoffeeDateComponent],
+  imports: [LoadingIndicatorComponent, NavBarComponent, SharedTimeComponent, ReadTogetherComponent, ProfileComponent, CoffeeDateComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -31,17 +32,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
     queueMicrotask(()=>document.getElementById('first-steps-heading')?.focus());
   }
   readonly coffee = signal(false);
+  readonly stayingIn = signal(false);
+  readonly reading = signal(false);
+  openStayIn(): void {
+    this.watching.set(false); this.reading.set(false); this.coffee.set(false); this.stayingIn.set(true);
+    queueMicrotask(() => document.getElementById('dashboard-heading')?.focus());
+  }
+  openReading(): void {
+    this.stayingIn.set(false); this.watching.set(false); this.reading.set(true);
+    queueMicrotask(() => document.getElementById('dashboard-heading')?.focus());
+  }
   readonly outingProposal=signal<OutingUpdate|null>(null);
   pickYours(proposal:OutingUpdate):void {this.navigate('home');this.outingProposal.set(proposal);this.coffee.set(true);}
   openCoffee():void { this.outingProposal.set(null); this.watching.set(false);this.coffee.set(true);queueMicrotask(()=>document.getElementById('dashboard-heading')?.focus()); }
   readonly watching = signal(false);
   openSharedTime(): void {
+    this.stayingIn.set(false); this.reading.set(false);
     this.watching.set(true);
     setTimeout(() => document.getElementById('dashboard-heading')?.focus());
   }
   readonly page = signal<DashboardPage>('home');
   readonly sessionExpired = output<void>();
   navigate(page: DashboardPage): void {
+    this.stayingIn.set(false); this.reading.set(false);
     this.watching.set(false);
     this.coffee.set(false);
     this.page.set(page);

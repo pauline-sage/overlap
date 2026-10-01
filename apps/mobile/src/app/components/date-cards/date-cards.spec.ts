@@ -4,6 +4,24 @@ import { DateCardsComponent } from './date-cards';
 import { SharingService } from '../nav-bar/sharing/sharing.service';
 import { readableHours } from '../coffee-date/opening-hours';
 describe('Activity cards and hours',()=>{
+  it('automatically folds elapsed dates into expandable past cards',()=>{
+    vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-01T12:00:00Z'));
+    const sharing={error:signal(''),busy:signal(false),state:signal({outingUpdates:[{mine:true,revision:'timed',venue:{activity:'Coffee',name:'Cafe',startUtc:'2026-10-01T12:00:01Z'}}]})};
+    TestBed.configureTestingModule({imports:[DateCardsComponent],providers:[{provide:SharingService,useValue:sharing}]});
+    const f=TestBed.createComponent(DateCardsComponent);
+    try {
+      f.detectChanges();
+      expect(f.nativeElement.querySelector('.past-summary')).toBeNull();
+      vi.advanceTimersByTime(15000);f.detectChanges();
+      const summary=f.nativeElement.querySelector('.past-summary');
+      expect(summary.textContent).toContain('Coffee');
+      expect(summary.textContent).toContain('1 Oct 2026');
+      expect(f.nativeElement.querySelector('#past-timed').hidden).toBe(true);
+      summary.click();f.detectChanges();
+      expect(f.nativeElement.querySelector('#past-timed').hidden).toBe(false);
+      expect(summary.getAttribute('aria-expanded')).toBe('true');
+    } finally {f.destroy();vi.useRealTimers();}
+  });
   it('formats day ranges and overnight hours without guessing special rules',()=>{
     expect(readableHours('Su-Th 11:30-23:00; Fr,Sa 11:30-00:00')).toEqual([
       {days:'Sun – Thu',hours:'11:30 – 23:00'},

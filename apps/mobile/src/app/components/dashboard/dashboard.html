@@ -19,7 +19,7 @@
   (change)="uploadPhoto($event)"
 />
 
-@if (page() === 'home' && !watching() && !coffee()) {
+@if (page() === 'home' && !watching() && !coffee() && !stayingIn() && !reading()) {
   <section class="hero" aria-labelledby="dashboard-heading">
     <p class="home-eyebrow">YOUR LITTLE CORNER</p>
     <div class="orbit">
@@ -101,7 +101,7 @@
     (upload)="uploadPhoto($event)"
   />
 }
-@if (page() === 'home' && !watching() && !coffee()) {
+@if (page() === 'home' && !watching() && !coffee() && !stayingIn() && !reading()) {
   @if (error()) {
     <p role="alert">{{ error() }}</p>
   }
@@ -109,7 +109,7 @@
     <button type="button" (click)="navigate('profile')">Review invitation</button>
   }
 }
-@if (page() === 'home' && !watching() && !coffee()) {
+@if (page() === 'home' && !watching() && !coffee() && !stayingIn() && !reading()) {
 
   <section class="next" aria-labelledby="next-title">
     <div class="section-heading">
@@ -117,7 +117,7 @@
     </div>
     <p class="section-intro">What feels good today?</p>
     <div class="idea-grid">
-      <button class="idea time-idea" type="button" (click)="openSharedTime()">
+      <button class="idea time-idea" type="button" (click)="openStayIn()">
         <span class="idea-icon" aria-hidden="true"
           ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
             <rect x="3" y="3" width="18" height="18" rx="5" />
@@ -125,7 +125,7 @@
         ></span>
         <span
           ><strong>Stay in together @if(sharing.state()?.unreadPicks) { <span class="news-count">{{sharing.state()?.unreadPicks}} new</span> }</strong
-          ><span class="idea-description">A film, a series, and your favourite company.</span></span
+          ><span class="idea-description">A film, a series, or a book to share.</span></span
         >
         <span class="card-arrow" aria-hidden="true">&#8594;</span>
       </button>
@@ -151,11 +151,28 @@
     </div>
   </section>
 }
+@if (stayingIn() && page() === 'home') {
+  <button class="back" type="button" (click)="navigate('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg><span>Back</span></button>
+  <section class="next" aria-labelledby="dashboard-heading">
+    <h2 id="dashboard-heading" class="sr-only" tabindex="-1">Stay in together</h2>
+    <div class="idea-grid">
+      <button class="idea time-idea story-choice watch-choice" type="button" (click)="openSharedTime()">
+        <span class="idea-icon story-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1ZM3 9 2 5l17-4 1 4ZM6 4l3 4M12 3l3 4M8 13h8M8 17h5" /></svg></span>
+        <strong>Watch</strong>
+      </button>
+      <button class="idea coffee-idea story-choice read-choice" type="button" (click)="openReading()">
+        <span class="idea-icon story-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5C9 3 5 3 2 4v15c3-1 7-1 10 1 3-2 7-2 10-1V4c-3-1-7-1-10 1ZM12 5v15M5 8c1-.3 2-.3 4 .3M5 12c1-.3 2-.3 4 .3M15 8c2-.6 3-.6 4-.3M15 12c2-.6 3-.6 4-.3" /></svg></span>
+        <strong>Read</strong>
+      </button>
+    </div>
+  </section>
+}
+@if (reading() && page() === 'home') { <app-read-together (back)="openStayIn()" /> }
 <app-shared-time
   [hidden]="!watching() || page() !== 'home'"
   [active]="watching() && page() === 'home'"
   [partnerName]="together()?.partner?.displayName || 'Your person'"
-  (back)="navigate('home')"
+  (back)="openStayIn()"
 />
 @if(coffee() && page() === 'home'){<app-coffee-date (shared)="navigate('home')" [proposal]="outingProposal()" [partnerName]="together()?.partner?.displayName || 'Your person'" (back)="navigate(outingProposal() ? 'dates' : 'home')" />}
 <app-nav-bar

@@ -44,6 +44,8 @@ public static class TogetherEndpoints
                 await using var transaction = await db.Database.BeginTransactionAsync();
                 await db.Set<Overlap.Api.Watch.SharedPick>().Where(x => x.PairId == pair).ExecuteUpdateAsync(s => s.SetProperty(x => x.PairId, (string?)null).SetProperty(x => x.IsShared, false).SetProperty(x => x.Status, "pending"));
                 await db.Set<Overlap.Api.Outings.OutingUpdate>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
+                await db.Set<Overlap.Api.Watch.WatchedTitle>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
+                await db.Set<Overlap.Api.Books.ReadingEntry>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
                 await db.Set<SharingGrant>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
                 await db.PairMembers.Where(x => x.PairId == pair).ExecuteDeleteAsync();
                 await transaction.CommitAsync();

@@ -1,5 +1,5 @@
 import { LoadingIndicatorComponent } from '../loading-indicator';
-import { Component, inject, input, output } from '@angular/core';
+import { Component, inject, input, output, signal, DestroyRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { SharingService, OutingUpdate } from '../nav-bar/sharing/sharing.service';
@@ -8,6 +8,15 @@ import { SharingService, OutingUpdate } from '../nav-bar/sharing/sharing.service
   selector:'app-date-cards',imports: [LoadingIndicatorComponent,DatePipe,FormsModule],templateUrl:'./date-cards.html',styleUrl:'./date-cards.scss'
 })
 export class DateCardsComponent {
+  private readonly now=signal(Date.now());
+  readonly expanded=signal<string|null>(null);
+  constructor(){
+    const refresh=()=>this.now.set(Date.now());
+    const timer=setInterval(refresh,15000);
+    document.addEventListener('visibilitychange',refresh);
+    inject(DestroyRef).onDestroy(()=>{clearInterval(timer);document.removeEventListener('visibilitychange',refresh);});
+  }
+  togglePast(revision:string):void {this.expanded.update(x=>x===revision?null:revision);}
   readonly sharing=inject(SharingService);
   readonly notifications=input(false);
   readonly pickYours=output<OutingUpdate>(); readonly openPicks=output<void>();
@@ -26,7 +35,7 @@ export class DateCardsComponent {
     const all=this.sharing.state()?.outingUpdates || [];
     const updates=all.filter(x=>!x.cancelled);
     if(this.notifications()) return [{label:'',updates:all.filter(x=>!x.dismissed)}];
-    const now=Date.now();
+    const now=this.now();
     const time=(update:OutingUpdate)=>update.venue?.startUtc ? Date.parse(update.venue.startUtc) : NaN;
     return [
       {label:'Upcoming dates',updates:updates.filter(x=>time(x)>=now).sort((a,b)=>time(a)-time(b))},
