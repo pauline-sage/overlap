@@ -143,9 +143,9 @@
     <header><h2 id="dashboard-heading" tabindex="-1">Watch together</h2></header>
     <nav class="watch-tabs" role="tablist" aria-label="Watch views">
       <button id="watch-tab-discover" role="tab" type="button" [attr.aria-selected]="tab() === 'discover'" [tabIndex]="tab() === 'discover' ? 0 : -1" aria-controls="watch-panel" (keydown)="tabKey($event)" (click)="view('discover')">Discover</button>
-      <button id="watch-tab-picks" role="tab" type="button" [attr.aria-selected]="tab() === 'picks'" [tabIndex]="tab() === 'picks' ? 0 : -1" aria-controls="watch-panel" (keydown)="tabKey($event)" (click)="view('picks')">My picks <span>({{ pickTitles(true).length }})</span></button>
-      <button id="watch-tab-partner" role="tab" type="button" [attr.aria-selected]="tab() === 'partner'" [tabIndex]="tab() === 'partner' ? 0 : -1" aria-controls="watch-panel" (keydown)="tabKey($event)" (click)="view('partner')">{{ partnerName() }}'s picks <span>({{ pickTitles(false).length }})</span></button>
-      <button id="watch-tab-watched" role="tab" type="button" [attr.aria-selected]="tab() === 'watched'" [tabIndex]="tab() === 'watched' ? 0 : -1" aria-controls="watch-panel" (keydown)="tabKey($event)" (click)="view('watched')">Watched together <span>({{ watched().length }})</span></button>
+      <button id="watch-tab-picks" role="tab" type="button" [attr.aria-selected]="tab() === 'picks'" [tabIndex]="tab() === 'picks' ? 0 : -1" aria-controls="watch-panel" (keydown)="tabKey($event)" (click)="view('picks')">{{ ownName() }}'s</button>
+      <button id="watch-tab-partner" role="tab" type="button" [attr.aria-selected]="tab() === 'partner'" [tabIndex]="tab() === 'partner' ? 0 : -1" aria-controls="watch-panel" (keydown)="tabKey($event)" (click)="view('partner')">{{ partnerName() }}'s</button>
+      <button id="watch-tab-watched" role="tab" type="button" [attr.aria-selected]="tab() === 'watched'" [tabIndex]="tab() === 'watched' ? 0 : -1" aria-controls="watch-panel" (keydown)="tabKey($event)" (click)="view('watched')">Watched together</button>
     </nav>
     <section id="watch-panel" role="tabpanel" [attr.aria-labelledby]="'watch-tab-' + tab()" tabindex="0">
 
@@ -167,7 +167,7 @@
           <input
             id="watch-query"
             name="query"
-            type="search"
+            type="search" enterkeyhint="search" (keydown.enter)="$event.preventDefault(); search()"
             [(ngModel)]="query"
             (ngModelChange)="changed()"
             [placeholder]="mode === 'title' ? 'Search a title...' : 'Try space, friendship...'"

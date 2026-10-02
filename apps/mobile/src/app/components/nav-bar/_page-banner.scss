@@ -1,0 +1,16 @@
+@mixin banner {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  padding: 1.3rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 1.75rem;
+  background: radial-gradient(ellipse at top left,color-mix(in srgb,var(--accent) 24%,transparent),transparent 70%),radial-gradient(ellipse at bottom right,color-mix(in srgb,var(--clay) 16%,transparent),transparent 65%),var(--hero);
+  > div { flex: 1; min-width: 0; }
+  h2 { font-size: 1.55rem; font-weight: 700; letter-spacing: -.04em; margin: 0; }
+  p { font-size: .85rem; line-height: 1.6; margin: .35rem 0 0; color: var(--muted); }
+  .page-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 1rem; background: var(--surface); color: var(--text); flex-shrink: 0; }
+  svg { width: 20px; height: 20px; stroke-width: 1.7; }
+}

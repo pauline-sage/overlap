@@ -1,4 +1,5 @@
-﻿:host {
+@use '../personal-card';
+:host {
   display: block;
   min-height: 100dvh;
 }
@@ -278,11 +279,14 @@ h1:focus {
 }
 
 .header-welcome {
-  margin-left: auto;
-  font-size: 0.8rem;
-  color: var(--muted);
+  @include personal-card.eyebrow;
+  margin: 0 0 0 auto;
+  min-width: 0;
   max-width: 9rem;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  align-self: center;
 }
 .topbar {
   gap: 0.65rem;
@@ -291,9 +295,6 @@ h1:focus {
   .brand {
     font-size: 1.25rem;
     gap: 0.4rem;
-  }
-  .header-welcome {
-    font-size: 0.75rem;
   }
 }
 

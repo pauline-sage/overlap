@@ -15,7 +15,7 @@
       <span class="brand-mark" aria-hidden="true"><i></i><i></i></span> overlap
     </button>
     @if (account(); as person) {
-      <span class="header-welcome">Hi, {{ person.displayName }}</span>
+      <span class="header-welcome" [title]="'Hi, ' + (person.displayName || '')">Hi, {{ person.displayName }}</span>
     }
     <div class="header-actions">
     <button

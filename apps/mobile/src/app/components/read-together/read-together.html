@@ -57,7 +57,7 @@
     @if (tab() === 'discover') {
       <form (ngSubmit)="search()">
         <label for="book-query">Title or author</label>
-        <input id="book-query" name="query" type="search" maxlength="120" placeholder="Find your next shared read..." [(ngModel)]="query" (ngModelChange)="changed()" />
+        <input id="book-query" name="query" type="search" enterkeyhint="search" (keydown.enter)="$event.preventDefault(); search()" maxlength="120" placeholder="Find your next shared read..." [(ngModel)]="query" (ngModelChange)="changed()" />
         <div class="filters">
           <div><label for="book-genre">Genre</label><select id="book-genre" name="genre" [(ngModel)]="genre" (ngModelChange)="changed()"><option value="">Any genre</option>@for (item of genres; track item) { <option [value]="item.toLowerCase()">{{ item }}</option> }</select></div>
           <div><label for="book-language">Edition language</label><select id="book-language" name="language" [(ngModel)]="language" (ngModelChange)="changed()"><option value="">Any language</option><option value="en">English</option><option value="fr">French</option></select></div>

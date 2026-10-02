@@ -44,6 +44,16 @@ describe('Unified watch search', () => {
     fixture.detectChanges();
     return fixture;
   }
+  it('submits from the search keyboard action and closes the keyboard', async () => {
+    const f = render();
+    const field = f.nativeElement.querySelector('#watch-query') as HTMLInputElement;
+    field.focus();
+    field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    await f.whenStable();
+    expect(document.activeElement).not.toBe(field);
+    expect(auth.submit).toHaveBeenCalledWith('watch/search', expect.any(Object));
+    f.destroy();
+  });
   it('puts LGBTQ+ and BL in the mood and removes the separate controls', () => {
     const f = render();
     const options = f.nativeElement.querySelector('#watch-genre').textContent;

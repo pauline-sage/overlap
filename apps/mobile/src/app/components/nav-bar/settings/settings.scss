@@ -1,6 +1,7 @@
+@use '../page-banner';
 :host { display: block; }
 h2 { font-size: 1.8rem; margin: 0 0 1.75rem; }
-h3 { font-size: .8rem; font-weight: 500; color: var(--muted); margin: 0 0 .75rem; }
+h3 { font-size: 1.05rem; font-weight: 650; letter-spacing: -.02em; color: var(--text); margin: 0 0 .65rem; }
 .account-actions { border: 1px solid var(--line); border-radius: 1rem; overflow: hidden; background: var(--surface); }
 button { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; text-align: left; padding: 1rem; min-height: 3.5rem; font: inherit; color: var(--text); background: transparent; border: 0; cursor: pointer; }
 .account-actions button + button { border-top: 1px solid var(--line); }
@@ -16,3 +17,5 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
 .delete-account fieldset{border:0;padding:0;min-width:0}
 .delete-account label{display:block;font-size:.85rem;margin-bottom:.5rem}
 .delete-account input{width:100%;min-height:48px;border:1px solid var(--line);border-radius:.8rem;background:var(--field);color:var(--text);padding:.75rem;font:inherit;margin-bottom:1rem}
+
+.page-banner { @include page-banner.banner; }

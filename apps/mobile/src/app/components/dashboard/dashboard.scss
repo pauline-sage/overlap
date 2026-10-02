@@ -1,3 +1,4 @@
+@use '../personal-card';
 
 :host{display:block}
 p{color:var(--muted);line-height:1.6}
@@ -5,10 +6,8 @@ button:not(.back){min-height:3rem;padding:.8rem 1rem;width:100%;font:inherit;bor
 button:disabled{opacity:.5;cursor:default}
 button:focus-visible{outline:2px solid var(--clay);outline-offset:3px}
 button.back{border:0;background:none;font:inherit}
-.hero{text-align:center;padding:1.5rem 1rem 1.25rem;background:var(--hero);border:1px solid color-mix(in srgb,var(--accent) 18%,transparent);border-radius:2rem;margin:.25rem 0 2rem;position:relative;isolation:isolate;overflow:hidden;box-shadow:0 12px 32px rgba(0,0,0,.06)}
-.hero::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 20% 18%,color-mix(in srgb,var(--accent) 24%,transparent),transparent 60%),radial-gradient(ellipse at 85% 28%,color-mix(in srgb,var(--clay) 18%,transparent),transparent 55%),linear-gradient(180deg,transparent 40%,var(--hero) 95%)}
-.hero::after{content:'';position:absolute;top:2.8rem;left:50%;width:17rem;height:10rem;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse,color-mix(in srgb,var(--accent) 12%,transparent),transparent 70%);z-index:-1;pointer-events:none}
-.home-eyebrow{font-size:.62rem;letter-spacing:.2em;font-weight:600;margin:0 0 1.2rem}
+.hero { @include personal-card.card; }
+.home-eyebrow { @include personal-card.eyebrow; }
 .orbit{display:flex;align-items:flex-start;justify-content:center;isolation:isolate;padding:.5rem 0;gap:0}
 .person-slot{display:flex;flex-direction:column;align-items:center;gap:.85rem;min-width:0;width:clamp(6rem,25vw,7rem)}
 .person-slot+.person-slot{margin-left:-1rem}

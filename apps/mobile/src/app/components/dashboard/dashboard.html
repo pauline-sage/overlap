@@ -168,7 +168,7 @@
   </section>
 }
 @if (reading() && page() === 'home') { <app-read-together (back)="openStayIn()" /> }
-<app-shared-time
+<app-shared-time [ownName]="greetingName()"
   [hidden]="!watching() || page() !== 'home'"
   [active]="watching() && page() === 'home'"
   [partnerName]="together()?.partner?.displayName || 'Your person'"

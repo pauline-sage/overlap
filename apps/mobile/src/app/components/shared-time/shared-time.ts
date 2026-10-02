@@ -57,6 +57,7 @@ export class SharedTimeComponent implements OnDestroy {
   private readonly auth = inject(AuthService);
   readonly active = input(false);
   readonly partnerName = input('Your person');
+  readonly ownName = input('You');
   readonly back = output<void>();
   readonly formats = ['Both', 'Movie', 'Series'];
   readonly genres = [
@@ -159,6 +160,7 @@ export class SharedTimeComponent implements OnDestroy {
   }
   async search(more = false): Promise<void> {
     if (this.busy() || !this.ownPlatforms.length || !this.partnerPlatforms.length) return;
+    if (document.activeElement instanceof HTMLInputElement) document.activeElement.blur();
     this.busy.set(true);
     this.error.set('');
     const version = this.searchVersion;

@@ -28,3 +28,6 @@ docs/
 # Operating systems
 .DS_Store
 Thumbs.db
+
+# Personal local startup launcher
+/start-local.cmd

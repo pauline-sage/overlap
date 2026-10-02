@@ -81,6 +81,7 @@ export class ReadTogetherComponent implements OnInit, OnDestroy {
   changed(): void { this.searchVersion++; this.results.set(null); this.hasMore.set(false); this.explanation.set(''); this.error.set(''); }
   async search(more = false): Promise<void> {
     if(this.busy()) return;
+    if (document.activeElement instanceof HTMLInputElement) document.activeElement.blur();
     this.busy.set(true); this.error.set('');
     const version = this.searchVersion; const page = more ? this.page+1 : 1;
     if(!more) this.results.set(null);
