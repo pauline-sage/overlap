@@ -1,0 +1,19 @@
+@if(busy()){<app-loading-indicator label="Updating food preferences..." />}
+<button class="back" type="button" (click)="back.emit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg><span>Back</span></button>
+<header class="page-banner"><span class="page-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 10a4 4 0 0 1-1-8 4 4 0 0 1 6 1 4 4 0 0 1 6-1 4 4 0 0 1-1 8v10H7zM7 16h10"/></svg></span><div><h2>Food preferences</h2><p>A recipe that feels right for both of you.</p></div></header>
+<form class="checklist-card contest-form" (ngSubmit)="save()">
+  <h3>Your list</h3><p class="hint">Saved for future cooking contests. Your restrictions count even when your list is private.</p>
+  <label class="check-row"><input type="checkbox" name="redMeat" [(ngModel)]="avoidRedMeat" /><span>No red meat<small class="preference-help">Beef, veal, pork, lamb and other red meats.</small></span></label>
+  <label for="food-exclusions">Ingredients I don't eat</label><input id="food-exclusions" name="ingredients" [(ngModel)]="excludedIngredients" maxlength="600" placeholder="Tuna, spinach, olives..." />
+  <p class="hint">Separate ingredients with commas. Use English names to match the recipes.</p>
+  <label class="check-row"><input type="checkbox" name="sharing" [(ngModel)]="shareWithPartner" /><span>Let my partner see my list<small class="preference-help">Off keeps your list private. You can change this whenever you like.</small></span></label>
+  <button class="primary" type="submit" [disabled]="busy()">Save my preferences</button>
+  <p class="credit">Filters check listed ingredients and instructions. Review the recipe before cooking.</p>
+</form>
+<section class="checklist-card"><h3>Your partner's list</h3>
+  @if(partnerShared()){ @if(partner();as prefs){@if(prefs.avoidRedMeat){<p class="hint">No red meat</p>}@for(item of prefs.excludedIngredients;track item){<p class="hint">{{item}}</p>}@if(!prefs.avoidRedMeat && !prefs.excludedIngredients.length){<p class="hint">No ingredient exclusions.</p>}} }
+  @else{<p class="hint">Your partner's list is private. They can choose to share it from Cooking.</p>}
+  <button class="remove" type="button" [disabled]="busy()" (click)="load()">Refresh</button>
+</section>
+@if(notice()){<p class="hint" role="status">{{notice()}}</p>}
+@if(error()){<p class="error" role="alert">{{error()}}</p>}

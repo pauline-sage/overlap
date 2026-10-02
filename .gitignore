@@ -16,6 +16,7 @@ npm-debug.log*
 .dotnet-cli/
 .local/
 appsettings.Local.json
+appsettings.Push.Local.json
 
 # Editors
 # Local documentation

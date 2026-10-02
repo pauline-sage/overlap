@@ -28,6 +28,8 @@ public static class DeleteAccountEndpoints
                 await db.Set<OutingUpdate>().Where(x=>x.PairId==pair).ExecuteDeleteAsync();
                 await db.Set<WatchedTitle>().Where(x=>x.PairId==pair).ExecuteDeleteAsync();
                 await db.Set<Overlap.Api.Books.ReadingEntry>().Where(x=>x.PairId==pair).ExecuteDeleteAsync();
+                await db.Set<Overlap.Api.Cooking.SavedRecipe>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
+                await db.Set<Overlap.Api.Cooking.CookingContest>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
                 await db.Set<SharingGrant>().Where(x=>x.PairId==pair).ExecuteDeleteAsync();
                 await db.PairMembers.Where(x=>x.PairId==pair).ExecuteDeleteAsync();
             }

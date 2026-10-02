@@ -5,11 +5,14 @@
 }
 @if (sharing.state(); as state) {
   @if (notifications()) {
-    <app-date-cards class="notification-feed" [notifications]="true" (openPicks)="openPicks.emit()" (pickYours)="pickYours.emit($event)" />
+    <app-date-cards class="notification-feed" [notifications]="true" (openContest)="openContest.emit($event)" (openCooking)="openCooking.emit($event)" (openPicks)="openPicks.emit()" (pickYours)="pickYours.emit($event)" />
   } @else {
     <p class="hint intro">{{ state.connected ? 'Choose what your partner can see. Change this at any time.' : 'Connect with your person to choose what to share.' }}</p>
-    <div class="preferences">
-      @for (category of categories; track category.key) {
+    @for (section of sections; track section.title) {
+    <section class="sharing-section" [attr.aria-labelledby]="'sharing-'+section.title">
+      <h3 [id]="'sharing-'+section.title">{{section.title}}</h3>
+      <div class="preferences">
+      @for (category of section.categories; track category.key) {
         <label class="preference">
           <span class="copy">
             <strong>{{ category.label }}</strong>
@@ -25,7 +28,9 @@
           </span>
         </label>
       }
-    </div>
+      </div>
+    </section>
+    }
     <p class="hint location">Your search history stays private. Outing locations are chosen separately for each search.</p>
   }
 }

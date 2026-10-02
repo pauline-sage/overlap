@@ -19,7 +19,7 @@
   (change)="uploadPhoto($event)"
 />
 
-@if (page() === 'home' && !watching() && !coffee() && !stayingIn() && !reading()) {
+@if (page() === 'home' && !watching() && !coffee() && !stayingIn() && !reading() && !cooking()) {
   <section class="hero" aria-labelledby="dashboard-heading">
     <p class="home-eyebrow">YOUR LITTLE CORNER</p>
     <div class="orbit">
@@ -101,7 +101,7 @@
     (upload)="uploadPhoto($event)"
   />
 }
-@if (page() === 'home' && !watching() && !coffee() && !stayingIn() && !reading()) {
+@if (page() === 'home' && !watching() && !coffee() && !stayingIn() && !reading() && !cooking()) {
   @if (error()) {
     <p role="alert">{{ error() }}</p>
   }
@@ -109,7 +109,7 @@
     <button type="button" (click)="navigate('profile')">Review invitation</button>
   }
 }
-@if (page() === 'home' && !watching() && !coffee() && !stayingIn() && !reading()) {
+@if (page() === 'home' && !watching() && !coffee() && !stayingIn() && !reading() && !cooking()) {
 
   <section class="next" aria-labelledby="next-title">
     <div class="section-heading">
@@ -125,7 +125,7 @@
         ></span>
         <span
           ><strong>Stay in together @if(sharing.state()?.unreadPicks) { <span class="news-count">{{sharing.state()?.unreadPicks}} new</span> }</strong
-          ><span class="idea-description">A film, a series, or a book to share.</span></span
+          ><span class="idea-description">Cozy moments. Something to make or enjoy.</span></span
         >
         <span class="card-arrow" aria-hidden="true">&#8594;</span>
       </button>
@@ -154,7 +154,12 @@
 @if (stayingIn() && page() === 'home') {
   <button class="back" type="button" (click)="navigate('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg><span>Back</span></button>
   <section class="next" aria-labelledby="dashboard-heading">
-    <h2 id="dashboard-heading" class="sr-only" tabindex="-1">Stay in together</h2>
+    <header class="page-banner">
+      <span class="page-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10H3zM9 20v-7h6v7"/></svg></span>
+      <div><h2 id="dashboard-heading" tabindex="-1">Stay in together</h2><p>Make a little room for time together at home.</p></div>
+    </header>
+    <section class="stay-in-section" aria-labelledby="cozy-heading">
+      <h3 id="cozy-heading">Cozy time</h3>
     <div class="idea-grid">
       <button class="idea time-idea story-choice watch-choice" type="button" (click)="openSharedTime()">
         <span class="idea-icon story-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1ZM3 9 2 5l17-4 1 4ZM6 4l3 4M12 3l3 4M8 13h8M8 17h5" /></svg></span>
@@ -165,8 +170,19 @@
         <strong>Read</strong>
       </button>
     </div>
+    </section>
+    <section class="stay-in-section" aria-labelledby="make-heading">
+      <h3 id="make-heading">Make something together</h3>
+      <div class="idea-grid">
+        <button class="idea coffee-idea story-choice" type="button" (click)="openCooking()">
+          <span class="idea-icon story-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10a4 4 0 0 1-1-8 4 4 0 0 1 6 1 4 4 0 0 1 6-1 4 4 0 0 1-1 8v10H7zM7 16h10"/></svg></span>
+          <strong>Cooking</strong>
+        </button>
+      </div>
+    </section>
   </section>
 }
+@if (cooking() && page() === 'home') { <app-cooking [initialContestId]="cookingContestId()" [ownName]="greetingName()" [partnerName]="together()?.partner?.displayName || 'Your person'" [initialRecipeId]="cookingEntryId()" (back)="openStayIn()" /> }
 @if (reading() && page() === 'home') { <app-read-together (back)="openStayIn()" /> }
 <app-shared-time [ownName]="greetingName()"
   [hidden]="!watching() || page() !== 'home'"
@@ -179,7 +195,7 @@
   [current]="page()"
   [disabled]="busy()"
   (navigate)="navigate($event)"
-  (openPicks)="openPartnerPicks()" (pickYours)="pickYours($event)"
+  (openContest)="navigate('home'); openContest($event)" (openCooking)="navigate('home'); openCooking($event)" (openPicks)="openPartnerPicks()" (pickYours)="pickYours($event)"
   (changeEmail)="changeEmail.emit()"
   (changePassword)="changePassword.emit()"
   (signOut)="signOut.emit()"

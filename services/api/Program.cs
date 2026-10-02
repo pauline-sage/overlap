@@ -1,6 +1,8 @@
 using Overlap.Api.Outings;
 using Overlap.Api.Watch;
 using Overlap.Api.Books;
+using Overlap.Api.Cooking;
+using Overlap.Api.Notifications;
 using System.Threading.RateLimiting;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -14,7 +16,7 @@ using Overlap.Api.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 if (builder.Environment.IsDevelopment())
-    builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true).AddEnvironmentVariables();
+    builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true).AddJsonFile("appsettings.Push.Local.json", optional: true).AddEnvironmentVariables();
 if (await DeploymentCommands.RunAsync(args, builder.Configuration)) return;
 builder.Services.AddProblemDetails();
 builder.Services.AddSingleton(TimeProvider.System);
@@ -22,6 +24,8 @@ builder.Services.AddSingleton<OnlinePresence>();
 
 builder.Services.AddSingleton<TmdbCache>();
 builder.Services.AddSingleton<BookCatalogCache>();
+builder.Services.AddHttpClient<RecipeCatalog>(client => client.Timeout = TimeSpan.FromSeconds(15))
+    .RemoveAllLoggers().ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 builder.Services.AddHttpClient<BookCatalog>(client => client.Timeout = TimeSpan.FromSeconds(15))
     .RemoveAllLoggers()
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
@@ -160,6 +164,11 @@ if (authConfigured)
     builder.Services.AddHttpClient<AccountEmailSender>(client => client.Timeout = TimeSpan.FromSeconds(15))
         .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
     builder.Services.AddHostedService<AccountMailDispatcher>();
+    builder.Services.AddSingleton<IReminderPushSender,ReminderPushSender>();
+    builder.Services.AddHttpClient("phone-push",client=>client.Timeout=TimeSpan.FromSeconds(8)).RemoveAllLoggers()
+        .ConfigurePrimaryHttpMessageHandler(()=>new HttpClientHandler{AllowAutoRedirect=false});
+    builder.Services.AddSingleton<ContestReminderDispatcher>();
+    builder.Services.AddHostedService<PhoneReminderWorker>();
     builder.Services.AddRateLimiter(options =>
     {
         options.RejectionStatusCode = 429;
@@ -221,6 +230,10 @@ if (authConfigured)
     app.MapPicks();
     app.MapWatched();
     app.MapBooks();
+    app.MapCooking();
+    app.MapCookingContests();
+    app.MapFoodPreferences();
+    app.MapPhoneReminders();
     app.MapOutings();
     app.MapOutingUpdates();
     app.MapOutingReplies();

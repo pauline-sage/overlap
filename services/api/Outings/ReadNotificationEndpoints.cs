@@ -11,11 +11,20 @@ public static class ReadNotificationEndpoints
     {
         app.MapPost("/api/auth/privacy/read", async (ReadNotification request, ClaimsPrincipal user, AuthDbContext db) =>
         {
-            if (request.Revision is null || request.Revision.Length > 32 || request.Kind is not ("outing" or "outing-reply" or "pick")) return Results.BadRequest();
+            if (request.Revision is null || request.Revision.Length > 32 || request.Kind is not ("outing" or "outing-reply" or "pick" or "recipe" or "contest")) return Results.BadRequest();
             var id = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
             var pair = await db.PairMembers.Where(x => x.AccountId == id).Select(x => x.PairId).SingleOrDefaultAsync();
             if (pair is null) return Results.NoContent();
-            if (request.Kind == "outing")
+            if(request.Kind=="contest")
+            {
+                var rows=db.Set<Overlap.Api.Cooking.CookingContest>().Where(x=>x.Id==request.Id && x.PairId==pair && x.Revision==request.Revision);
+                await rows.Where(x=>x.ProposedBy==id).ExecuteUpdateAsync(s=>s.SetProperty(x=>x.SenderUnread,false).SetProperty(x=>x.SenderDismissedRevision,x=>request.Dismiss ? request.Revision : x.SenderDismissedRevision));
+                await rows.Where(x=>x.ProposedBy!=id).ExecuteUpdateAsync(s=>s.SetProperty(x=>x.RecipientUnread,false).SetProperty(x=>x.RecipientDismissedRevision,x=>request.Dismiss ? request.Revision : x.RecipientDismissedRevision));
+            }
+            else if (request.Kind == "recipe")
+                await db.Set<Overlap.Api.Cooking.SavedRecipe>().Where(x=>x.Id==request.Id && x.PairId==pair && x.SharedBy!=id && x.ShareRevision==request.Revision)
+                    .ExecuteUpdateAsync(s=>s.SetProperty(x=>x.ShareSeen,true).SetProperty(x=>x.ShareDismissed,x=>request.Dismiss || x.ShareDismissed));
+            else if (request.Kind == "outing")
                 await db.Set<OutingUpdate>().Where(x => x.PairId == pair && x.SenderId != id && x.Revision == request.Revision)
                     .ExecuteUpdateAsync(s => s.SetProperty(x => x.Seen, true).SetProperty(x => x.RecipientDismissedRevision, x => request.Dismiss ? request.Revision : x.RecipientDismissedRevision));
             else if (request.Kind == "outing-reply")

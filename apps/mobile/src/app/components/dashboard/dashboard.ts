@@ -7,13 +7,14 @@ import { Component, inject, input, output, signal, viewChild, OnInit, OnDestroy,
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService, TogetherStatus } from '../../auth.service';
 import { SharedTimeComponent } from '../shared-time/shared-time';
+import { CookingComponent } from '../cooking/cooking';
 import { ReadTogetherComponent } from '../read-together/read-together';
 import { DashboardPage, NavBarComponent } from '../nav-bar/nav-bar';
 
 @Component({
   selector: 'app-dashboard',
   providers: [SharingService],
-  imports: [LoadingIndicatorComponent, NavBarComponent, SharedTimeComponent, ReadTogetherComponent, ProfileComponent, CoffeeDateComponent],
+  imports: [LoadingIndicatorComponent, NavBarComponent, SharedTimeComponent, ReadTogetherComponent, CookingComponent, ProfileComponent, CoffeeDateComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -34,12 +35,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly coffee = signal(false);
   readonly stayingIn = signal(false);
   readonly reading = signal(false);
+  readonly cooking = signal(false);
+  readonly cookingEntryId=signal(0);
+  readonly cookingContestId=signal(0);
+  private openReminderLink():void {
+    const url=new URL(window.location.href);const value=url.searchParams.get('cookingContest');
+    if(value && /^\d+$/.test(value) && Number.isSafeInteger(Number(value)) && Number(value)>0){this.navigate('home');this.openContest(Number(value));url.searchParams.delete('cookingContest');history.replaceState(null,'',url.pathname+url.search+url.hash);}
+  }
+  openContest(id:number):void {this.openCooking();this.cookingContestId.set(id);}
+  openCooking(entryId=0): void { this.cookingContestId.set(0); this.cookingEntryId.set(entryId); this.stayingIn.set(false); this.watching.set(false); this.reading.set(false); this.coffee.set(false); this.cooking.set(true); queueMicrotask(() => document.getElementById('dashboard-heading')?.focus()); }
   openStayIn(): void {
-    this.watching.set(false); this.reading.set(false); this.coffee.set(false); this.stayingIn.set(true);
+    this.cooking.set(false); this.watching.set(false); this.reading.set(false); this.coffee.set(false); this.stayingIn.set(true);
     queueMicrotask(() => document.getElementById('dashboard-heading')?.focus());
   }
   openReading(): void {
-    this.stayingIn.set(false); this.watching.set(false); this.reading.set(true);
+    this.cooking.set(false); this.stayingIn.set(false); this.watching.set(false); this.reading.set(true);
     queueMicrotask(() => document.getElementById('dashboard-heading')?.focus());
   }
   readonly outingProposal=signal<OutingUpdate|null>(null);
@@ -47,14 +57,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   openCoffee():void { this.outingProposal.set(null); this.watching.set(false);this.coffee.set(true);queueMicrotask(()=>document.getElementById('dashboard-heading')?.focus()); }
   readonly watching = signal(false);
   openSharedTime(): void {
-    this.stayingIn.set(false); this.reading.set(false);
+    this.cooking.set(false); this.stayingIn.set(false); this.reading.set(false);
     this.watching.set(true);
     setTimeout(() => document.getElementById('dashboard-heading')?.focus());
   }
   readonly page = signal<DashboardPage>('home');
   readonly sessionExpired = output<void>();
   navigate(page: DashboardPage): void {
-    this.stayingIn.set(false); this.reading.set(false);
+    this.cooking.set(false); this.stayingIn.set(false); this.reading.set(false);
     this.watching.set(false);
     this.coffee.set(false);
     this.page.set(page);
@@ -119,6 +129,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     document.removeEventListener('visibilitychange', this.onVisibility);
   }
   async ngOnInit(): Promise<void> {
+    this.openReminderLink();
     await this.run(async () => {
       this.together.set(await this.auth.together());
       this.presenceKnown.set(true);

@@ -12,14 +12,14 @@
     <div><h2 id="dashboard-heading" tabindex="-1">Notifications</h2><p>Little updates that bring you closer.</p></div>
     @if(sharing.count()) { <span class="unread-count">{{ sharing.count() }} unread</span> }
   </header>
-  <app-sharing [notifications]="true" (openPicks)="openPicks.emit()" (pickYours)="pickYours.emit($event)" />
+  <app-sharing [notifications]="true" (openContest)="openContest.emit($event)" (openCooking)="openCooking.emit($event)" (openPicks)="openPicks.emit()" (pickYours)="pickYours.emit($event)" />
 }
 @if(current() === 'dates') {
   <header class="page-banner">
     <span class="page-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18M8 15h2M14 15h2"/></svg></span>
     <div><h2 id="dashboard-heading" tabindex="-1">Dates</h2><p>A little time set aside for each other.</p></div>
   </header>
-  <app-date-cards (openPicks)="openPicks.emit()" (pickYours)="pickYours.emit($event)" />
+  <app-date-cards (openContest)="openContest.emit($event)" (openCooking)="openCooking.emit($event)" (openPicks)="openPicks.emit()" (pickYours)="pickYours.emit($event)" />
 }
 <footer class="dock">
 <nav aria-label="Main navigation">

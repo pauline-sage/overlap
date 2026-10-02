@@ -410,6 +410,271 @@ namespace Overlap.Api.Migrations
                     b.ToTable("ReadingEntry");
                 });
 
+            modelBuilder.Entity("Overlap.Api.Cooking.ContestRecipeDraw", b =>
+                {
+                    b.Property<string>("PairId")
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<long>("SourceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<long>("ContestId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("PairId", "SourceId");
+
+                    b.HasIndex("ContestId");
+
+                    b.ToTable("ContestRecipeDraw");
+                });
+
+            modelBuilder.Entity("Overlap.Api.Cooking.CookingContest", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("Minutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PairId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("ProposedBy")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("RecipeContent")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RecipientDismissedRevision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("RecipientPreferences")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<bool>("RecipientUnread")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("RedrawRequestedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime?>("RevealedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Revision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("SenderDismissedRevision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("SenderPreferences")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<bool>("SenderUnread")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime>("StartUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<string>("TimeZone")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProposedBy");
+
+                    b.HasIndex("PairId", "StartUtc");
+
+                    b.ToTable("CookingContest");
+                });
+
+            modelBuilder.Entity("Overlap.Api.Cooking.FoodPreference", b =>
+                {
+                    b.Property<string>("AccountId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<string>("Revision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<bool>("ShareWithPartner")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("SharedPairId")
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.HasKey("AccountId");
+
+                    b.ToTable("FoodPreference");
+                });
+
+            modelBuilder.Entity("Overlap.Api.Cooking.RecipeExperience", b =>
+                {
+                    b.Property<long>("RecipeId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("AccountId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("MadeUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("Stars")
+                        .HasColumnType("int");
+
+                    b.HasKey("RecipeId", "AccountId");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("RecipeExperience");
+                });
+
+            modelBuilder.Entity("Overlap.Api.Cooking.SavedRecipe", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AddedBy")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("AddedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PairId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<bool>("ShareDismissed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("ShareRevision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<bool>("ShareSeen")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("SharedBy")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<long>("SourceId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AddedBy");
+
+                    b.HasIndex("PairId", "SourceId")
+                        .IsUnique();
+
+                    b.ToTable("SavedRecipe");
+                });
+
+            modelBuilder.Entity("Overlap.Api.Notifications.ContestReminderDelivery", b =>
+                {
+                    b.Property<long>("ContestId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SubscriptionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("NextAttemptUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("SentUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("ContestId", "SubscriptionId");
+
+                    b.HasIndex("SubscriptionId");
+
+                    b.ToTable("ContestReminderDelivery");
+                });
+
+            modelBuilder.Entity("Overlap.Api.Notifications.PhoneSubscription", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AccountId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("EndpointHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("ProtectedSubscription")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("EndpointHash")
+                        .IsUnique();
+
+                    b.ToTable("PhoneSubscription");
+                });
+
             modelBuilder.Entity("Overlap.Api.Outings.OutingUpdate", b =>
                 {
                     b.Property<string>("PairId")
@@ -670,6 +935,81 @@ namespace Overlap.Api.Migrations
                     b.HasOne("Overlap.Api.Auth.Account", null)
                         .WithMany()
                         .HasForeignKey("AddedBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Cooking.ContestRecipeDraw", b =>
+                {
+                    b.HasOne("Overlap.Api.Cooking.CookingContest", null)
+                        .WithMany()
+                        .HasForeignKey("ContestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Cooking.CookingContest", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("ProposedBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Cooking.FoodPreference", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Cooking.RecipeExperience", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Overlap.Api.Cooking.SavedRecipe", null)
+                        .WithMany()
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Cooking.SavedRecipe", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AddedBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Notifications.ContestReminderDelivery", b =>
+                {
+                    b.HasOne("Overlap.Api.Cooking.CookingContest", null)
+                        .WithMany()
+                        .HasForeignKey("ContestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Overlap.Api.Notifications.PhoneSubscription", null)
+                        .WithMany()
+                        .HasForeignKey("SubscriptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Notifications.PhoneSubscription", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

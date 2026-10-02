@@ -10,6 +10,15 @@ public static class DeploymentCommands
 {
     public static async Task<bool> RunAsync(string[] args, IConfiguration config)
     {
+        if(args.Contains("--generate-push-config")){
+            var path=Path.GetFullPath("appsettings.Push.Local.json");
+            using var key=ECDsa.Create(ECCurve.NamedCurves.nistP256);var parameters=key.ExportParameters(true);
+            static string Encode(byte[] bytes)=>Convert.ToBase64String(bytes).TrimEnd('=').Replace('+','-').Replace('/','_');
+            var publicKey=Encode([4,..parameters.Q.X!,..parameters.Q.Y!]);var privateKey=Encode(parameters.D!);
+            using var output=new FileStream(path,FileMode.CreateNew,FileAccess.Write,FileShare.None);
+            await System.Text.Json.JsonSerializer.SerializeAsync(output,new{Push=new{Subject="https://overlap-t7l6.onrender.com",PublicKey=publicKey,PrivateKey=privateKey,SchedulerSecret=Convert.ToHexString(RandomNumberGenerator.GetBytes(32))}},new System.Text.Json.JsonSerializerOptions{WriteIndented=true});
+            Console.WriteLine("Created private push configuration: "+path);return true;
+        }
         if (args.Contains("--generate-deployment-certificate"))
         {
             var directory = Path.GetFullPath(Path.Combine(".local", "deployment"));

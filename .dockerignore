@@ -41,3 +41,9 @@ services/api/**
 
 !services/api/Books/
 !services/api/Books/**
+
+!services/api/Cooking/
+!services/api/Cooking/**
+!services/api/Notifications/
+!services/api/Notifications/**
+**/appsettings.Push.Local.json

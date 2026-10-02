@@ -1,3 +1,4 @@
+@use '../view-tabs';
 :host {
   display: block;
 }
@@ -353,14 +354,16 @@ nav button {
 
 .search-line { background:var(--surface); border-radius:1rem; gap:0; padding:.15rem; } .search-line select { font-size:.8rem; color:var(--muted); } .preferences { border-block:1px solid var(--line); margin:1.2rem 0; } .formats button[aria-pressed='true'] { border-color:var(--accent); }
 
-.watch-tabs { gap:0; border-bottom:1px solid var(--line); } .watch-tabs button { border-radius:.7rem .7rem 0 0; border-bottom:3px solid transparent; padding:.65rem .35rem; font-size:.8rem; } .watch-tabs button[aria-selected='true'] { border-bottom-color:var(--accent); background:var(--accent-soft); } .watch-tabs span { white-space:nowrap; font-size:inherit; }
+
 
 .title-card .meta { display:block; }
 .title-card .pick-status { display:block; margin-top:.55rem; color:var(--muted); font-size:.75rem; line-height:1.4; }
-.watch-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }
-.watch-tabs button { min-width:0; min-height:44px; white-space:normal; overflow-wrap:anywhere; }
+
+
 .watched-actions { margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--line); }
 
 .search-line:focus-within { outline:2px solid var(--text); outline-offset:2px; }
 .search-line input:focus-visible, .search-line select:focus-visible { outline:none; }
 .search-line select { border-left:1px solid var(--line); border-radius:0 .85rem .85rem 0; }
+
+.watch-tabs { @include view-tabs.tabs; }

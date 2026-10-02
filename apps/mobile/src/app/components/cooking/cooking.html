@@ -1,0 +1,73 @@
+@if(preferencesOpened()){<app-food-preferences (back)="closeFoodPreferences()" (saved)="refreshFoodPreferences()" />}
+<div [hidden]="preferencesOpened()">
+@if(contestsOpened()) { <app-cooking-contests (managePreferences)="preferencesOpened.set(true)" [contestId]="initialContestId()" (back)="contestsOpened.set(false)" /> } @else {
+@if(busy()) { <app-loading-indicator label="Getting your recipe ready..." /> }
+<button class="back" type="button" (click)="selected() ? close() : back.emit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg><span>Back</span></button>
+@if(selected(); as recipe) {
+  <article class="recipe-detail">
+    <header class="recipe-heading"><span class="recipe-eyebrow">In the kitchen</span><h2 tabindex="-1">{{ recipe.title }}</h2></header>
+    @if(recipe.photo; as photo) {
+      @if(!failedPhoto()) { <img class="recipe-photo" [src]="photo.url" [alt]="recipe.title" referrerpolicy="no-referrer" (error)="failedPhoto.set(true)" /> }
+      <p class="credit"><a [href]="photo.sourceUrl" target="_blank" rel="noopener noreferrer">Photo: {{ photo.author || 'Wikimedia Commons contributors' }}</a> - {{ photo.license }}</p>
+    }
+    <div class="recipe-actions">
+      @if(saved()) { <p class="saved-note" role="status">In your shared collection</p> }
+      @else if(connected()) { <button class="primary" type="button" (click)="save()" [disabled]="busy()">Save together</button> }
+      @if(connected()) { <button class="share-button" type="button" (click)="share()" [disabled]="busy()">Share with your person <span aria-hidden="true">&#8599;</span></button> }
+      @else { <p class="hint">Connect with your person to save and share recipes.</p> }
+      @if(notice()) { <p class="hint" role="status">{{notice()}}</p> }
+    </div>
+    <section class="checklist-card" aria-labelledby="ingredient-heading">
+      <div class="checklist-heading"><h3 id="ingredient-heading">Ingredients</h3><span>{{ingredientChecks().length}} / {{recipe.ingredients.length}}</span></div>
+      <p class="hint">Check what you already have.</p>
+      @for(item of recipe.ingredients; track $index) { <label class="check-row" [class.checked]="ingredientChecks().includes($index)"><input type="checkbox" [checked]="ingredientChecks().includes($index)" (change)="toggleCheck('ingredients',$index)" /><span>{{item}}</span></label> }
+    </section>
+    <section class="checklist-card" aria-labelledby="step-heading">
+      <div class="checklist-heading"><h3 id="step-heading">Instructions</h3><span>{{stepChecks().length}} / {{recipe.instructions.length}}</span></div>
+      <p class="hint">One step at a time. Checks stay private on this screen.</p>
+      @for(step of recipe.instructions; track $index) { <label class="check-row step-row" [class.checked]="stepChecks().includes($index)"><input type="checkbox" [checked]="stepChecks().includes($index)" (change)="toggleCheck('steps',$index)" /><span><small>Step {{$index+1}}</small>{{step}}</span></label> }
+    </section>
+    @if(connected()) {
+      <section class="checklist-card" aria-labelledby="made-heading">
+        <h3 id="made-heading">Made it?</h3>
+        @if(entry()?.ownMade) {
+          <p class="hint">You've made this recipe. How did you like it?</p>
+          <app-book-rating [title]="recipe.title" [rating]="entry()?.ownRating ?? null" [partnerRating]="entry()?.partnerRating ?? null" [disabled]="busy()" (rate)="experience(true,$event)" />
+          <button class="remove" type="button" [disabled]="busy()" (click)="experience(false)">Undo made it</button>
+        } @else { <button class="primary" type="button" [disabled]="busy()" (click)="experience(true)">I've made it</button> }
+        @if(entry()?.partnerMade) { <p class="hint">Your person has made it too.@if(!entry()?.ownMade && entry()?.partnerRating) { Rated {{entry()?.partnerRating}}/5. }</p> }
+      </section>
+    }
+    <p class="credit">Recipe by <a [href]="recipe.sourceUrl" target="_blank" rel="noopener noreferrer">Wikibooks contributors</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>. Formatting adapted for Overlap.</p>
+  </article>
+} @else {
+  <header class="page-banner"><span class="page-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 10a4 4 0 0 1-1-8 4 4 0 0 1 6 1 4 4 0 0 1 6-1 4 4 0 0 1-1 8v10H7zM7 16h10"/></svg></span><div><h2 id="dashboard-heading" tabindex="-1">Cooking</h2><p>Find a recipe to make your own.</p></div></header>
+  <button class="contest-entry" type="button" (click)="preferencesOpened.set(true)"><span class="entry-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M4 17h16M8 4v6M16 14v6"/></svg></span><strong>Food preferences</strong> <span aria-hidden="true">&#8599;</span></button>
+  <button class="contest-entry" type="button" (click)="contestsOpened.set(true)"><span class="entry-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3h8v6a4 4 0 0 1-8 0zM8 5H4v2a4 4 0 0 0 4 4M16 5h4v2a4 4 0 0 1-4 4M12 13v5M8 21h8M9 18h6"/></svg></span><strong>Cooking contest</strong> <span aria-hidden="true">&#8599;</span></button>
+  <nav class="cooking-tabs" role="tablist" aria-label="Cooking views">
+    <button id="cooking-tab-discover" type="button" role="tab" [attr.aria-selected]="tab()==='discover'" [tabIndex]="tab()==='discover'?0:-1" aria-controls="cooking-panel" (keydown)="tabKey($event)" (click)="view('discover')">Discover</button>
+    <button id="cooking-tab-made" type="button" role="tab" [attr.aria-selected]="tab()==='made'" [tabIndex]="tab()==='made'?0:-1" aria-controls="cooking-panel" (keydown)="tabKey($event)" (click)="view('made')">{{ownName()}}'s</button>
+    <button id="cooking-tab-partner" type="button" role="tab" [attr.aria-selected]="tab()==='partner'" [tabIndex]="tab()==='partner'?0:-1" aria-controls="cooking-panel" (keydown)="tabKey($event)" (click)="view('partner')">{{partnerName()}}'s</button>
+    <button id="cooking-tab-collection" type="button" role="tab" [attr.aria-selected]="tab()==='collection'" [tabIndex]="tab()==='collection'?0:-1" aria-controls="cooking-panel" (keydown)="tabKey($event)" (click)="view('collection')">Our recipes</button>
+  </nav>
+  <section id="cooking-panel" role="tabpanel" [attr.aria-labelledby]="'cooking-tab-'+tab()" tabindex="0">
+  @if(tab()==='discover') {
+    <form (ngSubmit)="search()"><label for="recipe-query">Find a recipe</label><input id="recipe-query" name="query" type="search" enterkeyhint="search" maxlength="120" placeholder="Try crepes, flan, Alfredo..." [(ngModel)]="query" (keydown.enter)="$event.preventDefault(); search()" /><button class="primary" type="submit" [disabled]="busy() || !query.trim()">Find something to cook</button></form>
+    <p class="hint">English recipes from Wikibooks. Some pages are guides; choose a recipe with ingredients and instructions.</p>
+    @if(hits(); as results) { @if(!results.length) { <p class="hint" role="status">No recipes found. Try another dish name.</p> } @for(hit of results; track hit.id) { <button class="recipe-row" type="button" (click)="open(hit)">{{hit.title}} <span aria-hidden="true">&#8250;</span></button> } }
+  } @else {
+    @if(!connected()) { <p class="hint">Connect with your person to keep a shared recipe collection.</p> }
+    @else if(tab()==='partner' && !partnerCookingShared()) { <p class="hint">Your person's Made it history is private. They can choose to share it in Settings.</p> }
+    @else if(!visibleEntries().length && !collectionError()) {
+      <p class="hint">{{tab()==='made' ? 'No recipes marked as made yet. Open a recipe and choose I’ve made it.' : tab()==='partner' ? 'Your person hasn’t marked any recipes as made yet.' : 'Your shared collection is empty. Find a recipe and save it together.'}}</p>
+    }
+    @for(entry of visibleEntries(); track entry.id) { <div class="collection-row"><button class="recipe-row" type="button" (click)="openSaved(entry)"><span><strong>{{entry.recipe.title}}</strong>@if(entry.ownMadeUtc){<small class="made-date">{{ownName()}} made it · {{entry.ownMadeUtc | date:'d MMM yyyy'}}</small>}@if(entry.partnerMadeUtc){<small class="made-date">{{partnerName()}} made it · {{entry.partnerMadeUtc | date:'d MMM yyyy'}}</small>}@if(tab()==='made' || tab()==='partner') {<small class="history-rating">{{(tab()==='made' ? entry.ownRating : entry.partnerRating) ? (tab()==='made' ? entry.ownRating : entry.partnerRating) + '/5' : 'Made · Not rated'}}</small>}</span> <span aria-hidden="true">&#8250;</span></button><button class="remove" [hidden]="tab()!=='collection'" type="button" (click)="remove(entry)" [disabled]="busy()" [attr.aria-label]="'Remove ' + entry.recipe.title + ' from our recipes'">Remove</button></div> }
+  }
+  </section>
+}
+@if(error()) { <p class="error" role="alert">{{error()}}</p> }
+@if(collectionError()) { <p class="error" role="alert">{{collectionError()}}</p><button type="button" (click)="load()">Retry collection</button> }
+
+}
+
+</div>

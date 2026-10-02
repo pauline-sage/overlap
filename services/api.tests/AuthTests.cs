@@ -52,6 +52,8 @@ public sealed class AuthFactory : WebApplicationFactory<Program>
             services.AddDbContext<AuthDbContext>(options => options.UseSqlite(connection));
             var dispatcher = services.Single(x => x.ServiceType == typeof(IHostedService) && x.ImplementationType == typeof(AccountMailDispatcher));
             services.Remove(dispatcher);
+            var reminderWorker=services.Single(x=>x.ServiceType==typeof(IHostedService) && x.ImplementationType==typeof(Overlap.Api.Notifications.PhoneReminderWorker));
+            services.Remove(reminderWorker);
             services.AddDataProtection().UseEphemeralDataProtectionProvider();
         });
     }

@@ -1,0 +1,27 @@
+@use '../view-tabs';
+@use '../nav-bar/page-banner';
+:host{display:block}.page-banner{@include page-banner.banner}
+button,input{font:inherit;color:var(--text)}button{cursor:pointer;min-height:44px;border:1px solid var(--line);border-radius:1rem;background:var(--surface);padding:.75rem 1rem}button:disabled{opacity:.6;cursor:default}
+
+label{display:block;font-size:.9rem;margin-bottom:.5rem}input{width:100%;min-height:48px;padding:.8rem;border:1px solid var(--line);border-radius:1rem;background:var(--surface)}.primary{width:100%;margin:1rem 0;background:var(--accent);color:var(--on-accent);font-weight:600}
+.hint,.credit{font-size:.9rem;color:var(--muted);line-height:1.6}.credit{font-size:.75rem}.credit a{color:inherit}.recipe-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;width:100%;text-align:left;margin:.5rem 0;overflow-wrap:anywhere}.collection-row{margin-bottom:1rem}.remove{font-size:.8rem;background:transparent}.recipe-detail h2{font-size:1.55rem;letter-spacing:-.04em;margin:0 0 1rem}.recipe-detail h3{font-size:1.05rem;font-weight:650;letter-spacing:-.02em;margin:1.75rem 0 .65rem}.recipe-photo{display:block;width:100%;max-height:20rem;object-fit:contain;border-radius:1.25rem;background:var(--surface)}.saved-note{font-size:.9rem;color:var(--text);background:var(--accent-soft);padding:.85rem 1rem;border-radius:1rem}.error{color:var(--error-text);line-height:1.5}:is(button,input,a):focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.recipe-heading{padding:1.25rem;border:1px solid var(--line);border-radius:1.5rem;background:var(--hero);margin-bottom:1.25rem}.recipe-heading h2{margin:.6rem 0 0}.recipe-eyebrow{font-size:.62rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}.recipe-actions{margin-bottom:1.5rem}.share-button{display:flex;justify-content:space-between;align-items:center;width:100%}.checklist-card{padding:1.25rem;margin:1rem 0;border:1px solid var(--line);border-radius:1.5rem;background:var(--surface);box-shadow:var(--shadow)}.recipe-detail .checklist-card h3{margin:0}.checklist-heading{display:flex;justify-content:space-between;align-items:center;gap:.75rem}.checklist-heading>span{font-size:.75rem;color:var(--muted)}.checklist-card>.hint{margin:.5rem 0 .75rem}.check-row{display:flex;align-items:flex-start;gap:.85rem;min-height:44px;padding:.8rem 0;margin:0;font-size:.95rem;line-height:1.6;cursor:pointer}.check-row+.check-row{border-top:1px solid var(--line)}.check-row input{width:18px;height:18px;min-height:0;flex:0 0 18px;padding:0;margin:.25rem 0 0;accent-color:var(--accent)}.check-row>span{min-width:0;overflow-wrap:anywhere}.check-row.checked>span{color:var(--muted);text-decoration:line-through}.step-row small{display:block;margin-bottom:.2rem;font-size:.7rem;color:var(--muted);text-decoration:none}.checklist-card .primary{margin-bottom:0}
+
+.history-rating{display:block;margin-top:.3rem;font-size:.75rem;color:var(--muted)}
+
+.cooking-tabs { @include view-tabs.tabs; }
+
+.contest-form h3{margin:0 0 1rem}
+
+
+.contest-entry{display:flex;align-items:center;width:100%;justify-content:flex-start;gap:.85rem;background:var(--surface);border-radius:1.25rem;padding:.85rem 1rem;margin-bottom:.75rem;text-align:left}
+.contest-entry strong{flex:1;font-size:.95rem;font-weight:600}
+.entry-icon{display:grid;place-items:center;flex:0 0 44px;height:44px;border-radius:.9rem;background:var(--accent-soft);color:var(--text)}
+.entry-icon svg{width:23px;height:23px}
+.collection-row{border:1px solid var(--line);border-radius:1.25rem;background:var(--surface);overflow:hidden;margin:.75rem 0}
+.collection-row .recipe-row{border:0;border-radius:0;background:transparent;margin:0;padding:1rem;min-height:72px}
+.collection-row .recipe-row strong{font-size:.95rem;font-weight:600;line-height:1.5}
+.made-date{display:block;font-size:.75rem;color:var(--muted);line-height:1.5;margin-top:.35rem}
+.collection-row .remove:not([hidden]){display:block;width:100%;border:0;border-top:1px solid var(--line);border-radius:0;text-align:left;color:var(--muted);padding:.65rem 1rem;font-size:.75rem}
+
+.preference-help{display:block;font-size:.75rem;color:var(--muted);line-height:1.5;margin-top:.25rem}

@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 namespace Overlap.Api.Auth;
 
@@ -13,7 +13,7 @@ public sealed record SharingCategory(string Category);
 
 public static class PrivacyEndpoints
 {
-    private static readonly string[] Categories = ["profile", "presence", "picks", "books"];
+    private static readonly string[] Categories = ["profile", "presence", "picks", "books", "cooking"];
     private static string Id(ClaimsPrincipal user) => user.FindFirstValue(ClaimTypes.NameIdentifier)!;
     private static Task<string?> Pair(AuthDbContext db, string id) => db.PairMembers.Where(x => x.AccountId == id).Select(x => x.PairId).SingleOrDefaultAsync();
     public static Task<bool> Allowed(AuthDbContext db, string? pair, string sender, string category) =>
@@ -42,7 +42,15 @@ public static class PrivacyEndpoints
                 ? await db.Users.Where(x => x.Id == partnerId && x.ShareDisplayName).Select(x => x.DisplayName).SingleOrDefaultAsync() : null;
             var picks = await db.Set<Overlap.Api.Watch.SharedPick>().AsNoTracking().Where(x => x.ProposedBy == id ||
                 (pair != null && x.PairId == pair && x.IsShared && db.Set<SharingGrant>().Any(g => g.PairId == pair && g.SenderId == x.ProposedBy && g.Category == "picks" && g.Status == "accepted"))).OrderByDescending(x => x.Id).ToListAsync();
+            var recipes=await db.Set<Overlap.Api.Cooking.SavedRecipe>().AsNoTracking().Where(x=>pair!=null && x.PairId==pair && x.SharedBy!=id && x.ShareRevision!="").OrderByDescending(x=>x.Id).ToListAsync();
+            var contests=await db.Set<Overlap.Api.Cooking.CookingContest>().AsNoTracking().Where(x=>pair!=null && x.PairId==pair).OrderBy(x=>x.StartUtc).ToListAsync();
             return Results.Ok(new { connected = pair != null, receivedPicks, partnerName,
+                unreadContests=contests.Count(x=>x.ProposedBy==id ? x.SenderUnread : x.RecipientUnread),
+                cookingContests=contests.Select(x=>new{x.Id,x.Status,x.Revision,redrawPending=x.RedrawRequestedBy!=null,redrawMine=x.RedrawRequestedBy==id,availableMinutes=x.Minutes,x.TimeZone,recipeTitle=x.RevealedUtc is null || x.RecipeContent is null ? null : System.Text.Json.JsonSerializer.Deserialize<Overlap.Api.Cooking.Recipe>(x.RecipeContent)!.Title,startUtc=DateTime.SpecifyKind(x.StartUtc,DateTimeKind.Utc),mine=x.ProposedBy==id,
+                    unread=x.ProposedBy==id ? x.SenderUnread : x.RecipientUnread,
+                    dismissed=(x.ProposedBy==id ? x.SenderDismissedRevision : x.RecipientDismissedRevision)==x.Revision}),
+                unreadRecipes=recipes.Count(x=>!x.ShareSeen),
+                recipeShares=recipes.Select(x=>new{x.Id,revision=x.ShareRevision,unread=!x.ShareSeen,dismissed=x.ShareDismissed,title=System.Text.Json.JsonSerializer.Deserialize<Overlap.Api.Cooking.Recipe>(x.Content)!.Title}),
                 unreadOutings = outingUpdates.Count(x => x.SenderId == id ? !x.ReplySeen : !x.Seen),
                 unreadPicks = picks.Count(x => x.IsShared && x.PairId == pair && (x.ProposedBy == id ? x.SenderHasNews : x.RecipientHasNews)),
                 moviePicks = picks.Select(x => new { x.Id, x.Revision, dismissed = (x.ProposedBy == id ? x.SenderDismissedRevision : x.RecipientDismissedRevision) == x.Revision, mine = x.ProposedBy == id, x.Status,

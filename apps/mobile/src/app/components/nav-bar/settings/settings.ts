@@ -1,4 +1,5 @@
 import { SharingComponent } from '../sharing/sharing';
+import { PhoneRemindersComponent } from './phone-reminders';
 import { PrivacyNoticeComponent } from '../../privacy-notice/privacy-notice';
 
 import { FormsModule } from '@angular/forms';
@@ -9,7 +10,7 @@ import { LoadingIndicatorComponent } from '../../loading-indicator';
 import { Component, inject, signal, input, output } from '@angular/core';
 @Component({
   selector: 'app-settings',
-  imports: [FormsModule, LoadingIndicatorComponent,PrivacyNoticeComponent, SharingComponent],
+  imports: [FormsModule, LoadingIndicatorComponent,PrivacyNoticeComponent, SharingComponent,PhoneRemindersComponent],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
 })

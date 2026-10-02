@@ -1,0 +1,57 @@
+@if(busy()) {<app-loading-indicator label="Updating your cooking contest..." />}
+<button class="back" type="button" (click)="selectedId() ? selectedId.set(0) : back.emit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg><span>Back</span></button>
+<header class="page-banner"><span class="page-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 10a4 4 0 0 1-1-8 4 4 0 0 1 6 1 4 4 0 0 1 6-1 4 4 0 0 1-1 8v10H7zM7 16h10"/></svg></span><div><h2>Cooking contest</h2><p>A little challenge, in your own kitchens.</p></div></header>
+@if(selectedId()) {
+  @if(contest();as contest) {
+    <section class="checklist-card contest-reveal">
+      <div class="reveal-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 32h32M11 30a13 13 0 0 1 26 0M6 36h36M24 17v-3M21 14h6M16 8l-2-3M32 8l2-3M24 6V2"/></svg></div>
+      <span class="reveal-eyebrow">Two kitchens, one recipe</span>
+      <h3>{{shuffling() ? 'Your shared recipe is on its way' : recipe()?.title || contest.recipeTitle || 'A surprise for both of you'}}</h3><p class="reveal-budget">About {{contest.availableMinutes}} minutes together</p>
+      @if(contest.status==='accepted') {
+        @if(!unlocked()){
+          <div class="reveal-schedule"><p>{{contest.startUtc | date:'EEEE, d MMMM'}}</p><strong>{{contest.startUtc | date:'HH:mm'}}</strong><small>Your time &middot; {{zone}}</small></div>
+          <div class="countdown-tiles" role="timer" [attr.aria-label]="'Time until shuffle unlocks: '+countdown()">
+            @for(part of countdownParts();track part.label){<div aria-hidden="true"><strong>{{part.value}}</strong><span>{{part.label}}</span></div>}
+          </div>
+          <p class="reveal-message">A little anticipation. Your surprise unlocks here.</p>
+        }
+        @else if(shuffling()){<div class="shuffle-animation" role="status"><span aria-hidden="true">{{shuffleFrame()}}</span><p>Shuffling the same recipe for both of you...</p></div>}
+        @else if(!recipe()){<p class="hint">It's time. Either of you can start the shared shuffle.</p>}
+        @if(!recipe()){<button class="primary" type="button" [disabled]="busy() || !unlocked() || !preferencesReady()" (click)="shuffle()">@if(!unlocked()){<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>} {{!unlocked() ? 'Waiting for our moment' : preferencesReady() ? 'Shuffle our recipe' : 'Confirm preferences first'}}</button>}
+        @if(!recipe()){<p class="hint" role="status">{{preferencesReady() ? 'Both food preferences are saved. You are ready.' : ownPreferences() ? 'Your preferences are saved. Waiting for your partner.' : 'Save your food preferences in Cooking to get ready.'}}</p>}
+        <p class="reveal-note">A surprise from your shared recipes.<br />Add a few favourites before you begin.</p>
+      } @else {<p class="hint">{{contest.status==='pending' ? 'Your partner needs to accept first.' : 'This contest is no longer active.'}}</p>}
+    </section>
+    @if(contest.status==='accepted' && !recipe()){<button class="contest-entry" type="button" (click)="managePreferences.emit()">Manage food preferences in Cooking <span aria-hidden="true">&#8599;</span></button>}
+    @if(!shuffling()) { @if(recipe();as recipe) {
+      <section class="checklist-card redraw-card"><h3>A different recipe?</h3>
+        @if(redrawPending()){
+          @if(redrawMine()){<p class="hint">Waiting for your partner to agree. Your current recipe stays until then.</p><button class="remove" type="button" [disabled]="busy()" (click)="redraw('withdraw')">Withdraw request</button>}
+          @else{<p class="hint">Your partner wants to draw another recipe. Shall we?</p><div class="redraw-actions"><button class="primary" type="button" [disabled]="busy()" (click)="redraw('accept')">Yes, shuffle again</button><button type="button" [disabled]="busy()" (click)="redraw('decline')">Keep this recipe</button></div>}
+        } @else{<p class="hint">Shuffle again when both of you agree. Previous draws won't come back.</p><button class="primary" type="button" [disabled]="busy()" (click)="redraw('request')">Ask to shuffle again</button>}
+      </section>
+      @if(recipe.photo;as photo){<img class="recipe-photo" [src]="photo.url" [alt]="recipe.title" referrerpolicy="no-referrer" /><p class="credit"><a [href]="photo.sourceUrl" target="_blank" rel="noopener noreferrer">{{photo.author}} - {{photo.license}}</a></p>}
+      <section class="checklist-card"><h3>Ingredients</h3>@for(item of recipe.ingredients;track $index){<label class="check-row"><input type="checkbox" /><span>{{item}}</span></label>}</section>
+      <section class="checklist-card"><h3>Instructions</h3>@for(step of recipe.instructions;track $index){<label class="check-row step-row"><input type="checkbox" /><span><small>Step {{$index+1}}</small>{{step}}</span></label>}</section>
+      <p class="credit">Recipe by <a [href]="recipe.sourceUrl" target="_blank" rel="noopener noreferrer">Wikibooks contributors</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>. Formatting adapted for Overlap.</p>
+    }
+    }
+  } @else {<p class="hint">This contest is unavailable. Refresh Cooking or return to your contests.</p>}
+} @else {
+@if(sharing.state()?.connected) {
+  <form class="checklist-card contest-form" (ngSubmit)="invite()">
+    <h3>Invite your person</h3>
+    <p class="eyebrow">Choose your day</p>
+    <app-outing-calendar [value]="date" (valueChange)="date=$event" />
+    <div class="row time"><app-outing-choice label="Hour" [value]="hour" [options]="hourOptions" (valueChange)="hour=$event" /><app-outing-choice label="Minutes" [value]="minute" [options]="minuteOptions" (valueChange)="minute=$event" /></div>
+    <p class="hint">Your local time &middot; {{zone}}</p>
+    <app-outing-choice label="How much time do you have?" [value]="availableMinutes" [options]="availabilityOptions" (valueChange)="availableMinutes=$event" />
+    <p class="hint">An approximate time budget for the surprise recipe. Its cooking time will depend on the recipe you shuffle.</p>
+    <button class="primary" type="submit" [disabled]="busy() || !date">Send invitation</button>
+  </form>
+} @else {<p class="hint">Connect with your person to plan a cooking contest.</p>}
+<app-date-cards [contestsOnly]="true" (openContest)="select($event)" />
+}
+
+@if(notice()) {<p class="hint" role="status">{{notice()}}</p>}
+@if(error()) {<p class="error" role="alert">{{error()}}</p>}

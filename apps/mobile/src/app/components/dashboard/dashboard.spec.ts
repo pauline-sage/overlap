@@ -24,6 +24,14 @@ describe('Dashboard photos and invitations', () => {
     fixture.detectChanges();
     return fixture;
   }
+  it('opens a cooking reminder link after authentication and removes the query parameter',async()=>{
+    history.replaceState(null,'','/?cookingContest=23');
+    const fixture=await render();
+    expect(fixture.componentInstance.cooking()).toBe(true);
+    expect(fixture.componentInstance.cookingContestId()).toBe(23);
+    expect(new URL(window.location.href).searchParams.has('cookingContest')).toBe(false);
+    fixture.destroy();
+  });
   it('opens shared time and returns home through dashboard navigation', async () => {
     const fixture = await render();
     fixture.nativeElement.querySelector('button.time-idea').click();
@@ -105,7 +113,7 @@ describe('Dashboard photos and invitations', () => {
     fixture.nativeElement.querySelector('button[aria-label="Settings"]').click();
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Change password');
-    expect(fixture.nativeElement.textContent).toContain('Sign out');
+    expect(fixture.nativeElement.textContent).toContain('Phone notifications');
     expect(fixture.nativeElement.textContent).not.toContain('Close, wherever you are.');
     fixture.nativeElement.querySelector('button[aria-label="Profile"]').click();
     fixture.detectChanges();

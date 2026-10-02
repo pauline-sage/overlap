@@ -1,18 +1,27 @@
+@if(!notifications() && !contestsOnly()) {
+  <nav class="date-tabs" role="tablist" aria-label="Date views">
+    <button id="dates-tab-upcoming" type="button" role="tab" aria-controls="dates-panel" [attr.aria-selected]="dateTab()==='upcoming'" [tabIndex]="dateTab()==='upcoming'?0:-1" (keydown)="dateTabKey($event)" (click)="dateTab.set('upcoming')">Upcoming</button>
+    <button id="dates-tab-passed" type="button" role="tab" aria-controls="dates-panel" [attr.aria-selected]="dateTab()==='passed'" [tabIndex]="dateTab()==='passed'?0:-1" (keydown)="dateTabKey($event)" (click)="dateTab.set('passed')">Passed</button>
+  </nav>
+}
+<section id="dates-panel" [attr.role]="!notifications() && !contestsOnly() ? 'tabpanel' : null" [attr.aria-labelledby]="!notifications() && !contestsOnly() ? 'dates-tab-'+dateTab() : null">
 @if(sharing.busy()) {<app-loading-indicator [label]="'Updating your date...'" />}
 @if(sharing.error()) {<p role="alert">{{sharing.error()}}</p>}
 @if(sharing.state();as state) {
-  @for(group of groups();track group.label) {
-    @if(group.label && (group.updates.length || group.label==='Upcoming dates')) { <h2>{{group.label}}</h2> }
-    @if(group.label==='Upcoming dates' && !group.updates.length) { <p class="when">No upcoming dates yet. Places shared without a time appear below.</p> }
+  @for(group of displayedGroups();track group.label) {
+    @if(contestsOnly() && group.label && (group.updates.length || group.contests.length)) { <h2>{{group.label}}</h2> }
+    @if(group.label==='Upcoming dates' && !group.updates.length && !group.contests.length) { <p class="when">No upcoming dates yet. Plan a little time together.</p> }
+    @if(group.label==='Past dates' && !group.updates.length && !group.contests.length){<p class="when">No passed dates yet.</p>}
     @for(update of group.updates;track update.mine) {
-    <article class="date-card" [class.new]="update.unread" [class.compact]="group.label==='Past dates'">
-      @if(group.label==='Past dates') {
+    <article class="date-card" [class.new]="update.unread" [class.compact]="!notifications() && !contestsOnly()">
+      @if(!notifications() && !contestsOnly()) {
         <button class="past-summary" type="button" [attr.aria-expanded]="expanded()===update.revision" [attr.aria-controls]="'past-'+update.revision" (click)="togglePast(update.revision)">
-          <span><strong>{{update.venue?.activity || 'Outing'}}</strong><span class="when">{{update.venue?.startUtc | date:'d MMM yyyy, HH:mm'}}</span></span>
+          <span class="day-tile"><strong>{{update.venue?.startUtc | date:'dd'}}</strong><span>{{update.venue?.startUtc | date:'MMM'}}</span></span>
+          <span class="summary-copy"><strong>{{update.venue?.activity || 'Outing'}}</strong><span class="invitation-note">{{update.mine ? "You've asked " + (state.partnerName || 'your partner') + " out" : (state.partnerName || 'Your partner') + " has asked you out"}}</span><span class="when">{{update.venue?.startUtc | date:'EEE, d MMM yyyy'}} <span class="summary-time">{{update.venue?.startUtc | date:'HH:mm'}}</span></span>@if(update.unread){<span class="summary-news">New</span>}</span>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" [class.expanded]="expanded()===update.revision"><path d="m9 5 7 7-7 7"/></svg>
         </button>
       }
-      <div [id]="'past-'+update.revision" [hidden]="group.label==='Past dates' && expanded()!==update.revision">
+      <div [id]="'past-'+update.revision" [hidden]="!notifications() && !contestsOnly() && expanded()!==update.revision">
       @if(update.venue;as venue) {
         <div class="card-top"><span class="category">{{venue.activity || 'An outing'}}</span>@if(update.unread) {<span class="new-label">New</span>}</div>
         <div class="occasion">
@@ -63,9 +72,34 @@
       </div>
     </article>
   }
+    @for(contest of group.contests;track contest.id) {
+      <article class="date-card contest-card" [class.new]="contest.unread" [class.compact]="!notifications() && !contestsOnly()">
+        @if(!notifications() && !contestsOnly()) {
+          <button class="past-summary" type="button" [attr.aria-expanded]="expanded()==='contest-'+contest.id" [attr.aria-controls]="'contest-details-'+contest.id" (click)="togglePast('contest-'+contest.id)">
+            <span class="day-tile"><strong>{{contest.startUtc | date:'dd'}}</strong><span>{{contest.startUtc | date:'MMM'}}</span></span>
+            <span class="summary-copy"><strong>Cooking contest</strong><span class="invitation-note">{{contest.mine ? "You've invited " + (state.partnerName || 'your partner') + " to cook" : (state.partnerName || 'Your partner') + " has invited you to cook"}}</span><span class="when">{{contest.startUtc | date:'EEE, d MMM yyyy'}} <span class="summary-time">{{contest.startUtc | date:'HH:mm'}}</span></span>@if(contest.unread){<span class="summary-news">New</span>}</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" [class.expanded]="expanded()==='contest-'+contest.id"><path d="m9 5 7 7-7 7"/></svg>
+          </button>
+        }
+        <div [id]="'contest-details-'+contest.id" [hidden]="!notifications() && !contestsOnly() && expanded()!=='contest-'+contest.id">
+        <div class="card-top"><span class="category">Cooking contest</span>@if(contest.unread){<span class="new-label">New</span>}</div>
+        <div class="occasion"><div class="day-tile"><strong>{{contest.startUtc | date:'dd'}}</strong><span>{{contest.startUtc | date:'MMM'}}</span></div><div><h3>Cooking with {{state.partnerName || 'your person'}}</h3><p class="date-time"><span>{{contest.startUtc | date:'EEEE, d MMMM'}}</span><strong>at {{contest.startUtc | date:'HH:mm'}}</strong></p><small>For you &middot; {{deviceZone}}</small><p class="when">About {{contest.availableMinutes}} minutes available</p></div></div>
+        <p class="when">{{contest.redrawPending ? (contest.redrawMine ? 'Waiting for your partner to agree to a new recipe' : 'Your partner would like to shuffle again') : contest.status==='pending' ? (contestFuture(contest) ? (contest.mine ? 'Waiting for your partner' : 'Your partner invited you to cook') : 'Invitation expired') : contest.status==='accepted' ? 'Accepted by both of you' : contest.status==='declined' ? 'Invitation declined' : 'Contest cancelled'}}</p>
+        @if(contest.status==='pending' && !contest.mine && contestFuture(contest)) {<div class="reply-actions"><button type="button" [disabled]="sharing.busy()" (click)="sharing.contestAction(contest,'accept')">Accept contest</button><button type="button" [disabled]="sharing.busy()" (click)="sharing.contestAction(contest,'decline')">Decline</button></div>}
+        @if(contest.recipeTitle){<div class="place"><span class="detail-label">Your shared recipe</span><h4>{{contest.recipeTitle}}</h4></div>}
+        @if((contest.status==='pending' || contest.status==='accepted') && contestFuture(contest)) {
+          @if(cancelling==='contest-'+contest.id) {<div class="cancellation"><p>Cancel this cooking contest for both of you?</p><div class="reply-actions"><button type="button" [disabled]="sharing.busy()" (click)="cancelContest(contest)">Confirm cancellation</button><button type="button" (click)="cancelling=null">Keep contest</button></div></div>}
+          @else {<button class="cancel-date" type="button" (click)="cancelling='contest-'+contest.id">{{contest.status==='pending' ? 'Cancel invitation' : 'Cancel contest'}}</button>}
+        }
+        <div class="place-actions contest-actions"><button type="button" (click)="openContest.emit(contest.id)">{{contest.status!=='accepted' ? 'View contest' : contest.recipeTitle ? 'View recipe' : 'Open contest'}} &#8599;</button></div>
+        @if(notifications()){<button class="read" type="button" [disabled]="sharing.busy()" (click)="sharing.markRead('contest',contest.revision,contest.id,true)">Dismiss</button>}
+        @if(contest.unread){<button class="read" type="button" [disabled]="sharing.busy()" (click)="sharing.markRead('contest',contest.revision,contest.id)">Mark as read</button>}
+        </div>
+      </article>
+    }
   }
-  @if(!notifications() && state.moviePicks?.length) { <h2>Watch picks</h2> }
-  @for(pick of state.moviePicks || [];track pick.id) {
+
+  @for(pick of notifications() && !contestsOnly() ? state.moviePicks || [] : [];track pick.id) {
     @if(!notifications() || (pick.shared && !pick.dismissed)) {
       <article class="date-card film-card" [class.new]="pick.unread">
         <div class="card-top"><span class="category">{{pick.title.format || 'Watch'}} pick</span>@if(pick.unread){<span class="new-label">New</span>}</div>
@@ -79,7 +113,16 @@
       </article>
     }
   }
-  @if(notifications() && !groups()[0].updates.length && !visibleMovieNotifications()) {
-    <div class="notification-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 5h16v14H4zM4 13h5l2 3h2l2-3h5" /></svg><strong>No shared updates yet.</strong><p class="when">Shared places, watch picks and replies will appear here.</p></div>
+  @if(notifications() && !contestsOnly()) {
+    @for(recipe of state.recipeShares || [];track recipe.id) {
+      @if(!recipe.dismissed) {
+        <article class="date-card" [class.new]="recipe.unread"><div class="card-top"><span class="category">Recipe</span>@if(recipe.unread){<span class="new-label">New</span>}</div><h3>{{recipe.title}}</h3><p class="when">{{state.partnerName || 'Your person'}} shared a recipe with you.</p><div class="links"><button type="button" (click)="openCooking.emit(recipe.id)">View in Cooking &#8599;</button></div><button class="read" type="button" [disabled]="sharing.busy()" (click)="sharing.markRead('recipe',recipe.revision,recipe.id,true)">Dismiss</button>@if(recipe.unread){<button class="read" type="button" [disabled]="sharing.busy()" (click)="sharing.markRead('recipe',recipe.revision,recipe.id)">Mark as read</button>}</article>
+      }
+    }
+  }
+  @if(notifications() && !contestsOnly() && !groups()[0].contests.length && !groups()[0].updates.length && !visibleMovieNotifications() && !visibleRecipeNotifications()) {
+    <div class="notification-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 5h16v14H4zM4 13h5l2 3h2l2-3h5" /></svg><strong>No shared updates yet.</strong><p class="when">Shared places, picks, recipes and cooking invitations will appear here.</p></div>
   }
 }
+
+</section>

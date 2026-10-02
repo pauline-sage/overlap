@@ -4,6 +4,58 @@ import { DateCardsComponent } from './date-cards';
 import { SharingService } from '../nav-bar/sharing/sharing.service';
 import { readableHours } from '../coffee-date/opening-hours';
 describe('Activity cards and hours',()=>{
+  it('separates Upcoming and Passed tabs and keeps Watch picks only in Notifications',()=>{
+    const sharing={error:signal(''),busy:signal(false),state:signal({outingUpdates:[
+      {mine:true,revision:'future',venue:{activity:'Coffee',name:'Future cafe',startUtc:new Date(Date.now()+3600000).toISOString()}},
+      {mine:true,revision:'past',venue:{activity:'Coffee',name:'Past cafe',startUtc:new Date(Date.now()-3600000).toISOString()}}
+    ],moviePicks:[{id:1,revision:'film',shared:true,mine:true,status:'pending',title:{title:'Watch-only film',format:'Movie'}}]})};
+    TestBed.configureTestingModule({imports:[DateCardsComponent],providers:[{provide:SharingService,useValue:sharing}]});
+    const f=TestBed.createComponent(DateCardsComponent);f.detectChanges();
+    const tabs=f.nativeElement.querySelectorAll('[role="tab"]');
+    expect(Array.from(tabs as NodeListOf<HTMLElement>).map(x=>x.textContent?.trim())).toEqual(['Upcoming','Passed']);
+    expect(f.nativeElement.textContent).toContain('Future cafe');
+    expect(f.nativeElement.querySelector('.summary-copy>strong').textContent).toBe('Coffee');
+    expect(f.nativeElement.querySelector('.invitation-note').textContent).toBe("You've asked your partner out");
+    expect(f.nativeElement.textContent).not.toContain('Past cafe');
+    expect(f.nativeElement.textContent).not.toContain('Watch-only film');
+    const futureDetails=f.nativeElement.querySelector('#past-future');
+    expect(futureDetails.hidden).toBe(true);
+    f.nativeElement.querySelector('.past-summary').click();f.detectChanges();
+    expect(futureDetails.hidden).toBe(false);
+    f.nativeElement.querySelector('.past-summary').click();f.detectChanges();
+    expect(futureDetails.hidden).toBe(true);
+    tabs[0].dispatchEvent(new KeyboardEvent('keydown',{key:'End',bubbles:true}));f.detectChanges();
+    expect(tabs[1].getAttribute('aria-selected')).toBe('true');
+    expect(f.nativeElement.textContent).not.toContain('Future cafe');
+    expect(f.nativeElement.querySelector('#past-past')).not.toBeNull();
+    expect(f.nativeElement.textContent).not.toContain('Watch-only film');
+    f.componentRef.setInput('notifications',true);f.detectChanges();
+    expect(f.nativeElement.querySelector('[role="tablist"]')).toBeNull();
+    expect(f.nativeElement.textContent).toContain('Watch-only film');f.destroy();
+  });
+  it('shows accepted contests in Dates, pending invitations in Notifications, and elapsed contests in Past dates',()=>{
+    const future=new Date(Date.now()+3600000).toISOString();
+    const contest={id:1,revision:'contest',status:'pending',mine:false,startUtc:future,timeZone:'UTC',availableMinutes:60,unread:true,dismissed:false};
+    const sharing={error:signal(''),busy:signal(false),state:signal({cookingContests:[contest]}),contestAction:vi.fn(),markRead:vi.fn()};
+    TestBed.configureTestingModule({imports:[DateCardsComponent],providers:[{provide:SharingService,useValue:sharing}]});
+    const f=TestBed.createComponent(DateCardsComponent);f.detectChanges();expect(f.nativeElement.querySelector('.contest-card')).toBeNull();
+    f.componentRef.setInput('notifications',true);f.detectChanges();expect(f.nativeElement.textContent).not.toContain('No shared updates yet');
+    const accept=Array.from(f.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(x=>x.textContent?.includes('Accept contest'))!;accept.click();expect(sharing.contestAction).toHaveBeenCalledWith(contest,'accept');
+    sharing.state.set({cookingContests:[{...contest,status:'accepted',dismissed:true}]});f.componentRef.setInput('notifications',false);f.detectChanges();
+    expect(f.componentInstance.groups()[0].contests).toHaveLength(1);expect(f.nativeElement.querySelector('.contest-card')).not.toBeNull();expect(f.nativeElement.textContent).not.toContain('No upcoming dates yet');
+    const open=vi.fn();f.componentInstance.openContest.subscribe(open);f.nativeElement.querySelector('.contest-actions button').click();expect(open).toHaveBeenCalledWith(1);
+    sharing.state.set({cookingContests:[{...contest,status:'accepted',startUtc:new Date(Date.now()-3600000).toISOString()}]});f.detectChanges();expect(f.componentInstance.groups().find(x=>x.label==='Past dates')?.contests).toHaveLength(1);
+    sharing.state.set({cookingContests:[{...contest,status:'cancelled'}]});f.detectChanges();expect(f.nativeElement.querySelector('.contest-card')).toBeNull();f.destroy();
+  });
+  it('shows recipe news and opens its saved recipe without an empty-feed message',()=>{
+    const sharing={error:signal(''),busy:signal(false),state:signal({outingUpdates:[],moviePicks:[],recipeShares:[{id:7,title:'Flan',revision:'recipe-revision',unread:true,dismissed:false}]}),markRead:vi.fn()};
+    TestBed.configureTestingModule({imports:[DateCardsComponent],providers:[{provide:SharingService,useValue:sharing}]});
+    const f=TestBed.createComponent(DateCardsComponent);f.componentRef.setInput('notifications',true);f.detectChanges();
+    const opened=vi.fn();f.componentInstance.openCooking.subscribe(opened);
+    expect(f.nativeElement.textContent).toContain('Flan');expect(f.nativeElement.textContent).not.toContain('No shared updates yet');
+    Array.from(f.nativeElement.querySelectorAll('button')).find((x:any)=>x.textContent.includes('View in Cooking')) && (Array.from(f.nativeElement.querySelectorAll('button')).find((x:any)=>x.textContent.includes('View in Cooking')) as HTMLButtonElement).click();
+    expect(opened).toHaveBeenCalledWith(7);f.destroy();
+  });
   it('automatically folds elapsed dates into expandable past cards',()=>{
     vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-01T12:00:00Z'));
     const sharing={error:signal(''),busy:signal(false),state:signal({outingUpdates:[{mine:true,revision:'timed',venue:{activity:'Coffee',name:'Cafe',startUtc:'2026-10-01T12:00:01Z'}}]})};
@@ -11,8 +63,8 @@ describe('Activity cards and hours',()=>{
     const f=TestBed.createComponent(DateCardsComponent);
     try {
       f.detectChanges();
-      expect(f.nativeElement.querySelector('.past-summary')).toBeNull();
-      vi.advanceTimersByTime(15000);f.detectChanges();
+      expect(f.nativeElement.querySelector('.past-summary').getAttribute('aria-expanded')).toBe('false');
+      vi.advanceTimersByTime(15000);f.componentInstance.dateTab.set('passed');f.detectChanges();
       const summary=f.nativeElement.querySelector('.past-summary');
       expect(summary.textContent).toContain('Coffee');
       expect(summary.textContent).toContain('1 Oct 2026');

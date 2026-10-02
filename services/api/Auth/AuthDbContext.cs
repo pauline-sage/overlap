@@ -43,6 +43,18 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        builder.Entity<Overlap.Api.Notifications.PhoneSubscription>(subscription=>{
+            subscription.Property(x=>x.AccountId).HasMaxLength(255);
+            subscription.Property(x=>x.EndpointHash).HasMaxLength(64);
+            subscription.HasIndex(x=>x.EndpointHash).IsUnique();
+            subscription.Property(x=>x.ProtectedSubscription).HasColumnType("longtext");
+            subscription.HasOne<Account>().WithMany().HasForeignKey(x=>x.AccountId).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<Overlap.Api.Notifications.ContestReminderDelivery>(delivery=>{
+            delivery.HasKey(x=>new{x.ContestId,x.SubscriptionId});
+            delivery.HasOne<Overlap.Api.Cooking.CookingContest>().WithMany().HasForeignKey(x=>x.ContestId).OnDelete(DeleteBehavior.Cascade);
+            delivery.HasOne<Overlap.Api.Notifications.PhoneSubscription>().WithMany().HasForeignKey(x=>x.SubscriptionId).OnDelete(DeleteBehavior.Cascade);
+        });
         builder.Entity<Overlap.Api.Outings.OutingUpdate>(update => {
             update.HasKey(x => new { x.PairId, x.SenderId });
             update.Property(x => x.PairId).HasMaxLength(32);
@@ -99,6 +111,50 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
             rating.Property(x => x.AccountId).HasMaxLength(255);
             rating.HasOne<Overlap.Api.Books.ReadingEntry>().WithMany().HasForeignKey(x => x.EntryId).OnDelete(DeleteBehavior.Cascade);
             rating.HasOne<Account>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<Overlap.Api.Cooking.SavedRecipe>(entry => {
+            entry.Property(x => x.PairId).HasMaxLength(32);
+            entry.Property(x => x.AddedBy).HasMaxLength(255);
+            entry.Property(x => x.Content).HasColumnType("longtext");
+            entry.Property(x => x.SharedBy).HasMaxLength(255);
+            entry.Property(x => x.ShareRevision).HasMaxLength(32);
+            entry.HasIndex(x => new { x.PairId, x.SourceId }).IsUnique();
+            entry.HasOne<Account>().WithMany().HasForeignKey(x => x.AddedBy).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<Overlap.Api.Cooking.RecipeExperience>(experience => {
+            experience.HasKey(x => new {x.RecipeId,x.AccountId});
+            experience.Property(x => x.AccountId).HasMaxLength(255);
+            experience.HasOne<Overlap.Api.Cooking.SavedRecipe>().WithMany().HasForeignKey(x => x.RecipeId).OnDelete(DeleteBehavior.Cascade);
+            experience.HasOne<Account>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<Overlap.Api.Cooking.CookingContest>(contest => {
+            contest.Property(x=>x.RedrawRequestedBy).HasMaxLength(255);
+            contest.Property(x=>x.RecipeContent).HasColumnType("longtext");
+            contest.Property(x=>x.SenderPreferences).HasMaxLength(2000);
+            contest.Property(x=>x.RecipientPreferences).HasMaxLength(2000);
+            contest.Property(x=>x.PairId).HasMaxLength(32);
+            contest.Property(x=>x.ProposedBy).HasMaxLength(255);
+            contest.Property(x=>x.TimeZone).HasMaxLength(100);
+            contest.Property(x=>x.Status).HasMaxLength(16);
+            contest.Property(x=>x.Revision).HasMaxLength(32);
+            contest.Property(x=>x.SenderDismissedRevision).HasMaxLength(32);
+            contest.Property(x=>x.RecipientDismissedRevision).HasMaxLength(32);
+            contest.HasIndex(x=>new{x.PairId,x.StartUtc});
+            contest.HasOne<Account>().WithMany().HasForeignKey(x=>x.ProposedBy).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<Overlap.Api.Cooking.ContestRecipeDraw>(draw=>{
+            draw.HasKey(x=>new{x.PairId,x.SourceId});
+            draw.Property(x=>x.PairId).HasMaxLength(32);
+            draw.Property(x=>x.Content).HasColumnType("longtext");
+            draw.HasOne<Overlap.Api.Cooking.CookingContest>().WithMany().HasForeignKey(x=>x.ContestId).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<Overlap.Api.Cooking.FoodPreference>(preference=>{
+            preference.HasKey(x=>x.AccountId);
+            preference.Property(x=>x.AccountId).HasMaxLength(255);
+            preference.Property(x=>x.SharedPairId).HasMaxLength(32);
+            preference.Property(x=>x.Content).HasMaxLength(2000);
+            preference.Property(x=>x.Revision).HasMaxLength(32);
+            preference.HasOne<Account>().WithMany().HasForeignKey(x=>x.AccountId).OnDelete(DeleteBehavior.Cascade);
         });
         builder.Entity<Account>().Property(x => x.DisplayName).HasMaxLength(50);
         builder.Entity<Account>().Property(x => x.InvitationHash).HasMaxLength(64);
