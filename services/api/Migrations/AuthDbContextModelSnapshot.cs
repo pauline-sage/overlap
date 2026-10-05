@@ -787,6 +787,134 @@ namespace Overlap.Api.Migrations
                     b.ToTable("OutingUpdate");
                 });
 
+            modelBuilder.Entity("Overlap.Api.Quiz.CustomQuiz", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AuthorId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("PairId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("QuestionsJson")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Revision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<DateTime>("UpdatedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId", "PairId");
+
+                    b.ToTable("CustomQuiz");
+                });
+
+            modelBuilder.Entity("Overlap.Api.Quiz.QuizAnswer", b =>
+                {
+                    b.Property<long>("RoundId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("QuestionIndex")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AccountId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int?>("GuessChoice")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OwnChoice")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Skipped")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime>("SubmittedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("RoundId", "QuestionIndex", "AccountId");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("QuizAnswer");
+                });
+
+            modelBuilder.Entity("Overlap.Api.Quiz.QuizRound", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("CompletedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CurrentIndex")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PairId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("ProposedBy")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("QuestionsJson")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Revision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProposedBy");
+
+                    b.HasIndex("PairId", "CreatedUtc");
+
+                    b.ToTable("QuizRound");
+                });
+
             modelBuilder.Entity("Overlap.Api.Watch.SharedPick", b =>
                 {
                     b.Property<long>("Id")
@@ -1088,6 +1216,39 @@ namespace Overlap.Api.Migrations
                     b.HasOne("Overlap.Api.Auth.Account", null)
                         .WithMany()
                         .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Quiz.CustomQuiz", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Quiz.QuizAnswer", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Overlap.Api.Quiz.QuizRound", null)
+                        .WithMany()
+                        .HasForeignKey("RoundId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Quiz.QuizRound", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("ProposedBy")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

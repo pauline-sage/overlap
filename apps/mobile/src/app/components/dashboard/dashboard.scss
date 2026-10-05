@@ -1,4 +1,3 @@
-@use '../nav-bar/page-banner';
 @use '../personal-card';
 
 :host{display:block}
@@ -53,6 +52,5 @@ button.back{border:0;background:none;font:inherit}
 .guide-actions button:first-child{background:var(--accent);color:var(--on-accent);display:flex;align-items:center;justify-content:space-between;gap:.5rem}
 .guide-actions button:last-child{background:transparent;border:0;color:var(--muted)}
 
-.page-banner { @include page-banner.banner; }
+
 .stay-in-section + .stay-in-section { margin-top: 1.75rem; }
-.stay-in-section > h3 { font-size: 1.05rem; font-weight: 650; letter-spacing: -.02em; color: var(--text); margin: 0 0 .65rem; }

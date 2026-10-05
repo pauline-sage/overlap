@@ -1,4 +1,4 @@
-import { LoadingIndicatorComponent } from '../loading-indicator';
+import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator';
 import { Component, inject, input, output, signal, DestroyRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';

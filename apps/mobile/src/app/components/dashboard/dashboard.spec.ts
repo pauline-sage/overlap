@@ -27,8 +27,8 @@ describe('Dashboard photos and invitations', () => {
   it('opens a cooking reminder link after authentication and removes the query parameter',async()=>{
     history.replaceState(null,'','/?cookingContest=23');
     const fixture=await render();
-    expect(fixture.componentInstance.cooking()).toBe(true);
-    expect(fixture.componentInstance.cookingContestId()).toBe(23);
+    expect(fixture.componentInstance.stayInRequest().activity).toBe('cooking');
+    expect(fixture.componentInstance.stayInRequest().contestId).toBe(23);
     expect(new URL(window.location.href).searchParams.has('cookingContest')).toBe(false);
     fixture.destroy();
   });

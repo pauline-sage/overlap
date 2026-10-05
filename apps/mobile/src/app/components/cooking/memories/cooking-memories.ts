@@ -2,11 +2,11 @@ import { Component, DestroyRef, effect, inject, input, output, signal } from '@a
 import { DatePipe } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { AuthService } from '../../auth.service';
-import { LoadingIndicatorComponent } from '../loading-indicator';
+import { AuthService } from '../../../auth.service';
+import { LoadingIndicatorComponent } from '../../loading-indicator/loading-indicator';
 interface DishPhoto {mine:boolean;accountId:string;revision:string;uploadedUtc:string;}
 interface Memory {contestId:number;revision:string;startUtc:string;completed:boolean;archived:boolean;recipe:{title:string;ingredients:string[];instructions:string[];sourceUrl:string;};photos:DishPhoto[];}
-@Component({selector:'app-cooking-memories',imports:[DatePipe,LoadingIndicatorComponent],templateUrl:'./cooking-memories.html',styleUrls:['./cooking.scss','./cooking-memories.scss']})
+@Component({selector:'app-cooking-memories',imports:[DatePipe,LoadingIndicatorComponent],templateUrl:'./cooking-memories.html',styleUrls:['../cooking.scss','./cooking-memories.scss']})
 export class CookingMemoriesComponent {
   readonly contestId=input(0);readonly back=output<void>();readonly archivedChange=output<boolean>();
   readonly entries=signal<Memory[]>([]);readonly selected=signal<Memory|null>(null);

@@ -1,0 +1,3 @@
+@use '../quiz-ui';
+@include quiz-ui.base;
+.template-library{margin-top:1rem}.custom-template{padding:1rem 0}.custom-template+.custom-template{border-top:1px solid var(--line)}.custom-template h4{margin:0 0 .75rem;overflow-wrap:anywhere}

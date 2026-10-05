@@ -1,0 +1,5 @@
+  <section class="quiz-card"><h3>Made by you</h3><p class="hint">Write five questions and keep them ready for another round.</p><button type="button" [disabled]="busy() || !connected()" (click)="create.emit()">Make my own quiz</button>
+    @if(templates().length){<details class="template-library"><summary>Your saved quizzes ({{templates().length}})</summary>@for(quiz of templates();track quiz.id){<article class="custom-template"><h4>{{quiz.title}}</h4><div class="actions"><button type="button" [disabled]="busy()" (click)="invite.emit(quiz)">Invite {{partnerName()}}</button><button type="button" [disabled]="busy()" (click)="edit.emit(quiz)">Edit</button></div>
+      @if(removingTemplate()===quiz.id){<p class="hint">Remove this quiz? Played rounds and their answers stay saved.</p><div class="actions"><button type="button" [disabled]="busy()" (click)="remove.emit(quiz)">Remove quiz</button><button type="button" (click)="removingTemplate.set(null)">Keep it</button></div>}@else{<button class="quiet" type="button" (click)="removingTemplate.set(quiz.id)">Remove</button>}
+    </article>}</details>}
+  </section>

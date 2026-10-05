@@ -1,4 +1,4 @@
-import { LoadingIndicatorComponent } from '../../loading-indicator';
+import { LoadingIndicatorComponent } from '../../loading-indicator/loading-indicator';
 ﻿import { DateCardsComponent } from '../../date-cards/date-cards';
 import { Component, inject, input, output } from '@angular/core';
 import { OutingUpdate, SharingService, Category } from './sharing.service';

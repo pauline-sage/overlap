@@ -1,27 +1,25 @@
-import { LoadingIndicatorComponent } from '../loading-indicator';
+import { StayInTogetherComponent } from '../stay-in-together/stay-in-together';
+import { StayInRequest } from '../stay-in-together/stay-in.types';
+import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator';
 
 import { OutingUpdate, SharingService } from '../nav-bar/sharing/sharing.service';
 import { CoffeeDateComponent } from '../coffee-date/coffee-date';
 import { ProfileComponent, ProfileAction } from '../profile/profile';
-import { Component, inject, input, output, signal, viewChild, OnInit, OnDestroy, NgZone } from '@angular/core';
+import { Component, inject, input, output, signal, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService, TogetherStatus } from '../../auth.service';
-import { SharedTimeComponent } from '../shared-time/shared-time';
-import { CookingComponent } from '../cooking/cooking';
-import { ReadTogetherComponent } from '../read-together/read-together';
 import { DashboardPage, NavBarComponent } from '../nav-bar/nav-bar';
 
 @Component({
   selector: 'app-dashboard',
   providers: [SharingService],
-  imports: [LoadingIndicatorComponent, NavBarComponent, SharedTimeComponent, ReadTogetherComponent, CookingComponent, ProfileComponent, CoffeeDateComponent],
+  imports: [StayInTogetherComponent, LoadingIndicatorComponent, NavBarComponent, ProfileComponent, CoffeeDateComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   readonly sharing = inject(SharingService);
-  private readonly sharedTime = viewChild(SharedTimeComponent);
-  openPartnerPicks(): void { this.navigate('home'); this.openSharedTime(); this.sharedTime()?.view('partner'); }
+  openPartnerPicks():void {this.openActivity({activity:'watch',partnerPicks:true});}
   readonly firstSteps = signal(false);
   finishFirstSteps(settings=false):void {
     this.firstSteps.set(false);
@@ -32,44 +30,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
     void this.sharing.load(true);
     queueMicrotask(()=>document.getElementById('first-steps-heading')?.focus());
   }
-  readonly coffee = signal(false);
-  readonly stayingIn = signal(false);
-  readonly reading = signal(false);
-  readonly cooking = signal(false);
-  readonly cookingEntryId=signal(0);
-  readonly cookingContestId=signal(0);
-  private openReminderLink():void {
+  readonly coffee=signal(false);
+  readonly stayingIn=signal(false);
+  readonly stayInRequest=signal<StayInRequest>({activity:'menu'});
+  private openActivity(request:StayInRequest):void{this.navigate('home');this.stayInRequest.set(request);this.stayingIn.set(true);queueMicrotask(()=>document.getElementById('dashboard-heading')?.focus());}
+  openStayIn():void{this.openActivity({activity:'menu'});}
+  openQuiz(id=0):void{this.openActivity({activity:'quiz',entryId:id});}
+  openCooking(entryId=0):void{this.openActivity({activity:'cooking',entryId});}
+  openContest(id:number):void{this.openActivity({activity:'cooking',contestId:id});}
+  openReading():void{this.openActivity({activity:'read'});}
+  openSharedTime():void{this.openActivity({activity:'watch'});}
+  private openReminderLink():void{
     const url=new URL(window.location.href);const value=url.searchParams.get('cookingContest');
-    if(value && /^\d+$/.test(value) && Number.isSafeInteger(Number(value)) && Number(value)>0){this.navigate('home');this.openContest(Number(value));url.searchParams.delete('cookingContest');history.replaceState(null,'',url.pathname+url.search+url.hash);}
-  }
-  openContest(id:number):void {this.openCooking();this.cookingContestId.set(id);}
-  openCooking(entryId=0): void { this.cookingContestId.set(0); this.cookingEntryId.set(entryId); this.stayingIn.set(false); this.watching.set(false); this.reading.set(false); this.coffee.set(false); this.cooking.set(true); queueMicrotask(() => document.getElementById('dashboard-heading')?.focus()); }
-  openStayIn(): void {
-    this.cooking.set(false); this.watching.set(false); this.reading.set(false); this.coffee.set(false); this.stayingIn.set(true);
-    queueMicrotask(() => document.getElementById('dashboard-heading')?.focus());
-  }
-  openReading(): void {
-    this.cooking.set(false); this.stayingIn.set(false); this.watching.set(false); this.reading.set(true);
-    queueMicrotask(() => document.getElementById('dashboard-heading')?.focus());
+    if(value && /^\d+$/.test(value) && Number.isSafeInteger(Number(value)) && Number(value)>0){this.openContest(Number(value));url.searchParams.delete('cookingContest');history.replaceState(null,'',url.pathname+url.search+url.hash);}
   }
   readonly outingProposal=signal<OutingUpdate|null>(null);
-  pickYours(proposal:OutingUpdate):void {this.navigate('home');this.outingProposal.set(proposal);this.coffee.set(true);}
-  openCoffee():void { this.outingProposal.set(null); this.watching.set(false);this.coffee.set(true);queueMicrotask(()=>document.getElementById('dashboard-heading')?.focus()); }
-  readonly watching = signal(false);
-  openSharedTime(): void {
-    this.cooking.set(false); this.stayingIn.set(false); this.reading.set(false);
-    this.watching.set(true);
-    setTimeout(() => document.getElementById('dashboard-heading')?.focus());
-  }
-  readonly page = signal<DashboardPage>('home');
-  readonly sessionExpired = output<void>();
-  navigate(page: DashboardPage): void {
-    this.cooking.set(false); this.stayingIn.set(false); this.reading.set(false);
-    this.watching.set(false);
-    this.coffee.set(false);
-    this.page.set(page);
-    queueMicrotask(() => document.getElementById('dashboard-heading')?.focus());
-  }
+  pickYours(proposal:OutingUpdate):void{this.navigate('home');this.outingProposal.set(proposal);this.coffee.set(true);}
+  openCoffee():void{this.navigate('home');this.outingProposal.set(null);this.coffee.set(true);}
+  readonly page=signal<DashboardPage>('home');
+  readonly sessionExpired=output<void>();
+  navigate(page:DashboardPage):void{this.stayingIn.set(false);this.coffee.set(false);this.page.set(page);queueMicrotask(()=>document.getElementById('dashboard-heading')?.focus());}
   private readonly auth = inject(AuthService);
   readonly invitationToken = input('');
   readonly invitationHandled = output<void>();

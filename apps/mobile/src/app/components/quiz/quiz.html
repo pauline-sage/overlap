@@ -1,0 +1,77 @@
+@if(editorOpened()){<app-quiz-editor [quiz]="editingTemplate()" (back)="editorOpened.set(false)" (saved)="templateSaved()" />} @else {
+@if(busy()){<app-loading-indicator label="Updating your quiz..." />}
+<button class="back" type="button" [disabled]="busy()" (click)="goBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg><span>Back</span></button>
+<header class="page-banner"><span class="page-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 8a3 3 0 1 1 5 2c-1 1-2 1-2 3M12 16v1"/><circle cx="12" cy="12" r="10"/></svg></span><div><h2 id="dashboard-heading" tabindex="-1">Quiz together</h2><p>A few guesses. A little more about each other.</p></div></header>
+@if(!selectedId()){
+  @switch(area()){
+    @case('home'){<app-quiz-home [pending]="pendingRounds()" (choose)="area.set($event)" />}
+    @case('guess'){<app-quiz-guess-setup [categories]="categories()" [categoryIds]="categoryIds()" [busy]="busy()" [connected]="connected()" [partnerName]="partnerName()" (toggle)="toggleCategory($event)" (invite)="create()" />}
+    @case('custom'){<app-quiz-library [templates]="templates()" [busy]="busy()" [connected]="connected()" [partnerName]="partnerName()" (create)="newTemplate()" (edit)="editTemplate($event)" (invite)="inviteCustom($event)" (remove)="removeTemplate($event)" />}
+    @case('history'){<app-quiz-history [rounds]="rounds()" (open)="open($event)" />}
+  }
+} @else if(round();as round){
+  @if(round.status==='pending'){
+    <section class="quiz-card"><h3>{{round.title || (round.mine ? 'Your invitation is sent' : 'A quiz with your person')}}</h3><p class="hint">Five questions from:</p><ul>@for(id of roundCategories();track id){<li>{{categoryTitle(id)}}</li>}</ul>
+      @if(round.mine){<p class="hint" role="status">Waiting for {{partnerName()}} to accept. They can open Quiz together to find your invitation.</p>}
+      @else{<p class="hint">You will both save your own answers and your guesses. Answers reveal after both submit. You can skip any question.</p><div class="actions"><button class="primary" type="button" [disabled]="busy()" (click)="act('accept')">Let's play</button><button type="button" [disabled]="busy()" (click)="act('decline')">Not this time</button></div>}
+    </section>
+  }
+  @if(round.status==='active'){@if(question();as question){
+    <section class="quiz-card"><p class="eyebrow">Question {{round.currentIndex+1}} of 5 &middot; {{categoryTitle(question.categoryId)}}</p>
+      @if(!question.ownSubmitted){
+        <p class="step-label">{{answerStep()==='own' ? '1. Answer for yourself' : '2. Guess for '+partnerName()}}</p>
+        <h3 id="quiz-question" tabindex="-1">{{answerStep()==='own' ? question.prompt : partnerPrompt(question.prompt)}}</h3>
+        @if(answerStep()==='own'){
+          <p class="hint">Which answer fits you best?</p>
+          <fieldset [disabled]="busy()"><legend class="sr-only">Your answer</legend>@for(choice of question.choices;track $index){<label class="check-row"><input type="radio" name="ownAnswer" [checked]="ownChoice()===$index" (change)="ownChoice.set($index)" /><span>{{choice}}</span></label>}</fieldset>
+          <button class="primary" type="button" [disabled]="busy() || ownChoice()===null" (click)="nextAnswerStep()">Now guess for {{partnerName()}} <span aria-hidden="true">&#8594;</span></button>
+        }@else{
+          <p class="hint">What would {{partnerName()}} choose? Their answer is still hidden.</p>
+          <fieldset [disabled]="busy()"><legend class="sr-only">Your guess for {{partnerName()}}</legend>@for(choice of question.choices;track $index){<label class="check-row"><input type="radio" name="partnerGuess" [checked]="guessChoice()===$index" (change)="guessChoice.set($index)" /><span>{{choice}}</span></label>}</fieldset>
+          <p class="answer-summary">Your own answer: <strong>{{answerLabel(question,ownChoice())}}</strong></p>
+          <button class="quiet" type="button" [disabled]="busy()" (click)="answerStep.set('own')">Change my answer</button>
+          <button class="primary" type="button" [disabled]="busy() || ownChoice()===null || guessChoice()===null" (click)="submit()">Send my answer and guess</button>
+        }
+        <p class="credit">Both choices stay private until you both send them.</p>
+        <button class="quiet" type="button" [disabled]="busy()" (click)="submit(true)">Skip this question</button>
+      }@else{
+        <h3>{{question.prompt}}</h3>
+        @if(!question.reveal){<p class="saved-note" role="status">You're ready. Waiting for {{partnerName()}}.</p>@if(question.ownAnswer;as answer){<p class="hint">Your answer: {{answerLabel(question,answer.ownChoice)}}</p><p class="hint">Your guess for {{partnerName()}}: {{answerLabel(question,answer.guessChoice)}}</p>}}
+      }
+      @if(!question.reveal && !question.ownSubmitted && question.partnerSubmitted){<p class="hint" role="status">{{partnerName()}} is ready. Take your time.</p>}
+      @if(question.reveal;as reveal){
+        <div class="reveal"><h4>Did you know each other?</h4>
+          <section class="person-result"><h5>Your guess about {{partnerName()}}</h5><dl><div><dt>You guessed</dt><dd>{{answerLabel(question,reveal.ownGuess)}}</dd></div><div><dt>{{partnerName()}} chose</dt><dd>{{answerLabel(question,reveal.partnerAnswer)}}</dd></div></dl><p class="result-label" [class.correct]="reveal.ownCorrect===true"><span aria-hidden="true">{{reveal.ownCorrect===null ? '—' : reveal.ownCorrect ? '✓' : '✕'}}</span> {{reveal.ownCorrect===null ? 'Skipped - no score' : reveal.ownCorrect ? 'You got it right' : 'Not this time'}}</p></section>
+          <section class="person-result"><h5>{{partnerName()}}'s guess about you</h5><dl><div><dt>{{partnerName()}} guessed</dt><dd>{{answerLabel(question,reveal.partnerGuess)}}</dd></div><div><dt>You chose</dt><dd>{{answerLabel(question,reveal.ownAnswer)}}</dd></div></dl><p class="result-label" [class.correct]="reveal.partnerCorrect===true"><span aria-hidden="true">{{reveal.partnerCorrect===null ? '—' : reveal.partnerCorrect ? '✓' : '✕'}}</span> {{reveal.partnerCorrect===null ? 'Skipped - no score' : reveal.partnerCorrect ? partnerName()+' got it right' : 'Not this time'}}</p></section>
+        </div>
+        @if(round.currentIndex<4){<button class="primary" type="button" [disabled]="busy()" (click)="act('next')">Next question <span aria-hidden="true">&#8594;</span></button>}@else{<button class="primary" type="button" [disabled]="busy()" (click)="load()">See our results</button>}
+      }
+    </section>
+  }}
+  @if(round.status==='completed'){<section class="quiz-card"><h3>Five questions, a little closer</h3><p class="hint">Your guesses: {{ownScore()}} / {{scored()}} correct. {{partnerName()}}: {{partnerScore()}} / {{scored()}} correct. Skipped questions are not scored.</p><p class="hint">Saved in Our quizzes. Review them whenever you like.</p><div class="actions"><button type="button" (click)="openReview()">Review answers</button><button type="button" (click)="playAnother()">Play another quiz</button></div></section>}
+  @if(round.status==='cancelled' || round.status==='declined'){<p class="hint">This round is closed. Previously submitted answers remain saved; unrevealed partner answers stay private.</p>}
+  @if(round.status!=='pending'){
+    @if(!reviewOpened() && round.status!=='completed'){<button class="quiet" type="button" (click)="openReview()">Review saved answers</button>}
+    @if(reviewOpened()){@if(reviewQuestion();as question){
+      <section class="quiz-card review-card"><div class="review-heading"><p class="eyebrow">Review &middot; Question {{reviewIndex()+1}} of {{round.questions.length}}</p><button class="quiet" type="button" (click)="reviewOpened.set(false)">Close review</button></div><h3>{{question.prompt}}</h3>
+        @if(question.reveal;as reveal){
+          <div class="reveal"><section class="person-result"><h5>Your guess about {{partnerName()}}</h5><dl><div><dt>You guessed</dt><dd>{{answerLabel(question,reveal.ownGuess)}}</dd></div><div><dt>{{partnerName()}} chose</dt><dd>{{answerLabel(question,reveal.partnerAnswer)}}</dd></div></dl><p class="result-label">{{reveal.ownCorrect===null ? 'Skipped - no score' : reveal.ownCorrect ? 'You got it right' : 'Not this time'}}</p></section>
+          <section class="person-result"><h5>{{partnerName()}}'s guess about you</h5><dl><div><dt>{{partnerName()}} guessed</dt><dd>{{answerLabel(question,reveal.partnerGuess)}}</dd></div><div><dt>You chose</dt><dd>{{answerLabel(question,reveal.ownAnswer)}}</dd></div></dl><p class="result-label">{{reveal.partnerCorrect===null ? 'Skipped - no score' : reveal.partnerCorrect ? partnerName()+' got it right' : 'Not this time'}}</p></section></div>
+        }@else if(question.ownAnswer;as answer){<p class="hint">Your saved answer: {{answerLabel(question,answer.ownChoice)}}</p><p class="hint">Your saved guess: {{answerLabel(question,answer.guessChoice)}}</p><p class="hint">Your partner's answers are still hidden.</p>}
+        @else{<p class="hint">No answers to review yet.</p>}
+        <div class="actions"><button type="button" [disabled]="reviewIndex()===0" (click)="moveReview(-1)">Previous</button><button type="button" [disabled]="reviewIndex()===round.questions.length-1" (click)="moveReview(1)">Next</button></div>
+      </section>
+    }}
+  }
+  @if(round.status==='active' || round.status==='pending'){
+    @if(confirmCancel()){<section class="quiz-card"><h3>Cancel this round?</h3><p class="hint">Both of you will stop playing. Submitted answers stay saved; unrevealed answers stay private.</p><div class="actions"><button type="button" [disabled]="busy()" (click)="act('cancel')">Cancel round</button><button type="button" (click)="confirmCancel.set(false)">Keep playing</button></div></section>}
+    @else{<button class="quiet" type="button" [disabled]="busy()" (click)="confirmCancel.set(true)">Cancel round</button>}
+  }@else{
+    @if(confirmRemove()){<section class="quiz-card"><h3>Remove this saved round?</h3><p class="hint">This removes all its answers and guesses for both of you.</p><div class="actions"><button type="button" [disabled]="busy()" (click)="remove()">Remove for both of us</button><button type="button" (click)="confirmRemove.set(false)">Keep it</button></div></section>}
+    @else{<button class="quiet" type="button" [disabled]="busy()" (click)="confirmRemove.set(true)">Remove saved round</button>}
+  }
+}
+@if(notice()){<p class="hint" role="status">{{notice()}}</p>}
+@if(error()){<p class="error" role="alert">{{error()}}</p><button type="button" [disabled]="busy()" (click)="categories().length ? load() : ngOnInit()">Refresh</button>}
+
+}

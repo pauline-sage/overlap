@@ -1,0 +1,15 @@
+@if(active() && activity()==='menu'){    <section class="stay-in-section" aria-labelledby="cozy-heading">
+      <h3 id="cozy-heading">Cozy time</h3>
+    <div class="idea-grid">
+      <button class="idea time-idea story-choice watch-choice" type="button" (click)="choose.emit('watch')">
+        <span class="idea-icon story-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1ZM3 9 2 5l17-4 1 4ZM6 4l3 4M12 3l3 4M8 13h8M8 17h5" /></svg></span>
+        <strong>Watch</strong>
+      </button>
+      <button class="idea coffee-idea story-choice read-choice" type="button" (click)="choose.emit('read')">
+        <span class="idea-icon story-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5C9 3 5 3 2 4v15c3-1 7-1 10 1 3-2 7-2 10-1V4c-3-1-7-1-10 1ZM12 5v15M5 8c1-.3 2-.3 4 .3M5 12c1-.3 2-.3 4 .3M15 8c2-.6 3-.6 4-.3M15 12c2-.6 3-.6 4-.3" /></svg></span>
+        <strong>Read</strong>
+      </button>
+    </div>
+    </section>}
+<div [hidden]="!active() || activity()!=='watch'"><app-shared-time [ownName]="ownName()" [partnerName]="partnerName()" [active]="active() && activity()==='watch'" (back)="back.emit()" /></div>
+@if(active() && activity()==='read'){<app-read-together (back)="back.emit()" />}

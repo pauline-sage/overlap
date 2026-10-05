@@ -1,7 +1,7 @@
 import {TestBed} from '@angular/core/testing';
 import {HttpClient} from '@angular/common/http';
 import {of} from 'rxjs';
-import {AuthService} from '../../../auth.service';
+import {AuthService} from '../../../../auth.service';
 import {PhoneRemindersComponent} from './phone-reminders';
 
 describe('Phone reminders',()=>{

@@ -1,4 +1,4 @@
-import { LoadingIndicatorComponent } from '../loading-indicator';
+import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator';
 import { Component, effect, inject, input, output, signal, untracked, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';

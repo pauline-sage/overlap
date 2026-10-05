@@ -1,0 +1,15 @@
+@if(busy()){<app-loading-indicator label="Saving your quiz..." />}
+<button class="back" type="button" [disabled]="busy()" (click)="back.emit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg><span>Back</span></button>
+<header class="page-banner"><span class="page-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m4 16 12-12 4 4L8 20H4zM14 6l4 4"/></svg></span><div><h2>{{quiz() ? 'Edit your quiz' : 'Make your own quiz'}}</h2><p>Your questions. Your little discoveries.</p></div></header>
+<form class="quiz-card quiz-editor" (ngSubmit)="save()">
+  <label for="custom-quiz-title">Quiz name</label><input id="custom-quiz-title" name="title" [(ngModel)]="title" maxlength="80" [disabled]="busy()" placeholder="Our little habits" />
+  <p class="eyebrow">Question {{index()+1}} of 5</p>
+  <p class="hint">Ask something both of you can answer about yourselves. Then you will guess each other's choice.</p>
+  <label for="custom-quiz-question">Your question</label><textarea id="custom-quiz-question" name="prompt" [(ngModel)]="questions[index()].prompt" maxlength="300" rows="3" [disabled]="busy()" placeholder="What would I choose for a perfect evening?" ></textarea>
+  @for(choice of questions[index()].choices;track $index){<label [for]="'custom-choice-'+$index">Choice {{$index+1}}</label><input [id]="'custom-choice-'+$index" [name]="'choice-'+$index" [(ngModel)]="questions[index()].choices[$index]" maxlength="100" [disabled]="busy()" />}
+  <p class="credit">Four different choices. There is no answer key: your guesses are compared with each other's actual answers.</p>
+  <div class="actions"><button type="button" [disabled]="busy() || index()===0" (click)="move(-1)">Previous question</button>@if(index()<4){<button type="button" [disabled]="busy() || !validQuestion(index())" (click)="move(1)">Next question</button>}</div>
+  @if(index()===4){<button class="primary" type="submit" [disabled]="busy() || !ready()">Save my quiz</button>}
+  <p class="hint">Saved quizzes stay private until you invite your partner. Editing a quiz keeps earlier rounds unchanged.</p>
+  @if(error()){<p class="error" role="alert">{{error()}}</p>}
+</form>

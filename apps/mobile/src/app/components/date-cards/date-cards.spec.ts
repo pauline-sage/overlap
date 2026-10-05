@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { DateCardsComponent } from './date-cards';
 import { SharingService } from '../nav-bar/sharing/sharing.service';
-import { readableHours } from '../coffee-date/opening-hours';
+import { readableHours } from '../coffee-date/opening-hours/opening-hours';
 describe('Activity cards and hours',()=>{
   it('separates Upcoming and Passed tabs and keeps Watch picks only in Notifications',()=>{
     const sharing={error:signal(''),busy:signal(false),state:signal({outingUpdates:[

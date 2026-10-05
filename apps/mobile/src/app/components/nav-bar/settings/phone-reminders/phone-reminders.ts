@@ -1,7 +1,7 @@
 import {Component,inject,signal,OnInit} from '@angular/core';
 import {HttpClient,HttpErrorResponse} from '@angular/common/http';
 import {firstValueFrom} from 'rxjs';
-import {AuthService} from '../../../auth.service';
+import {AuthService} from '../../../../auth.service';
 
 @Component({selector:'app-phone-reminders',template:`
   <section class="reminder-card" aria-labelledby="phone-reminder-title">

@@ -1,0 +1,1406 @@
+[
+  {
+    "id": "everyday",
+    "title": "Everyday life",
+    "personal": false,
+    "questions": [
+      {
+        "id": "everyday-01",
+        "categoryId": "everyday",
+        "prompt": "How would I start a free morning?",
+        "choices": [
+          "Sleep in",
+          "Make breakfast",
+          "Go for a walk",
+          "Start a project"
+        ]
+      },
+      {
+        "id": "everyday-02",
+        "categoryId": "everyday",
+        "prompt": "When do I feel most energetic?",
+        "choices": [
+          "Early morning",
+          "Late morning",
+          "Afternoon",
+          "Evening"
+        ]
+      },
+      {
+        "id": "everyday-03",
+        "categoryId": "everyday",
+        "prompt": "How do I prefer to plan my week?",
+        "choices": [
+          "A detailed schedule",
+          "A short list",
+          "One day at a time",
+          "Leave it open"
+        ]
+      },
+      {
+        "id": "everyday-04",
+        "categoryId": "everyday",
+        "prompt": "What makes a room feel comfortable to me?",
+        "choices": [
+          "Soft lighting",
+          "A tidy space",
+          "Music playing",
+          "Something cozy to sit on"
+        ]
+      },
+      {
+        "id": "everyday-05",
+        "categoryId": "everyday",
+        "prompt": "How do I spend a spare fifteen minutes?",
+        "choices": [
+          "Read",
+          "Listen to music",
+          "Message someone",
+          "Rest quietly"
+        ]
+      },
+      {
+        "id": "everyday-06",
+        "categoryId": "everyday",
+        "prompt": "What is my ideal rainy-day activity?",
+        "choices": [
+          "Watch something",
+          "Cook",
+          "Read",
+          "Play a game"
+        ]
+      },
+      {
+        "id": "everyday-07",
+        "categoryId": "everyday",
+        "prompt": "How do I usually choose what to wear?",
+        "choices": [
+          "Comfort first",
+          "Match my mood",
+          "Plan it ahead",
+          "Whatever is handy"
+        ]
+      },
+      {
+        "id": "everyday-08",
+        "categoryId": "everyday",
+        "prompt": "Which small treat would brighten my day most?",
+        "choices": [
+          "A favorite snack",
+          "A kind message",
+          "Fresh flowers",
+          "Time to myself"
+        ]
+      },
+      {
+        "id": "everyday-09",
+        "categoryId": "everyday",
+        "prompt": "What would I do first on arriving home?",
+        "choices": [
+          "Change clothes",
+          "Get a drink",
+          "Talk about my day",
+          "Take a quiet moment"
+        ]
+      },
+      {
+        "id": "everyday-10",
+        "categoryId": "everyday",
+        "prompt": "Which household task do I mind least?",
+        "choices": [
+          "Cooking",
+          "Tidying",
+          "Laundry",
+          "Organizing"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "food",
+    "title": "Food and drink",
+    "personal": false,
+    "questions": [
+      {
+        "id": "food-01",
+        "categoryId": "food",
+        "prompt": "What would I choose for a cozy breakfast?",
+        "choices": [
+          "Pancakes",
+          "Toast",
+          "Fruit and yogurt",
+          "Something savory"
+        ]
+      },
+      {
+        "id": "food-02",
+        "categoryId": "food",
+        "prompt": "Which flavor do I reach for first?",
+        "choices": [
+          "Sweet",
+          "Salty",
+          "Sour",
+          "Spicy"
+        ]
+      },
+      {
+        "id": "food-03",
+        "categoryId": "food",
+        "prompt": "What is my preferred warm drink?",
+        "choices": [
+          "Coffee",
+          "Tea",
+          "Hot chocolate",
+          "None of these"
+        ]
+      },
+      {
+        "id": "food-04",
+        "categoryId": "food",
+        "prompt": "How adventurous am I with unfamiliar food?",
+        "choices": [
+          "Try anything",
+          "Try a small bite",
+          "Ask what is in it first",
+          "Stick to familiar dishes"
+        ]
+      },
+      {
+        "id": "food-05",
+        "categoryId": "food",
+        "prompt": "What would I pick for a shared dessert?",
+        "choices": [
+          "Cake",
+          "Ice cream",
+          "Fruit",
+          "Pastries"
+        ]
+      },
+      {
+        "id": "food-06",
+        "categoryId": "food",
+        "prompt": "Which part of cooking do I enjoy most?",
+        "choices": [
+          "Choosing the recipe",
+          "Preparing ingredients",
+          "Cooking the dish",
+          "Tasting the result"
+        ]
+      },
+      {
+        "id": "food-07",
+        "categoryId": "food",
+        "prompt": "What is my ideal meal atmosphere?",
+        "choices": [
+          "Quiet and cozy",
+          "Lively and social",
+          "Outdoors",
+          "Casual on the sofa"
+        ]
+      },
+      {
+        "id": "food-08",
+        "categoryId": "food",
+        "prompt": "Which snack would I choose for a film?",
+        "choices": [
+          "Popcorn",
+          "Chocolate",
+          "Chips",
+          "Fruit"
+        ]
+      },
+      {
+        "id": "food-09",
+        "categoryId": "food",
+        "prompt": "What would I order from a cafe?",
+        "choices": [
+          "A warm drink",
+          "A cold drink",
+          "A pastry",
+          "Something savory"
+        ]
+      },
+      {
+        "id": "food-10",
+        "categoryId": "food",
+        "prompt": "How do I like choosing a restaurant?",
+        "choices": [
+          "A trusted favorite",
+          "Try somewhere new",
+          "Read reviews first",
+          "Let the other person choose"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "culture",
+    "title": "Films, books and music",
+    "personal": false,
+    "questions": [
+      {
+        "id": "culture-01",
+        "categoryId": "culture",
+        "prompt": "Which kind of film would I choose tonight?",
+        "choices": [
+          "Comedy",
+          "Drama",
+          "Adventure",
+          "Mystery"
+        ]
+      },
+      {
+        "id": "culture-02",
+        "categoryId": "culture",
+        "prompt": "What matters most to me in a story?",
+        "choices": [
+          "Characters",
+          "Plot twists",
+          "The atmosphere",
+          "The ideas"
+        ]
+      },
+      {
+        "id": "culture-03",
+        "categoryId": "culture",
+        "prompt": "How would I find my next book?",
+        "choices": [
+          "An author I know",
+          "A recommendation",
+          "Browse the shelves",
+          "Follow my mood"
+        ]
+      },
+      {
+        "id": "culture-04",
+        "categoryId": "culture",
+        "prompt": "What do I do when a favorite song starts?",
+        "choices": [
+          "Sing along",
+          "Dance",
+          "Listen closely",
+          "Turn it up"
+        ]
+      },
+      {
+        "id": "culture-05",
+        "categoryId": "culture",
+        "prompt": "How do I prefer to watch a series?",
+        "choices": [
+          "One episode at a time",
+          "Several in a row",
+          "Wait until it is finished",
+          "Watch whenever I have time"
+        ]
+      },
+      {
+        "id": "culture-06",
+        "categoryId": "culture",
+        "prompt": "Which fictional setting would I visit?",
+        "choices": [
+          "A magical world",
+          "A futuristic city",
+          "A peaceful village",
+          "A historical era"
+        ]
+      },
+      {
+        "id": "culture-07",
+        "categoryId": "culture",
+        "prompt": "What kind of music suits my quiet time?",
+        "choices": [
+          "Acoustic",
+          "Classical",
+          "Ambient",
+          "No music"
+        ]
+      },
+      {
+        "id": "culture-08",
+        "categoryId": "culture",
+        "prompt": "How do I react to a surprising ending?",
+        "choices": [
+          "Discuss it",
+          "Read other interpretations",
+          "Watch or read it again",
+          "Move on to another story"
+        ]
+      },
+      {
+        "id": "culture-09",
+        "categoryId": "culture",
+        "prompt": "What would I choose for a cultural outing?",
+        "choices": [
+          "A concert",
+          "A museum",
+          "A cinema",
+          "A bookshop"
+        ]
+      },
+      {
+        "id": "culture-10",
+        "categoryId": "culture",
+        "prompt": "Which part of a film stays with me most?",
+        "choices": [
+          "The dialogue",
+          "The music",
+          "The visuals",
+          "The ending"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "memories",
+    "title": "Childhood and memories",
+    "personal": false,
+    "questions": [
+      {
+        "id": "memories-01",
+        "categoryId": "memories",
+        "prompt": "Which childhood activity would I most like to revisit?",
+        "choices": [
+          "Drawing",
+          "Outdoor games",
+          "Building things",
+          "Reading stories"
+        ]
+      },
+      {
+        "id": "memories-02",
+        "categoryId": "memories",
+        "prompt": "What would I keep as a reminder of a good day?",
+        "choices": [
+          "A photo",
+          "A small object",
+          "A written note",
+          "The memory alone"
+        ]
+      },
+      {
+        "id": "memories-03",
+        "categoryId": "memories",
+        "prompt": "Which kind of memory do I talk about most?",
+        "choices": [
+          "Funny moments",
+          "Trips",
+          "People I met",
+          "Things I learned"
+        ]
+      },
+      {
+        "id": "memories-04",
+        "categoryId": "memories",
+        "prompt": "How do I prefer to record a special moment?",
+        "choices": [
+          "Take pictures",
+          "Write about it",
+          "Tell someone",
+          "Just enjoy it"
+        ]
+      },
+      {
+        "id": "memories-05",
+        "categoryId": "memories",
+        "prompt": "Which old favorite would I revisit first?",
+        "choices": [
+          "A film",
+          "A song",
+          "A place",
+          "A game"
+        ]
+      },
+      {
+        "id": "memories-06",
+        "categoryId": "memories",
+        "prompt": "What would I put in a time capsule?",
+        "choices": [
+          "A letter",
+          "A photo",
+          "A favorite object",
+          "A playlist"
+        ]
+      },
+      {
+        "id": "memories-07",
+        "categoryId": "memories",
+        "prompt": "What school activity would I choose again?",
+        "choices": [
+          "Art",
+          "Sports",
+          "Science projects",
+          "Reading and writing"
+        ]
+      },
+      {
+        "id": "memories-08",
+        "categoryId": "memories",
+        "prompt": "Which kind of souvenir means most to me?",
+        "choices": [
+          "Something handmade",
+          "A useful object",
+          "A photograph",
+          "A note from someone"
+        ]
+      },
+      {
+        "id": "memories-09",
+        "categoryId": "memories",
+        "prompt": "How do I like celebrating a milestone?",
+        "choices": [
+          "A small gathering",
+          "A special outing",
+          "A quiet moment",
+          "A big celebration"
+        ]
+      },
+      {
+        "id": "memories-10",
+        "categoryId": "memories",
+        "prompt": "What would I most enjoy looking through?",
+        "choices": [
+          "Old photos",
+          "Old letters",
+          "Travel souvenirs",
+          "Childhood belongings"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "personality",
+    "title": "Personality",
+    "personal": false,
+    "questions": [
+      {
+        "id": "personality-01",
+        "categoryId": "personality",
+        "prompt": "How do I usually recharge?",
+        "choices": [
+          "Time alone",
+          "Time with someone",
+          "Being outdoors",
+          "Doing something creative"
+        ]
+      },
+      {
+        "id": "personality-02",
+        "categoryId": "personality",
+        "prompt": "When facing a new challenge, what do I do first?",
+        "choices": [
+          "Make a plan",
+          "Try it immediately",
+          "Ask for advice",
+          "Learn more about it"
+        ]
+      },
+      {
+        "id": "personality-03",
+        "categoryId": "personality",
+        "prompt": "How do I react to a change of plans?",
+        "choices": [
+          "Adapt quickly",
+          "Need a moment",
+          "Look for a new plan",
+          "Ask what everyone prefers"
+        ]
+      },
+      {
+        "id": "personality-04",
+        "categoryId": "personality",
+        "prompt": "What motivates me to finish a project?",
+        "choices": [
+          "Seeing progress",
+          "A deadline",
+          "Encouragement",
+          "The finished result"
+        ]
+      },
+      {
+        "id": "personality-05",
+        "categoryId": "personality",
+        "prompt": "How do I usually make a difficult choice?",
+        "choices": [
+          "Compare options",
+          "Trust my instinct",
+          "Talk it through",
+          "Give it time"
+        ]
+      },
+      {
+        "id": "personality-06",
+        "categoryId": "personality",
+        "prompt": "Which quality do I value most in myself?",
+        "choices": [
+          "Curiosity",
+          "Kindness",
+          "Persistence",
+          "Creativity"
+        ]
+      },
+      {
+        "id": "personality-07",
+        "categoryId": "personality",
+        "prompt": "What role do I tend to take in a shared project?",
+        "choices": [
+          "Organizer",
+          "Idea person",
+          "Practical helper",
+          "Encourager"
+        ]
+      },
+      {
+        "id": "personality-08",
+        "categoryId": "personality",
+        "prompt": "How do I respond to good news?",
+        "choices": [
+          "Tell someone",
+          "Celebrate quietly",
+          "Plan a celebration",
+          "Enjoy the moment"
+        ]
+      },
+      {
+        "id": "personality-09",
+        "categoryId": "personality",
+        "prompt": "What helps me concentrate?",
+        "choices": [
+          "Silence",
+          "Background music",
+          "A clear workspace",
+          "A change of setting"
+        ]
+      },
+      {
+        "id": "personality-10",
+        "categoryId": "personality",
+        "prompt": "Which compliment would mean most to me?",
+        "choices": [
+          "You are thoughtful",
+          "You are capable",
+          "You are creative",
+          "You make things brighter"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "connection",
+    "title": "Friendship and connection",
+    "personal": false,
+    "questions": [
+      {
+        "id": "connection-01",
+        "categoryId": "connection",
+        "prompt": "What kind of support helps me most on a hard day?",
+        "choices": [
+          "Listening",
+          "Practical help",
+          "Encouragement",
+          "Some space"
+        ]
+      },
+      {
+        "id": "connection-02",
+        "categoryId": "connection",
+        "prompt": "How do I prefer to catch up with someone far away?",
+        "choices": [
+          "Messages",
+          "A voice call",
+          "A video call",
+          "A shared activity"
+        ]
+      },
+      {
+        "id": "connection-03",
+        "categoryId": "connection",
+        "prompt": "What makes time together feel meaningful to me?",
+        "choices": [
+          "A good conversation",
+          "Doing something new",
+          "Everyday company",
+          "Laughing together"
+        ]
+      },
+      {
+        "id": "connection-04",
+        "categoryId": "connection",
+        "prompt": "How do I like receiving a thoughtful surprise?",
+        "choices": [
+          "A small gift",
+          "A planned outing",
+          "A handwritten message",
+          "Help with something"
+        ]
+      },
+      {
+        "id": "connection-05",
+        "categoryId": "connection",
+        "prompt": "What do I appreciate most when making plans together?",
+        "choices": [
+          "Clear details",
+          "Flexibility",
+          "Shared decisions",
+          "Someone taking the lead"
+        ]
+      },
+      {
+        "id": "connection-06",
+        "categoryId": "connection",
+        "prompt": "How do I prefer to celebrate a friend's success?",
+        "choices": [
+          "A warm message",
+          "A call",
+          "A small gift",
+          "An outing together"
+        ]
+      },
+      {
+        "id": "connection-07",
+        "categoryId": "connection",
+        "prompt": "What would I suggest for a relaxed catch-up?",
+        "choices": [
+          "Coffee or tea",
+          "A walk",
+          "A meal",
+          "A game"
+        ]
+      },
+      {
+        "id": "connection-08",
+        "categoryId": "connection",
+        "prompt": "How do I usually show that I am thinking of someone?",
+        "choices": [
+          "Send a message",
+          "Share something they would like",
+          "Call them",
+          "Plan time together"
+        ]
+      },
+      {
+        "id": "connection-09",
+        "categoryId": "connection",
+        "prompt": "What helps me feel heard?",
+        "choices": [
+          "Follow-up questions",
+          "Undivided attention",
+          "Remembering details",
+          "Acknowledging how I feel"
+        ]
+      },
+      {
+        "id": "connection-10",
+        "categoryId": "connection",
+        "prompt": "What shared tradition would I most enjoy?",
+        "choices": [
+          "A regular call",
+          "A monthly outing",
+          "Exchanging recommendations",
+          "A yearly trip"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "affection",
+    "title": "Affection and romance",
+    "personal": true,
+    "questions": [
+      {
+        "id": "affection-01",
+        "categoryId": "affection",
+        "prompt": "What kind of romantic gesture would I enjoy most?",
+        "choices": [
+          "A heartfelt note",
+          "A thoughtful gift",
+          "A planned date",
+          "An everyday act of care"
+        ]
+      },
+      {
+        "id": "affection-02",
+        "categoryId": "affection",
+        "prompt": "What is my ideal low-key date?",
+        "choices": [
+          "A walk",
+          "Cooking together",
+          "A film evening",
+          "Coffee and conversation"
+        ]
+      },
+      {
+        "id": "affection-03",
+        "categoryId": "affection",
+        "prompt": "How do I prefer to mark an anniversary?",
+        "choices": [
+          "Revisit a memory",
+          "Try something new",
+          "A quiet evening",
+          "A special meal"
+        ]
+      },
+      {
+        "id": "affection-04",
+        "categoryId": "affection",
+        "prompt": "What makes a message feel affectionate to me?",
+        "choices": [
+          "Warm words",
+          "A shared joke",
+          "A remembered detail",
+          "A simple check-in"
+        ]
+      },
+      {
+        "id": "affection-05",
+        "categoryId": "affection",
+        "prompt": "What would I choose for a surprise date?",
+        "choices": [
+          "An outdoor picnic",
+          "A cultural outing",
+          "A cozy evening",
+          "A small adventure"
+        ]
+      },
+      {
+        "id": "affection-06",
+        "categoryId": "affection",
+        "prompt": "How do I like planning a date?",
+        "choices": [
+          "Plan it together",
+          "Take turns",
+          "Keep part of it a surprise",
+          "Decide spontaneously"
+        ]
+      },
+      {
+        "id": "affection-07",
+        "categoryId": "affection",
+        "prompt": "Which shared ritual sounds nicest to me?",
+        "choices": [
+          "Morning messages",
+          "An evening call",
+          "A weekly date",
+          "A shared playlist"
+        ]
+      },
+      {
+        "id": "affection-08",
+        "categoryId": "affection",
+        "prompt": "What kind of gift feels most personal to me?",
+        "choices": [
+          "Something handmade",
+          "Something useful",
+          "An experience",
+          "A keepsake"
+        ]
+      },
+      {
+        "id": "affection-09",
+        "categoryId": "affection",
+        "prompt": "What would I most enjoy on a quiet evening together?",
+        "choices": [
+          "Talking",
+          "Watching something",
+          "Making food",
+          "Listening to music"
+        ]
+      },
+      {
+        "id": "affection-10",
+        "categoryId": "affection",
+        "prompt": "Which detail would make a date feel special?",
+        "choices": [
+          "A favorite place",
+          "A thoughtful plan",
+          "A personal message",
+          "Unhurried time"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dreams",
+    "title": "Dreams and ambitions",
+    "personal": false,
+    "questions": [
+      {
+        "id": "dreams-01",
+        "categoryId": "dreams",
+        "prompt": "What would I most like to learn next?",
+        "choices": [
+          "A language",
+          "A creative skill",
+          "A practical skill",
+          "A sport"
+        ]
+      },
+      {
+        "id": "dreams-02",
+        "categoryId": "dreams",
+        "prompt": "If I had a month for a personal project, what would I choose?",
+        "choices": [
+          "Make something",
+          "Study something",
+          "Travel somewhere",
+          "Help a cause"
+        ]
+      },
+      {
+        "id": "dreams-03",
+        "categoryId": "dreams",
+        "prompt": "Which kind of achievement would make me proudest?",
+        "choices": [
+          "Learning a difficult skill",
+          "Finishing a creative project",
+          "Helping someone",
+          "Reaching a personal goal"
+        ]
+      },
+      {
+        "id": "dreams-04",
+        "categoryId": "dreams",
+        "prompt": "How do I prefer to work toward a big goal?",
+        "choices": [
+          "Small daily steps",
+          "Focused bursts",
+          "A clear schedule",
+          "With someone alongside me"
+        ]
+      },
+      {
+        "id": "dreams-05",
+        "categoryId": "dreams",
+        "prompt": "What would I do with an unexpected free year?",
+        "choices": [
+          "Travel",
+          "Study",
+          "Create",
+          "Rest and explore locally"
+        ]
+      },
+      {
+        "id": "dreams-06",
+        "categoryId": "dreams",
+        "prompt": "Which dream experience appeals to me most?",
+        "choices": [
+          "See a natural wonder",
+          "Learn from an expert",
+          "Create something lasting",
+          "Live somewhere new"
+        ]
+      },
+      {
+        "id": "dreams-07",
+        "categoryId": "dreams",
+        "prompt": "What would I like to get better at?",
+        "choices": [
+          "Expressing myself",
+          "Organizing my time",
+          "Trying new things",
+          "Taking time to rest"
+        ]
+      },
+      {
+        "id": "dreams-08",
+        "categoryId": "dreams",
+        "prompt": "What kind of project would I start with a friend?",
+        "choices": [
+          "A creative project",
+          "A community project",
+          "A learning challenge",
+          "An adventure plan"
+        ]
+      },
+      {
+        "id": "dreams-09",
+        "categoryId": "dreams",
+        "prompt": "Which future home feature matters most to me?",
+        "choices": [
+          "A cozy kitchen",
+          "A garden",
+          "A creative workspace",
+          "A peaceful reading corner"
+        ]
+      },
+      {
+        "id": "dreams-10",
+        "categoryId": "dreams",
+        "prompt": "What helps me stay hopeful about a goal?",
+        "choices": [
+          "A clear next step",
+          "Encouragement",
+          "Inspiring examples",
+          "Seeing past progress"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "travel",
+    "title": "Travel and adventures",
+    "personal": false,
+    "questions": [
+      {
+        "id": "travel-01",
+        "categoryId": "travel",
+        "prompt": "Where would I choose for a short getaway?",
+        "choices": [
+          "The coast",
+          "The mountains",
+          "A city",
+          "The countryside"
+        ]
+      },
+      {
+        "id": "travel-02",
+        "categoryId": "travel",
+        "prompt": "What do I plan first for a trip?",
+        "choices": [
+          "Where to stay",
+          "What to eat",
+          "What to see",
+          "How to get there"
+        ]
+      },
+      {
+        "id": "travel-03",
+        "categoryId": "travel",
+        "prompt": "How do I like exploring a new place?",
+        "choices": [
+          "Walk without a strict plan",
+          "Follow a prepared route",
+          "Join a guided visit",
+          "Ask locals for ideas"
+        ]
+      },
+      {
+        "id": "travel-04",
+        "categoryId": "travel",
+        "prompt": "What is my preferred travel pace?",
+        "choices": [
+          "See as much as possible",
+          "One main activity a day",
+          "Mostly relax",
+          "A mix of busy and quiet days"
+        ]
+      },
+      {
+        "id": "travel-05",
+        "categoryId": "travel",
+        "prompt": "Which outing sounds most appealing?",
+        "choices": [
+          "A scenic hike",
+          "A market visit",
+          "A museum day",
+          "A beach afternoon"
+        ]
+      },
+      {
+        "id": "travel-06",
+        "categoryId": "travel",
+        "prompt": "What would I pack first?",
+        "choices": [
+          "Comfortable shoes",
+          "A book",
+          "A camera",
+          "A favorite snack"
+        ]
+      },
+      {
+        "id": "travel-07",
+        "categoryId": "travel",
+        "prompt": "What makes a trip memorable to me?",
+        "choices": [
+          "The people",
+          "The scenery",
+          "The food",
+          "An unexpected experience"
+        ]
+      },
+      {
+        "id": "travel-08",
+        "categoryId": "travel",
+        "prompt": "How adventurous would I be on a day out?",
+        "choices": [
+          "Try something completely new",
+          "Try one new activity",
+          "Keep it gentle",
+          "Choose something familiar"
+        ]
+      },
+      {
+        "id": "travel-09",
+        "categoryId": "travel",
+        "prompt": "Which place would I explore first in a new city?",
+        "choices": [
+          "A park",
+          "A local cafe",
+          "A historic area",
+          "A neighborhood shop"
+        ]
+      },
+      {
+        "id": "travel-10",
+        "categoryId": "travel",
+        "prompt": "What kind of shared travel memory would I treasure?",
+        "choices": [
+          "A funny mishap",
+          "A beautiful view",
+          "A great conversation",
+          "A new discovery"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "values",
+    "title": "Values and priorities",
+    "personal": true,
+    "questions": [
+      {
+        "id": "values-01",
+        "categoryId": "values",
+        "prompt": "What matters most to me when choosing how to spend free time?",
+        "choices": [
+          "Rest",
+          "Connection",
+          "Learning",
+          "Adventure"
+        ]
+      },
+      {
+        "id": "values-02",
+        "categoryId": "values",
+        "prompt": "Which quality do I admire most in other people?",
+        "choices": [
+          "Honesty",
+          "Kindness",
+          "Courage",
+          "Curiosity"
+        ]
+      },
+      {
+        "id": "values-03",
+        "categoryId": "values",
+        "prompt": "What makes a decision feel right to me?",
+        "choices": [
+          "It fits my values",
+          "It helps someone",
+          "It is well thought out",
+          "It feels balanced"
+        ]
+      },
+      {
+        "id": "values-04",
+        "categoryId": "values",
+        "prompt": "What would I protect first in a busy week?",
+        "choices": [
+          "Time to rest",
+          "Time with people",
+          "Time for a personal goal",
+          "Time outdoors"
+        ]
+      },
+      {
+        "id": "values-05",
+        "categoryId": "values",
+        "prompt": "What kind of contribution feels most meaningful to me?",
+        "choices": [
+          "Teaching",
+          "Practical help",
+          "Creating something",
+          "Listening"
+        ]
+      },
+      {
+        "id": "values-06",
+        "categoryId": "values",
+        "prompt": "Which idea of success feels closest to mine?",
+        "choices": [
+          "A balanced life",
+          "Meaningful relationships",
+          "Personal growth",
+          "Making a useful contribution"
+        ]
+      },
+      {
+        "id": "values-07",
+        "categoryId": "values",
+        "prompt": "What do I value most in a shared commitment?",
+        "choices": [
+          "Reliability",
+          "Openness",
+          "Flexibility",
+          "Mutual encouragement"
+        ]
+      },
+      {
+        "id": "values-08",
+        "categoryId": "values",
+        "prompt": "What would I prioritize in a new community?",
+        "choices": [
+          "Welcoming people",
+          "Shared interests",
+          "A peaceful setting",
+          "Opportunities to help"
+        ]
+      },
+      {
+        "id": "values-09",
+        "categoryId": "values",
+        "prompt": "Which everyday choice feels most important to me?",
+        "choices": [
+          "How I treat people",
+          "How I spend my time",
+          "What I learn",
+          "How I care for myself"
+        ]
+      },
+      {
+        "id": "values-10",
+        "categoryId": "values",
+        "prompt": "What would I most like others to remember about me?",
+        "choices": [
+          "My kindness",
+          "My creativity",
+          "My courage",
+          "My curiosity"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "silly",
+    "title": "Silly hypotheticals",
+    "personal": false,
+    "questions": [
+      {
+        "id": "silly-01",
+        "categoryId": "silly",
+        "prompt": "Which harmless superpower would I choose?",
+        "choices": [
+          "Talk to animals",
+          "Instantly tidy a room",
+          "Find lost objects",
+          "Always pick the perfect snack"
+        ]
+      },
+      {
+        "id": "silly-02",
+        "categoryId": "silly",
+        "prompt": "If I could become an animal for a day, what would I choose?",
+        "choices": [
+          "A cat",
+          "A bird",
+          "A dolphin",
+          "A dog"
+        ]
+      },
+      {
+        "id": "silly-03",
+        "categoryId": "silly",
+        "prompt": "What would I bring to a very silly talent show?",
+        "choices": [
+          "A funny dance",
+          "A dramatic reading",
+          "An unusual skill",
+          "A terrible magic trick"
+        ]
+      },
+      {
+        "id": "silly-04",
+        "categoryId": "silly",
+        "prompt": "Which imaginary transport would I use?",
+        "choices": [
+          "A flying bicycle",
+          "A tiny cloud",
+          "A friendly dragon",
+          "A teleporting sofa"
+        ]
+      },
+      {
+        "id": "silly-05",
+        "categoryId": "silly",
+        "prompt": "If my day had a theme tune, what style would it be?",
+        "choices": [
+          "Upbeat pop",
+          "Epic orchestral",
+          "Relaxed jazz",
+          "Playful cartoon music"
+        ]
+      },
+      {
+        "id": "silly-06",
+        "categoryId": "silly",
+        "prompt": "Which absurd job would suit me best?",
+        "choices": [
+          "Cloud shape inspector",
+          "Professional nap tester",
+          "Dragon librarian",
+          "Snack detective"
+        ]
+      },
+      {
+        "id": "silly-07",
+        "categoryId": "silly",
+        "prompt": "What would I name a friendly robot by theme?",
+        "choices": [
+          "A food name",
+          "A character name",
+          "A grand title",
+          "A silly sound"
+        ]
+      },
+      {
+        "id": "silly-08",
+        "categoryId": "silly",
+        "prompt": "If I could swap weather for a day, what would I choose?",
+        "choices": [
+          "Gentle snow",
+          "Warm sunshine",
+          "Dramatic clouds",
+          "A rainbow after rain"
+        ]
+      },
+      {
+        "id": "silly-09",
+        "categoryId": "silly",
+        "prompt": "Which miniature world would I visit?",
+        "choices": [
+          "A city inside a teacup",
+          "A forest in a bookshelf",
+          "An island in a bathtub",
+          "A village under a sofa"
+        ]
+      },
+      {
+        "id": "silly-10",
+        "categoryId": "silly",
+        "prompt": "What would I do with an invisible hat?",
+        "choices": [
+          "Play a harmless prank",
+          "Go people-watching",
+          "Solve a silly mystery",
+          "Forget where I put it"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "know-me",
+    "title": "How well do you know me?",
+    "personal": false,
+    "questions": [
+      {
+        "id": "know-me-01",
+        "categoryId": "know-me",
+        "prompt": "What would I choose for a perfect Sunday?",
+        "choices": [
+          "Rest at home",
+          "Spend time outdoors",
+          "Meet people",
+          "Work on a favorite hobby"
+        ]
+      },
+      {
+        "id": "know-me-02",
+        "categoryId": "know-me",
+        "prompt": "Which invitation would I accept first?",
+        "choices": [
+          "A film night",
+          "A meal",
+          "An outdoor outing",
+          "A creative workshop"
+        ]
+      },
+      {
+        "id": "know-me-03",
+        "categoryId": "know-me",
+        "prompt": "What would I buy as a small treat for myself?",
+        "choices": [
+          "A book",
+          "A snack",
+          "Something for a hobby",
+          "Something cozy"
+        ]
+      },
+      {
+        "id": "know-me-04",
+        "categoryId": "know-me",
+        "prompt": "What do I usually notice first in a new place?",
+        "choices": [
+          "The atmosphere",
+          "The sounds",
+          "The people",
+          "The details"
+        ]
+      },
+      {
+        "id": "know-me-05",
+        "categoryId": "know-me",
+        "prompt": "Which activity could keep me happily occupied for hours?",
+        "choices": [
+          "Reading or watching",
+          "Making something",
+          "Exploring",
+          "Talking"
+        ]
+      },
+      {
+        "id": "know-me-06",
+        "categoryId": "know-me",
+        "prompt": "What is my preferred way to end a good day?",
+        "choices": [
+          "A quiet routine",
+          "A conversation",
+          "Some entertainment",
+          "An early night"
+        ]
+      },
+      {
+        "id": "know-me-07",
+        "categoryId": "know-me",
+        "prompt": "Which kind of recommendation am I most likely to try?",
+        "choices": [
+          "A book",
+          "A film or series",
+          "A place",
+          "A recipe"
+        ]
+      },
+      {
+        "id": "know-me-08",
+        "categoryId": "know-me",
+        "prompt": "What do I most enjoy sharing with someone?",
+        "choices": [
+          "Stories",
+          "Discoveries",
+          "Food",
+          "Activities"
+        ]
+      },
+      {
+        "id": "know-me-09",
+        "categoryId": "know-me",
+        "prompt": "Which surprise plan would feel most like me?",
+        "choices": [
+          "A familiar favorite",
+          "A new experience",
+          "A quiet escape",
+          "A playful challenge"
+        ]
+      },
+      {
+        "id": "know-me-10",
+        "categoryId": "know-me",
+        "prompt": "What would I choose when we have an hour together?",
+        "choices": [
+          "Talk",
+          "Watch something",
+          "Play a game",
+          "Make something"
+        ]
+      }
+    ]
+  }
+]

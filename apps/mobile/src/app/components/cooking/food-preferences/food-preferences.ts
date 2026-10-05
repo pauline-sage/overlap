@@ -2,11 +2,11 @@ import { Component, inject, output, signal, OnInit, DestroyRef } from '@angular/
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { AuthService } from '../../auth.service';
-import { LoadingIndicatorComponent } from '../loading-indicator';
+import { AuthService } from '../../../auth.service';
+import { LoadingIndicatorComponent } from '../../loading-indicator/loading-indicator';
 interface Preferences {avoidRedMeat:boolean;excludedIngredients:string[];}
 interface PreferenceLists {ownPreferences:Preferences|null;shareWithPartner:boolean;partnerPreferences:Preferences|null;partnerShared:boolean;}
-@Component({selector:'app-food-preferences',imports:[FormsModule,LoadingIndicatorComponent],templateUrl:'./food-preferences.html',styleUrl:'./cooking.scss'})
+@Component({selector:'app-food-preferences',imports:[FormsModule,LoadingIndicatorComponent],templateUrl:'./food-preferences.html',styleUrl:'../cooking.scss'})
 export class FoodPreferencesComponent implements OnInit {
   readonly back=output<void>();readonly saved=output<void>();
   private readonly http=inject(HttpClient);private readonly auth=inject(AuthService);

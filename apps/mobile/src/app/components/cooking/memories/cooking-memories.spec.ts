@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClient } from '@angular/common/http';
 import { of } from 'rxjs';
-import { AuthService } from '../../auth.service';
+import { AuthService } from '../../../auth.service';
 import { CookingMemoriesComponent } from './cooking-memories';
 const recipe={title:'Feijoada',ingredients:['Beans'],instructions:['Simmer'],sourceUrl:'https://en.wikibooks.org'};
 const entry={contestId:7,revision:'current',startUtc:'2026-10-05T08:00:00Z',completed:false,archived:false,recipe,photos:[] as {mine:boolean;accountId:string;revision:string;uploadedUtc:string}[]};

@@ -1,0 +1,4 @@
+  <section class="quiz-card"><h3>Our quizzes</h3><p class="hint">Invitations, rounds to resume and your latest 100 saved rounds.</p>
+    @for(item of rounds();track item.id){<button class="round-row" type="button" (click)="open.emit(item.id)"><span>@if(item.title){<small>{{item.title}}</small>}<strong>{{item.status==='pending' ? item.mine ? 'Invitation sent' : 'Your person invited you' : item.status==='active' ? 'Resume our quiz' : item.status==='completed' ? 'Our saved answers' : 'Closed round'}}</strong><small>{{item.createdUtc | date:'d MMM yyyy'}} &middot; {{item.status}}</small></span><span aria-hidden="true">&#8250;</span></button>}
+    @if(!rounds().length){<p class="hint">Your first round is waiting to happen.</p>}
+  </section>

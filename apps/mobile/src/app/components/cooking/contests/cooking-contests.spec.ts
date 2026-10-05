@@ -2,8 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClient } from '@angular/common/http';
 import { of } from 'rxjs';
 import { signal } from '@angular/core';
-import { AuthService } from '../../auth.service';
-import { SharingService } from '../nav-bar/sharing/sharing.service';
+import { AuthService } from '../../../auth.service';
+import { SharingService } from '../../nav-bar/sharing/sharing.service';
 import { CookingContestsComponent } from './cooking-contests';
 describe('Cooking contest invitations',()=>{
   it('requests a redraw without replacing the current recipe and lets the partner consent',async()=>{

@@ -43,7 +43,7 @@ public sealed class AuthFactory : WebApplicationFactory<Program>
             {
                 services.RemoveAll<IConfigureOptions<Microsoft.AspNetCore.RateLimiting.RateLimiterOptions>>();
                 services.Configure<Microsoft.AspNetCore.RateLimiting.RateLimiterOptions>(options => {
-                    foreach(var policy in new[] { "auth", "email", "picks", "watch" })
+                    foreach(var policy in new[] { "auth", "email", "picks", "watch", "quiz" })
                         options.AddPolicy(policy, _ => System.Threading.RateLimiting.RateLimitPartition.GetNoLimiter("consent-test"));
                 });
             }

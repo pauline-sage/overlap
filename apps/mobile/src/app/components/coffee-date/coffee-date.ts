@@ -1,6 +1,7 @@
-import { LoadingIndicatorComponent } from '../loading-indicator';
-import { OpeningHoursComponent } from './opening-hours';
-import { OutingChoiceComponent, OutingCalendarComponent } from './outing-controls';
+import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator';
+import { OpeningHoursComponent } from './opening-hours/opening-hours';
+import { OutingChoiceComponent } from './outing-choice/outing-choice';
+import { OutingCalendarComponent } from './outing-calendar/outing-calendar';
 import { Component, inject, input, output, signal, OnDestroy, OnInit } from '@angular/core';
 import { DecimalPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';

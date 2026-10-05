@@ -1,0 +1,14 @@
+@if(active() && activity()==='menu'){
+  <button class="back" type="button" (click)="back.emit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg><span>Back</span></button>
+  <header class="page-banner"><span class="page-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m3 10 9-7 9 7v10H3zM9 20v-7h6v7"/></svg></span><div><h2 id="dashboard-heading" tabindex="-1">Stay in together</h2><p>Make a little room for time together at home.</p></div></header>
+  <nav class="group-picker" aria-label="Stay-in categories">
+    <button type="button" [attr.aria-pressed]="group()==='cozy'" (click)="group.set('cozy')">Cozy time</button>
+    <button type="button" [attr.aria-pressed]="group()==='know'" (click)="group.set('know')">Get to know</button>
+    <button type="button" [attr.aria-pressed]="group()==='make'" (click)="group.set('make')">Make together</button>
+  </nav>
+}
+<div class="groups" [class.menu]="activity()==='menu'">
+  <app-cozy-time [active]="active()" [activity]="activity()" [ownName]="ownName()" [partnerName]="partnerName()" [partnerPicks]="entry().partnerPicks || false" [hidden]="activity()==='menu' ? group()!=='cozy' : (activity()!=='menu' && activity()!=='watch' && activity()!=='read')" (choose)="choose($event)" (back)="choose('menu')" />
+  <app-get-to-know [active]="active()" [activity]="activity()" [partnerName]="partnerName()" [roundId]="entry().entryId || 0" [hidden]="activity()==='menu' ? group()!=='know' : (activity()!=='menu' && activity()!=='quiz')" (choose)="choose($event)" (back)="choose('menu')" />
+  <app-make-together [active]="active()" [activity]="activity()" [ownName]="ownName()" [partnerName]="partnerName()" [recipeId]="entry().entryId || 0" [contestId]="entry().contestId || 0" [hidden]="activity()==='menu' ? group()!=='make' : (activity()!=='menu' && activity()!=='cooking')" (choose)="choose($event)" (back)="choose('menu')" />
+</div>

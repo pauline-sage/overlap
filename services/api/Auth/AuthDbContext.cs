@@ -169,6 +169,22 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
             preference.Property(x=>x.Revision).HasMaxLength(32);
             preference.HasOne<Account>().WithMany().HasForeignKey(x=>x.AccountId).OnDelete(DeleteBehavior.Cascade);
         });
+        builder.Entity<Overlap.Api.Quiz.QuizRound>(round=>{
+            round.Property(x=>x.Title).HasMaxLength(80);
+            round.Property(x=>x.PairId).HasMaxLength(32);round.Property(x=>x.ProposedBy).HasMaxLength(255);
+            round.Property(x=>x.QuestionsJson).HasColumnType("longtext");round.Property(x=>x.Status).HasMaxLength(16);round.Property(x=>x.Revision).HasMaxLength(32);
+            round.HasIndex(x=>new{x.PairId,x.CreatedUtc});round.HasOne<Account>().WithMany().HasForeignKey(x=>x.ProposedBy).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<Overlap.Api.Quiz.CustomQuiz>(quiz=>{
+            quiz.Property(x=>x.PairId).HasMaxLength(32);quiz.Property(x=>x.AuthorId).HasMaxLength(255);quiz.Property(x=>x.Title).HasMaxLength(80);
+            quiz.Property(x=>x.QuestionsJson).HasColumnType("longtext");quiz.Property(x=>x.Revision).HasMaxLength(32);
+            quiz.HasIndex(x=>new{x.AuthorId,x.PairId});quiz.HasOne<Account>().WithMany().HasForeignKey(x=>x.AuthorId).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<Overlap.Api.Quiz.QuizAnswer>(answer=>{
+            answer.HasKey(x=>new{x.RoundId,x.QuestionIndex,x.AccountId});answer.Property(x=>x.AccountId).HasMaxLength(255);
+            answer.HasOne<Overlap.Api.Quiz.QuizRound>().WithMany().HasForeignKey(x=>x.RoundId).OnDelete(DeleteBehavior.Cascade);
+            answer.HasOne<Account>().WithMany().HasForeignKey(x=>x.AccountId).OnDelete(DeleteBehavior.Cascade);
+        });
         builder.Entity<Account>().Property(x => x.DisplayName).HasMaxLength(50);
         builder.Entity<Account>().Property(x => x.InvitationHash).HasMaxLength(64);
         builder.Entity<Account>().HasIndex(x => x.InvitationHash).IsUnique();

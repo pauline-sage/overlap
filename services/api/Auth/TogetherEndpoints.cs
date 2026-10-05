@@ -48,6 +48,8 @@ public static class TogetherEndpoints
                 await db.Set<Overlap.Api.Books.ReadingEntry>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
                 await db.Set<Overlap.Api.Cooking.SavedRecipe>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
                 await db.Set<Overlap.Api.Cooking.CookingContest>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
+                await db.Set<Overlap.Api.Quiz.QuizRound>().Where(x=>x.PairId==pair).ExecuteDeleteAsync();
+                await db.Set<Overlap.Api.Quiz.CustomQuiz>().Where(x=>x.PairId==pair).ExecuteDeleteAsync();
                 await db.Set<SharingGrant>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
                 await db.PairMembers.Where(x => x.PairId == pair).ExecuteDeleteAsync();
                 await transaction.CommitAsync();

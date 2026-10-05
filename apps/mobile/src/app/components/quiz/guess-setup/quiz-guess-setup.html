@@ -1,0 +1,15 @@
+  <section class="quiz-card"><h3>Guess my answer</h3><p class="hint">{{totalQuestions()}} questions, {{categories().length}} categories. Five questions per round. Choose your own answer and guess your person's answer.</p>
+    @if(!connected()){<p class="hint">Connect with your person to play and save a shared quiz.</p>}
+    <div class="category-heading"><h4 id="quiz-categories-heading">Choose your categories</h4><span>{{categoryIds().length}} selected</span></div>
+    <p class="hint carousel-hint" id="quiz-carousel-help">Swipe to explore. Add the categories you want to play.</p>
+    <div #categoryRail class="category-carousel" role="region" aria-roledescription="carousel" aria-labelledby="quiz-categories-heading" aria-describedby="quiz-carousel-help" tabindex="0" (scroll)="categoryScrolled($event)" (keydown)="categoryKey($event)">
+      @for(category of categories();track category.id){<article class="category-slide" role="group" aria-roledescription="slide" [attr.aria-label]="($index+1)+' of '+categories().length+': '+category.title" [class.category-selected]="categoryIds().includes(category.id)">
+        <span class="eyebrow">{{category.personal ? 'Personal, opt in' : 'Get to know each other'}}</span><h4>{{category.title}}</h4><p class="hint">{{category.count}} questions</p>
+        <button type="button" class="category-toggle" [attr.aria-pressed]="categoryIds().includes(category.id)" [attr.aria-label]="(categoryIds().includes(category.id) ? 'Remove ' : 'Add ')+category.title" [disabled]="busy()" (click)="toggle.emit(category.id)"><span aria-hidden="true">{{categoryIds().includes(category.id) ? '✓' : '+'}}</span> {{categoryIds().includes(category.id) ? 'Selected' : 'Add category'}}</button>
+      </article>}
+    </div>
+    <div class="carousel-controls"><button type="button" aria-label="Previous category" [disabled]="categoryIndex()===0 || busy()" (click)="moveCategory(-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></button><span aria-live="polite">{{categories().length ? categoryIndex()+1 : 0}} / {{categories().length}}</span><button type="button" aria-label="Next category" [disabled]="categoryIndex()>=categories().length-1 || busy()" (click)="moveCategory(1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button></div>
+    <p class="hint">New questions are picked first. Categories can repeat after you have tried them all. Personal categories are optional; either person can skip any question.</p>
+    <button class="primary" type="button" [disabled]="busy() || !connected() || !categoryIds().length" (click)="invite.emit()">Invite {{partnerName()}}</button>
+    <p class="credit">Submitted answers stay private until both respond. Revealed answers and guesses are saved for both of you. Play together now or come back later.</p>
+  </section>

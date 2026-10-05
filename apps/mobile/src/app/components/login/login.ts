@@ -1,4 +1,4 @@
-import { LoadingIndicatorComponent } from '../loading-indicator';
+import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator';
 import { PrivacyNoticeComponent } from '../privacy-notice/privacy-notice';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal, viewChild } from '@angular/core';

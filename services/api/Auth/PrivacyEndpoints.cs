@@ -44,7 +44,8 @@ public static class PrivacyEndpoints
                 (pair != null && x.PairId == pair && x.IsShared && db.Set<SharingGrant>().Any(g => g.PairId == pair && g.SenderId == x.ProposedBy && g.Category == "picks" && g.Status == "accepted"))).OrderByDescending(x => x.Id).ToListAsync();
             var recipes=await db.Set<Overlap.Api.Cooking.SavedRecipe>().AsNoTracking().Where(x=>pair!=null && x.PairId==pair && x.SharedBy!=id && x.ShareRevision!="").OrderByDescending(x=>x.Id).ToListAsync();
             var contests=await db.Set<Overlap.Api.Cooking.CookingContest>().AsNoTracking().Where(x=>pair!=null && x.PairId==pair).OrderBy(x=>x.StartUtc).ToListAsync();
-            return Results.Ok(new { connected = pair != null, receivedPicks, partnerName,
+            var quizInvitations=await db.Set<Overlap.Api.Quiz.QuizRound>().AsNoTracking().Where(x=>pair!=null && x.PairId==pair && x.ProposedBy!=id && x.Status=="pending").Select(x=>new{x.Id}).ToArrayAsync();
+            return Results.Ok(new { quizInvitations, connected = pair != null, receivedPicks, partnerName,
                 unreadContests=contests.Count(x=>x.ProposedBy==id ? x.SenderUnread : x.RecipientUnread),
                 cookingContests=contests.Select(x=>new{x.Id,x.Status,x.Revision,redrawPending=x.RedrawRequestedBy!=null,redrawMine=x.RedrawRequestedBy==id,availableMinutes=x.Minutes,x.TimeZone,recipeTitle=x.RevealedUtc is null || x.RecipeContent is null ? null : System.Text.Json.JsonSerializer.Deserialize<Overlap.Api.Cooking.Recipe>(x.RecipeContent)!.Title,startUtc=DateTime.SpecifyKind(x.StartUtc,DateTimeKind.Utc),mine=x.ProposedBy==id,
                     unread=x.ProposedBy==id ? x.SenderUnread : x.RecipientUnread,

@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClient } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
-import { AuthService } from '../../auth.service';
+import { AuthService } from '../../../auth.service';
 import { FoodPreferencesComponent } from './food-preferences';
 describe('Cooking food preferences',()=>{
   it('saves typed foods with the main form and preserves the draft after a failed write',async()=>{

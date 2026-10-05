@@ -2,8 +2,8 @@ import { Component, inject, OnDestroy, OnInit, output, signal } from '@angular/c
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../auth.service';
-import { LoadingIndicatorComponent } from '../loading-indicator';
-import { BookRatingComponent } from './book-rating';
+import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator';
+import { BookRatingComponent } from './book-rating/book-rating';
 
 export interface BookTitle {
   id: string; title: string; authors: string[]; authorIds: string[]; subjects: string[];

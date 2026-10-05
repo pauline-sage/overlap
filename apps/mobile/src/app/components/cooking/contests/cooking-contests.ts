@@ -1,18 +1,19 @@
-import { CookingMemoriesComponent } from './cooking-memories';
+import { CookingMemoriesComponent } from '../memories/cooking-memories';
 import { Component, inject, input, output, signal, computed, effect, OnInit, DestroyRef } from '@angular/core';
-import { OutingChoiceComponent, OutingCalendarComponent } from '../coffee-date/outing-controls';
+import { OutingChoiceComponent } from '../../coffee-date/outing-choice/outing-choice';
+import { OutingCalendarComponent } from '../../coffee-date/outing-calendar/outing-calendar';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { AuthService } from '../../auth.service';
-import { SharingService } from '../nav-bar/sharing/sharing.service';
-import { DateCardsComponent } from '../date-cards/date-cards';
-import { LoadingIndicatorComponent } from '../loading-indicator';
+import { AuthService } from '../../../auth.service';
+import { SharingService } from '../../nav-bar/sharing/sharing.service';
+import { DateCardsComponent } from '../../date-cards/date-cards';
+import { LoadingIndicatorComponent } from '../../loading-indicator/loading-indicator';
 
 interface FoodPreferences {avoidRedMeat:boolean;excludedIngredients:string[];}
 interface ContestRecipe {title:string;ingredients:string[];instructions:string[];sourceUrl:string;photo?:{url:string;author:string;license:string;sourceUrl:string};}
-@Component({selector:'app-cooking-contests',imports:[CookingMemoriesComponent,DatePipe,FormsModule,DateCardsComponent,LoadingIndicatorComponent,OutingChoiceComponent,OutingCalendarComponent],templateUrl:'./cooking-contests.html',styleUrls:['./cooking.scss','./cooking-contests.scss']})
+@Component({selector:'app-cooking-contests',imports:[CookingMemoriesComponent,DatePipe,FormsModule,DateCardsComponent,LoadingIndicatorComponent,OutingChoiceComponent,OutingCalendarComponent],templateUrl:'./cooking-contests.html',styleUrls:['../cooking.scss','./cooking-contests.scss']})
 export class CookingContestsComponent implements OnInit {
   readonly contestId=input(0);
   readonly selectedId=signal(0);

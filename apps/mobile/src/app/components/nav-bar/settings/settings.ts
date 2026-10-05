@@ -1,12 +1,12 @@
 import { SharingComponent } from '../sharing/sharing';
-import { PhoneRemindersComponent } from './phone-reminders';
+import { PhoneRemindersComponent } from './phone-reminders/phone-reminders';
 import { PrivacyNoticeComponent } from '../../privacy-notice/privacy-notice';
 
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { IdleSessionService } from '../../../idle-session.service';
-import { LoadingIndicatorComponent } from '../../loading-indicator';
+import { LoadingIndicatorComponent } from '../../loading-indicator/loading-indicator';
 import { Component, inject, signal, input, output } from '@angular/core';
 @Component({
   selector: 'app-settings',

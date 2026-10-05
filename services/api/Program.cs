@@ -1,3 +1,4 @@
+using Overlap.Api.Quiz;
 using Overlap.Api.Outings;
 using Overlap.Api.Watch;
 using Overlap.Api.Books;
@@ -172,6 +173,9 @@ if (authConfigured)
     builder.Services.AddRateLimiter(options =>
     {
         options.RejectionStatusCode = 429;
+        options.AddPolicy("quiz", context => RateLimitPartition.GetFixedWindowLimiter(
+            context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
+            { PermitLimit = 60, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
         options.AddPolicy("picks", context => RateLimitPartition.GetFixedWindowLimiter(
             context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
             { PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
@@ -230,6 +234,8 @@ if (authConfigured)
     app.MapPicks();
     app.MapWatched();
     app.MapBooks();
+    app.MapQuiz();
+    app.MapCustomQuizzes();
     app.MapCooking();
     app.MapCookingContests();
     app.MapCookingMemories();

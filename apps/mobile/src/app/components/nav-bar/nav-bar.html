@@ -10,8 +10,9 @@
   <header class="page-banner">
     <span class="page-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 17h14l-2-3V9a5 5 0 0 0-10 0v5l-2 3ZM10 20h4" /></svg></span>
     <div><h2 id="dashboard-heading" tabindex="-1">Notifications</h2><p>Little updates that bring you closer.</p></div>
-    @if(sharing.count()) { <span class="unread-count">{{ sharing.count() }} unread</span> }
+    @if(sharing.count()) { <span class="unread-count">{{ sharing.count() }} updates</span> }
   </header>
+  @for(invitation of sharing.state()?.quizInvitations ?? [];track invitation.id){<section class="quiz-invitation"><h3>A quiz with your person</h3><p>Five questions to answer and guess together. Review the categories before accepting.</p><button type="button" [disabled]="disabled()" (click)="openQuiz.emit(invitation.id)">View quiz invitation</button></section>}
   <app-sharing [notifications]="true" (openContest)="openContest.emit($event)" (openCooking)="openCooking.emit($event)" (openPicks)="openPicks.emit()" (pickYours)="pickYours.emit($event)" />
 }
 @if(current() === 'dates') {

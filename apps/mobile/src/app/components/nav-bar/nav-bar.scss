@@ -57,3 +57,5 @@ h2 {font-size:1.8rem;font-weight:700;letter-spacing:-.04em;margin:0 0 1.5rem;}
 .unread-count{font-size:.7rem;padding:.35rem .65rem;border-radius:2rem;background:var(--accent);color:var(--on-accent)}
 
 .page-banner { @include page-banner.banner; }
+
+.quiz-invitation{padding:1.25rem;margin:1rem 0;border:1px solid var(--line);border-radius:1.5rem;background:var(--surface);box-shadow:var(--shadow)}.quiz-invitation h3{font-size:1.05rem;font-weight:650;margin:0 0 .75rem}.quiz-invitation p{font-size:.9rem;color:var(--muted);line-height:1.6}.quiz-invitation button{width:100%;border:1px solid var(--line);background:var(--accent);color:var(--on-accent);font:600 .9rem "Segoe UI",Arial,sans-serif;padding:.75rem 1rem}

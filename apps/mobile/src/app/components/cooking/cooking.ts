@@ -1,14 +1,14 @@
-import { CookingMemoriesComponent } from './cooking-memories';
+import { CookingMemoriesComponent } from './memories/cooking-memories';
 import { Component, inject, OnInit, OnDestroy, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../auth.service';
-import { FoodPreferencesComponent } from './food-preferences';
-import { CookingContestsComponent } from './cooking-contests';
-import { BookRatingComponent } from '../read-together/book-rating';
-import { LoadingIndicatorComponent } from '../loading-indicator';
+import { FoodPreferencesComponent } from './food-preferences/food-preferences';
+import { CookingContestsComponent } from './contests/cooking-contests';
+import { BookRatingComponent } from '../read-together/book-rating/book-rating';
+import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator';
 interface RecipeHit { id: number; title: string; }
 interface Recipe extends RecipeHit { revision: number; ingredients: string[]; instructions: string[]; sourceUrl: string; photo: { url: string; author: string; license: string; licenseUrl: string; sourceUrl: string } | null; }
 interface Entry { ownMadeUtc?:string|null; partnerMadeUtc?:string|null; ownMade?: boolean; partnerMade?: boolean; ownRating?: number | null; partnerRating?: number | null; id: number; addedUtc: string; recipe: Recipe; }
