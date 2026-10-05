@@ -47,3 +47,6 @@ services/api/**
 !services/api/Notifications/
 !services/api/Notifications/**
 **/appsettings.Push.Local.json
+
+!services/api/Quiz/
+!services/api/Quiz/**
