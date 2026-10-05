@@ -9,22 +9,23 @@ namespace Overlap.Api.Auth;
 public static class AvatarImage
 {
     public const int Size = 128;
-    public static byte[] Encode(byte[] pixels)
+    public static byte[] Encode(byte[] pixels) => EncodeSquare(pixels, Size);
+    public static byte[] EncodeSquare(byte[] pixels, int size)
     {
-        if (pixels.Length != Size * Size * 3) throw new ArgumentException("Invalid avatar dimensions.");
+        if (size is not (128 or 512) || pixels.Length != size * size * 3) throw new ArgumentException("Invalid avatar dimensions.");
         using var png = new MemoryStream();
         png.Write(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 });
         var header = new byte[13];
-        BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(0, 4), Size);
-        BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(4, 4), Size);
+        BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(0, 4), size);
+        BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(4, 4), size);
         header[8] = 8; header[9] = 2;
         Chunk(png, "IHDR", header);
         using var compressed = new MemoryStream();
         using (var zip = new ZLibStream(compressed, CompressionLevel.Fastest, leaveOpen: true))
-            for (var row = 0; row < Size; row++)
+            for (var row = 0; row < size; row++)
             {
                 zip.WriteByte(0);
-                zip.Write(pixels, row * Size * 3, Size * 3);
+                zip.Write(pixels, row * size * 3, size * 3);
             }
         Chunk(png, "IDAT", compressed.ToArray());
         Chunk(png, "IEND", []);

@@ -64,13 +64,14 @@ public static class CookingContestEndpoints
             var contest=await db.Set<CookingContest>().AsNoTracking().SingleOrDefaultAsync(x=>x.Id==id && db.PairMembers.Any(m=>m.AccountId==account && m.PairId==x.PairId),ct);
             if(contest is null)return Results.NotFound();
             if(contest.Status!="accepted" || contest.RevealedUtc is null || contest.Revision!=request.Revision)return Results.Problem(statusCode:409,title:"This draw has changed. Refresh and try again.");
+            if(await db.Set<CookingMemory>().AnyAsync(x=>x.ContestId==id,ct))return Results.Problem(statusCode:409,title:"This recipe is already in your album. Start a new contest for another recipe.");
             if(request.Action=="accept"){
                 if(contest.RedrawRequestedBy is null || contest.RedrawRequestedBy==account)return Results.Problem(statusCode:403,title:"Only your partner can accept your redraw request.");
                 return await ContestDraw.Pick(contest,account,true,db,clock,ct);
             }
             if(request.Action=="request" ? contest.RedrawRequestedBy!=null : contest.RedrawRequestedBy==null || (request.Action=="withdraw" ? contest.RedrawRequestedBy!=account : contest.RedrawRequestedBy==account))return Results.Problem(statusCode:409,title:"This redraw request has changed.");
             var requester=request.Action=="request" ? account : null;var revision=Guid.NewGuid().ToString("N");
-            var changed=await db.Set<CookingContest>().Where(x=>x.Id==id && x.Revision==request.Revision && x.PairId==contest.PairId)
+            var changed=await db.Set<CookingContest>().Where(x=>x.Id==id && x.Revision==request.Revision && x.PairId==contest.PairId && !db.Set<CookingMemory>().Any(m=>m.ContestId==x.Id))
                 .ExecuteUpdateAsync(s=>s.SetProperty(x=>x.RedrawRequestedBy,requester).SetProperty(x=>x.Revision,revision).SetProperty(x=>x.SenderUnread,contest.ProposedBy!=account).SetProperty(x=>x.RecipientUnread,contest.ProposedBy==account),ct);
             return changed==1 ? Results.NoContent() : Results.Problem(statusCode:409,title:"This contest has changed. Refresh and try again.");
         });

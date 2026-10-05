@@ -22,14 +22,14 @@ export class FoodPreferencesComponent implements OnInit {
     const foods=[...new Map([...this.excludedFoods,...additions].map(x=>[x.toLowerCase(),x])).values()];
     if(foods.length>12 || foods.some(x=>x.length>50)){this.error.set('Choose up to 12 foods, with at most 50 characters per food.');return;}
     this.excludedIngredients=foods.join(', ');
-    if(await this.save())this.newFood='';else this.excludedIngredients=previous;
+    if(await this.save(false))this.newFood='';else this.excludedIngredients=previous;
   }
   async removeFood(food:string,event?:Event):Promise<void>{
     if(event)(event.target as HTMLInputElement).checked=true;
     if(this.busy())return;
     const previous=this.excludedIngredients;
     this.excludedIngredients=this.excludedFoods.filter(x=>x!==food).join(', ');
-    if(!await this.save())this.excludedIngredients=previous;
+    if(!await this.save(false))this.excludedIngredients=previous;
   }
   private loading=false;private destroyed=false;private version=0;
   constructor(){
@@ -55,9 +55,13 @@ export class FoodPreferencesComponent implements OnInit {
     catch{if(!this.destroyed)this.error.set('Food preferences could not be refreshed. Try again.');}
     finally{this.loading=false;if(!partnerOnly)this.busy.set(false);}
   }
-  async save():Promise<boolean>{
-    if(this.busy())return false;++this.version;this.busy.set(true);this.error.set('');this.notice.set('');let stored=false;
-    try{await this.auth.submit('cooking/preferences',{avoidRedMeat:this.avoidRedMeat,excludedIngredients:this.excludedIngredients.split(',').map(x=>x.trim()).filter(Boolean),shareWithPartner:this.shareWithPartner});stored=true;await this.fetch(true);if(!this.destroyed){this.notice.set('Your food preferences are saved.');this.saved.emit();}}
+  async save(includeDraft=true):Promise<boolean>{
+    if(this.busy())return false;
+    const additions=includeDraft ? this.newFood.split(',').map(x=>x.trim()).filter(Boolean) : [];
+    const foods=[...new Map([...this.excludedFoods,...additions].map(x=>[x.toLowerCase(),x])).values()];
+    if(foods.length>12 || foods.some(x=>x.length>50)){this.error.set('Choose up to 12 foods, with at most 50 characters per food.');return false;}
+    ++this.version;this.busy.set(true);this.error.set('');this.notice.set('');let stored=false;
+    try{await this.auth.submit('cooking/preferences',{avoidRedMeat:this.avoidRedMeat,excludedIngredients:foods,shareWithPartner:this.shareWithPartner});stored=true;this.excludedIngredients=foods.join(', ');if(includeDraft)this.newFood='';await this.fetch(true);if(!this.destroyed){this.notice.set('Your food preferences are saved.');this.saved.emit();}}
     catch(error){this.error.set(stored ? 'Your preferences were saved, but could not be refreshed. Reopen Food preferences to retry.' : error instanceof HttpErrorResponse ? error.error?.title || 'Unable to save preferences.' : 'Unable to save preferences.');}finally{this.busy.set(false);}
     return stored;
   }

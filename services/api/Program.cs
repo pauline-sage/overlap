@@ -232,6 +232,7 @@ if (authConfigured)
     app.MapBooks();
     app.MapCooking();
     app.MapCookingContests();
+    app.MapCookingMemories();
     app.MapFoodPreferences();
     app.MapPhoneReminders();
     app.MapOutings();

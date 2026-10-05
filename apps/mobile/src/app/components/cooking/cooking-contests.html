@@ -24,12 +24,15 @@
     </section>
     @if(contest.status==='accepted' && !recipe()){<button class="contest-entry" type="button" (click)="managePreferences.emit()">Manage food preferences in Cooking <span aria-hidden="true">&#8599;</span></button>}
     @if(!shuffling()) { @if(recipe();as recipe) {
+      <app-cooking-memories [contestId]="selectedId()" (archivedChange)="memoryArchived.set($event)" />
+      @if(!memoryArchived()){
       <section class="checklist-card redraw-card"><h3>A different recipe?</h3>
         @if(redrawPending()){
           @if(redrawMine()){<p class="hint">Waiting for your partner to agree. Your current recipe stays until then.</p><button class="remove" type="button" [disabled]="busy()" (click)="redraw('withdraw')">Withdraw request</button>}
           @else{<p class="hint">Your partner wants to draw another recipe. Shall we?</p><div class="redraw-actions"><button class="primary" type="button" [disabled]="busy()" (click)="redraw('accept')">Yes, shuffle again</button><button type="button" [disabled]="busy()" (click)="redraw('decline')">Keep this recipe</button></div>}
         } @else{<p class="hint">Shuffle again when both of you agree. Previous draws won't come back.</p><button class="primary" type="button" [disabled]="busy()" (click)="redraw('request')">Ask to shuffle again</button>}
       </section>
+      }
       @if(recipe.photo;as photo){<img class="recipe-photo" [src]="photo.url" [alt]="recipe.title" referrerpolicy="no-referrer" /><p class="credit"><a [href]="photo.sourceUrl" target="_blank" rel="noopener noreferrer">{{photo.author}} - {{photo.license}}</a></p>}
       <section class="checklist-card"><h3>Ingredients</h3>@for(item of recipe.ingredients;track $index){<label class="check-row"><input type="checkbox" /><span>{{item}}</span></label>}</section>
       <section class="checklist-card"><h3>Instructions</h3>@for(step of recipe.instructions;track $index){<label class="check-row step-row"><input type="checkbox" /><span><small>Step {{$index+1}}</small>{{step}}</span></label>}</section>

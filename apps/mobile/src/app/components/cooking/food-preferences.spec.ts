@@ -4,6 +4,18 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '../../auth.service';
 import { FoodPreferencesComponent } from './food-preferences';
 describe('Cooking food preferences',()=>{
+  it('saves typed foods with the main form and preserves the draft after a failed write',async()=>{
+    let foods=['spinach','lamb'];
+    const http={get:vi.fn(()=>of({ownPreferences:{avoidRedMeat:true,excludedIngredients:foods},shareWithPartner:false,partnerPreferences:null,partnerShared:false}))};
+    const auth={submit:vi.fn(async(_path:string,body:{excludedIngredients:string[]})=>{foods=body.excludedIngredients;})};
+    TestBed.configureTestingModule({imports:[FoodPreferencesComponent],providers:[{provide:HttpClient,useValue:http},{provide:AuthService,useValue:auth}]});
+    const f=TestBed.createComponent(FoodPreferencesComponent);f.detectChanges();await vi.waitFor(()=>expect(f.componentInstance.busy()).toBe(false));
+    const c=f.componentInstance;c.newFood='olives';f.detectChanges();f.nativeElement.querySelector('button[type="submit"]').click();
+    await vi.waitFor(()=>expect(c.busy()).toBe(false));expect(foods).toEqual(['spinach','lamb','olives']);expect(c.newFood).toBe('');
+    await c.load();expect(c.excludedFoods).toEqual(foods);
+    auth.submit.mockRejectedValueOnce(new Error('offline'));c.newFood='tuna';await c.save();
+    expect(c.newFood).toBe('tuna');expect(c.excludedFoods).toEqual(['spinach','lamb','olives']);f.destroy();
+  });
   it('adds checked foods, saves removals and restores the list when saving fails',async()=>{
     let foods=['tuna'];
     const http={get:vi.fn(()=>of({ownPreferences:{avoidRedMeat:false,excludedIngredients:foods},shareWithPartner:false,partnerPreferences:null,partnerShared:false}))};
@@ -12,7 +24,7 @@ describe('Cooking food preferences',()=>{
     const f=TestBed.createComponent(FoodPreferencesComponent);f.detectChanges();await vi.waitFor(()=>expect(f.componentInstance.busy()).toBe(false));
     const c=f.componentInstance;c.newFood='spinach, TUNA';await c.addFood();f.detectChanges();
     expect(c.excludedFoods.map(x=>x.toLowerCase())).toEqual(['tuna','spinach']);expect(c.newFood).toBe('');
-    const checks=()=>Array.from(f.nativeElement.querySelectorAll('.excluded-foods input')) as HTMLInputElement[];
+    const checks=()=>Array.from(f.nativeElement.querySelectorAll('.excluded-foods input:not([name])')) as HTMLInputElement[];
     expect(checks()).toHaveLength(2);expect(checks().every(x=>x.checked)).toBe(true);
     checks()[0].click();await vi.waitFor(()=>expect(c.busy()).toBe(false));f.detectChanges();
     expect(foods).toEqual(['spinach']);expect(checks()).toHaveLength(1);

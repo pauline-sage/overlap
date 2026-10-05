@@ -1,3 +1,4 @@
+import { CookingMemoriesComponent } from './cooking-memories';
 import { Component, inject, OnInit, OnDestroy, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
@@ -11,7 +12,7 @@ import { LoadingIndicatorComponent } from '../loading-indicator';
 interface RecipeHit { id: number; title: string; }
 interface Recipe extends RecipeHit { revision: number; ingredients: string[]; instructions: string[]; sourceUrl: string; photo: { url: string; author: string; license: string; licenseUrl: string; sourceUrl: string } | null; }
 interface Entry { ownMadeUtc?:string|null; partnerMadeUtc?:string|null; ownMade?: boolean; partnerMade?: boolean; ownRating?: number | null; partnerRating?: number | null; id: number; addedUtc: string; recipe: Recipe; }
-@Component({ selector: 'app-cooking', imports: [DatePipe, FormsModule, LoadingIndicatorComponent, BookRatingComponent, CookingContestsComponent, FoodPreferencesComponent], templateUrl: './cooking.html', styleUrl: './cooking.scss' })
+@Component({ selector: 'app-cooking', imports: [CookingMemoriesComponent, DatePipe, FormsModule, LoadingIndicatorComponent, BookRatingComponent, CookingContestsComponent, FoodPreferencesComponent], templateUrl: './cooking.html', styleUrl: './cooking.scss' })
 export class CookingComponent implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly http = inject(HttpClient);
@@ -26,6 +27,7 @@ export class CookingComponent implements OnInit, OnDestroy {
   readonly contestsView=viewChild(CookingContestsComponent);
   refreshFoodPreferences():void {const view=this.contestsView();if(view?.selectedId())void view.loadRecipe(view.selectedId());}
   closeFoodPreferences():void {this.preferencesOpened.set(false);this.refreshFoodPreferences();}
+  readonly albumOpened=signal(false);
   readonly contestsOpened=signal(false);
   readonly busy = signal(false);
   readonly error = signal('');
@@ -66,9 +68,13 @@ export class CookingComponent implements OnInit, OnDestroy {
     catch { if(!this.disposed && version===this.collectionVersion) this.collectionError.set('Your recipe collection could not be loaded. Try again.'); }
     finally { this.loading=false; }
   }
+  dismissSearchKeyboard():void {
+    document.getElementById('recipe-query')?.blur();
+    if(document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  }
   async search(): Promise<void> {
+    this.dismissSearchKeyboard();
     if(this.busy() || !this.query.trim()) return;
-    if(document.activeElement instanceof HTMLInputElement) document.activeElement.blur();
     this.busy.set(true); this.error.set(''); this.hits.set(null);
     try { const hits=await this.auth.submit<RecipeHit[]>('cooking/search',{query:this.query}); if(!this.disposed) this.hits.set(hits); }
     catch(e) { this.problem(e); } finally { this.busy.set(false); }

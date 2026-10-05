@@ -59,6 +59,13 @@ public sealed partial class TogetherTests
         (await Post(first,"cooking/preferences",new{avoidRedMeat=true,excludedIngredients=new[]{"tuna"},shareWithPartner=false})).EnsureSuccessStatusCode();
         Assert.Equal(JsonValueKind.Null,(await second.GetFromJsonAsync<JsonElement>("/api/auth/cooking/preferences")).GetProperty("partnerPreferences").ValueKind);
         (await Post(first,"cooking/preferences",new{avoidRedMeat=true,excludedIngredients=new[]{"tuna"},shareWithPartner=true})).EnsureSuccessStatusCode();
+        (await Post(first,"cooking/preferences",new{avoidRedMeat=false,excludedIngredients=new[]{" spinach ","olives","SPINACH"},shareWithPartner=true})).EnsureSuccessStatusCode();
+        var updated=await first.GetFromJsonAsync<JsonElement>("/api/auth/cooking/preferences");
+        Assert.False(updated.GetProperty("ownPreferences").GetProperty("avoidRedMeat").GetBoolean());
+        Assert.Equal(new[]{"spinach","olives"},updated.GetProperty("ownPreferences").GetProperty("excludedIngredients").EnumerateArray().Select(x=>x.GetString()).ToArray());
+        Assert.Equal(new[]{"spinach","olives"},(await second.GetFromJsonAsync<JsonElement>("/api/auth/cooking/preferences")).GetProperty("partnerPreferences").GetProperty("excludedIngredients").EnumerateArray().Select(x=>x.GetString()).ToArray());
+        (await Post(first,"cooking/preferences",new{avoidRedMeat=true,excludedIngredients=Array.Empty<string>(),shareWithPartner=false})).EnsureSuccessStatusCode();
+        Assert.Empty((await first.GetFromJsonAsync<JsonElement>("/api/auth/cooking/preferences")).GetProperty("ownPreferences").GetProperty("excludedIngredients").EnumerateArray());
         (await Post(first,"together/leave",new{})).EnsureSuccessStatusCode();
         Assert.True((await first.GetFromJsonAsync<JsonElement>("/api/auth/cooking/preferences")).GetProperty("ownPreferences").GetProperty("avoidRedMeat").GetBoolean());
         (await Post(stranger,"together/accept",new{token=await Invite(first)})).EnsureSuccessStatusCode();

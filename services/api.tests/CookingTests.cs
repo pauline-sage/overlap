@@ -11,6 +11,36 @@ using Xunit;
 namespace Overlap.Api.Tests;
 public class CookingCatalogTests
 {
+    private sealed class DietarySearchHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken ct)
+        {
+            var query=Uri.UnescapeDataString(request.RequestUri!.Query);
+            string body;
+            if(query.Contains("list=search")) body="""
+                {"query":{"search":[{"pageid":1,"title":"Cookbook:Feijoada"},{"pageid":2,"title":"Cookbook:Vegetarian Feijoada"}]}}
+                """;
+            else
+            {
+                var vegetarian=query.Contains("pageid=2");
+                body=JsonSerializer.Serialize(new{parse=new{title=vegetarian ? "Cookbook:Vegetarian Feijoada" : "Cookbook:Feijoada",revid=1,text="<h2>Ingredients</h2><ul><li>"+(vegetarian ? "Beans, carrots" : "Beans, pork")+"</li></ul><h2>Method</h2><ol><li>Simmer</li></ol>"}});
+            }
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK){Content=new StringContent(body,System.Text.Encoding.UTF8,"application/json")});
+        }
+    }
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task SearchOffersRealAlternativeWhenEitherPersonExcludesMeat(bool ownerExcludes)
+    {
+        using var http=new HttpClient(new DietarySearchHandler());
+        var restricted=new ContestPreferences(true,[]);var unrestricted=new ContestPreferences(false,[]);
+        var results=await new RecipeCatalog(http).Search("feijoada",ownerExcludes ? [restricted,unrestricted] : [unrestricted,restricted],CancellationToken.None);
+        Assert.Equal(2,Assert.Single(results).Id);
+        var unavailable=await new RecipeCatalog(http).Search("feijoada",[new ContestPreferences(false,["beans"])],CancellationToken.None);
+        Assert.Empty(unavailable);
+    }
+
     [Fact]
     public void ExtractsQuantitiesAndInstructionsWithoutRenderingHtml()
     {

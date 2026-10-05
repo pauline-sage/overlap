@@ -28,6 +28,26 @@ public sealed class RecipeCatalog(HttpClient http)
             .Where(x => x.GetProperty("title").GetString()!.StartsWith("Cookbook:", StringComparison.Ordinal))
             .Select(x => new RecipeHit(x.GetProperty("pageid").GetInt64(), x.GetProperty("title").GetString()![9..])).ToArray();
     }
+    public async Task<RecipeHit[]> Search(string query, ContestPreferences[] preferences, CancellationToken ct)
+    {
+        if (!preferences.Any(x => x.AvoidRedMeat || x.ExcludedIngredients.Length > 0)) return await Search(query, ct);
+        // Prefer real catalogue alternatives; never rewrite a recipe's ingredients.
+        var vegetarian = await Search(query + " vegetarian", ct);
+        var vegan = await Search(query + " vegan", ct);
+        var original = await Search(query, ct);
+        var candidates = vegetarian.Concat(vegan).Concat(original).DistinctBy(x => x.Id).Take(20).ToArray();
+        var matches = new List<RecipeHit>();
+        foreach (var batch in candidates.Chunk(4))
+        {
+            var checkedRecipes = await Task.WhenAll(batch.Select(async hit =>
+            {
+                var recipe = await Details(hit.Id, ct, includePhoto: false);
+                return recipe is not null && ContestRecipeFilter.Allows(recipe, preferences) ? hit : null;
+            }));
+            matches.AddRange(checkedRecipes.OfType<RecipeHit>());
+        }
+        return matches.ToArray();
+    }
     public static Recipe? Extract(long id, long revision, string title, string html)
     {
         if (!title.StartsWith("Cookbook:", StringComparison.Ordinal) || html.Length > 800_000) return null;
@@ -60,12 +80,13 @@ public sealed class RecipeCatalog(HttpClient http)
         }
         return [];
     }
-    public async Task<Recipe?> Details(long id, CancellationToken ct)
+    public async Task<Recipe?> Details(long id, CancellationToken ct, bool includePhoto = true)
     {
         var json = await Get("en.wikibooks.org", $"action=parse&pageid={id}&prop=text|revid|images", ct);
         if (!json.TryGetProperty("parse", out var page)) return null;
         var recipe = Extract(id, page.GetProperty("revid").GetInt64(), page.GetProperty("title").GetString()!, page.GetProperty("text").GetString()!);
         if (recipe is null) return null;
+        if (!includePhoto) return recipe;
         // Only display an explicitly reusable Commons photo; image bytes are never downloaded or persisted.
         try
         {

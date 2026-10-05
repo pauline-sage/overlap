@@ -515,6 +515,51 @@ namespace Overlap.Api.Migrations
                     b.ToTable("CookingContest");
                 });
 
+            modelBuilder.Entity("Overlap.Api.Cooking.CookingDishPhoto", b =>
+                {
+                    b.Property<long>("ContestId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("AccountId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<byte[]>("Png")
+                        .IsRequired()
+                        .HasColumnType("mediumblob");
+
+                    b.Property<string>("Revision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<DateTime>("UploadedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("ContestId", "AccountId");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("CookingDishPhoto");
+                });
+
+            modelBuilder.Entity("Overlap.Api.Cooking.CookingMemory", b =>
+                {
+                    b.Property<long>("ContestId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("RecipeContent")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("ContestId");
+
+                    b.ToTable("CookingMemory");
+                });
+
             modelBuilder.Entity("Overlap.Api.Cooking.FoodPreference", b =>
                 {
                     b.Property<string>("AccountId")
@@ -953,6 +998,30 @@ namespace Overlap.Api.Migrations
                     b.HasOne("Overlap.Api.Auth.Account", null)
                         .WithMany()
                         .HasForeignKey("ProposedBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Cooking.CookingDishPhoto", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Overlap.Api.Cooking.CookingMemory", null)
+                        .WithMany()
+                        .HasForeignKey("ContestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Cooking.CookingMemory", b =>
+                {
+                    b.HasOne("Overlap.Api.Cooking.CookingContest", null)
+                        .WithOne()
+                        .HasForeignKey("Overlap.Api.Cooking.CookingMemory", "ContestId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

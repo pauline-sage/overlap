@@ -148,6 +148,19 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
             draw.Property(x=>x.Content).HasColumnType("longtext");
             draw.HasOne<Overlap.Api.Cooking.CookingContest>().WithMany().HasForeignKey(x=>x.ContestId).OnDelete(DeleteBehavior.Cascade);
         });
+        builder.Entity<Overlap.Api.Cooking.CookingMemory>(memory=>{
+            memory.HasKey(x=>x.ContestId);
+            memory.Property(x=>x.RecipeContent).HasColumnType("longtext");
+            memory.HasOne<Overlap.Api.Cooking.CookingContest>().WithOne().HasForeignKey<Overlap.Api.Cooking.CookingMemory>(x=>x.ContestId).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<Overlap.Api.Cooking.CookingDishPhoto>(photo=>{
+            photo.HasKey(x=>new{x.ContestId,x.AccountId});
+            photo.Property(x=>x.AccountId).HasMaxLength(255);
+            photo.Property(x=>x.Revision).HasMaxLength(32);
+            photo.Property(x=>x.Png).HasColumnType("mediumblob");
+            photo.HasOne<Overlap.Api.Cooking.CookingMemory>().WithMany().HasForeignKey(x=>x.ContestId).OnDelete(DeleteBehavior.Cascade);
+            photo.HasOne<Account>().WithMany().HasForeignKey(x=>x.AccountId).OnDelete(DeleteBehavior.Cascade);
+        });
         builder.Entity<Overlap.Api.Cooking.FoodPreference>(preference=>{
             preference.HasKey(x=>x.AccountId);
             preference.Property(x=>x.AccountId).HasMaxLength(255);

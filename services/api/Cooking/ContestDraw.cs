@@ -13,6 +13,7 @@ public static class ContestDraw
 {
     public static async Task<IResult> Pick(CookingContest contest,string account,bool redraw,AuthDbContext db,TimeProvider clock,CancellationToken ct)
     {
+        if(await db.Set<CookingMemory>().AnyAsync(x=>x.ContestId==contest.Id,ct))return Results.Problem(statusCode:409,title:"This recipe is already in your album. Start a new contest for another recipe.");
         var preferences=await FoodPreferencesEndpoints.ForPair(db,contest.PairId,ct);
         var senderRow=preferences.SingleOrDefault(x=>x.AccountId==contest.ProposedBy);var recipientRow=preferences.SingleOrDefault(x=>x.AccountId!=contest.ProposedBy);
         var sender=FoodPreferencesEndpoints.Read(senderRow);var recipient=FoodPreferencesEndpoints.Read(recipientRow);
@@ -25,6 +26,7 @@ public static class ContestDraw
         var selected=recipes[System.Security.Cryptography.RandomNumberGenerator.GetInt32(recipes.Count)];var revision=Guid.NewGuid().ToString("N");var now=clock.GetUtcNow().UtcDateTime;
         await using var transaction=await db.Database.BeginTransactionAsync(ct);
         var changed=await db.Set<CookingContest>().Where(x=>x.Id==contest.Id && x.PairId==contest.PairId && x.Status=="accepted" && x.Revision==contest.Revision
+            && !db.Set<CookingMemory>().Any(m=>m.ContestId==x.Id)
             && (redraw ? x.RedrawRequestedBy!=null && x.RedrawRequestedBy!=account : x.RevealedUtc==null)
             && db.Set<FoodPreference>().Any(p=>p.AccountId==senderRow!.AccountId && p.Revision==senderRow.Revision)
             && db.Set<FoodPreference>().Any(p=>p.AccountId==recipientRow!.AccountId && p.Revision==recipientRow.Revision))

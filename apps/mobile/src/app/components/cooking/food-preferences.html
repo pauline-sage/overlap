@@ -3,18 +3,20 @@
 <header class="page-banner"><span class="page-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 10a4 4 0 0 1-1-8 4 4 0 0 1 6 1 4 4 0 0 1 6-1 4 4 0 0 1-1 8v10H7zM7 16h10"/></svg></span><div><h2>Food preferences</h2><p>A recipe that feels right for both of you.</p></div></header>
 <form class="checklist-card contest-form" (ngSubmit)="save()">
   <h3>Your list</h3><p class="hint">Saved for future cooking contests. Your restrictions count even when your list is private.</p>
-  <label class="check-row"><input type="checkbox" name="redMeat" [(ngModel)]="avoidRedMeat" /><span>No red meat<small class="preference-help">Beef, veal, pork, lamb and other red meats.</small></span></label>
   <h3>Foods I don't eat</h3>
   <p class="hint">Checked foods are excluded. Uncheck to remove one. Additions and removals save automatically.</p>
   <div class="excluded-foods">
+    <label class="check-row"><input type="checkbox" name="redMeat" [(ngModel)]="avoidRedMeat" /><span>No red meat<small class="preference-help">Beef, veal, pork, lamb and other red meats.</small></span></label>
     @for(food of excludedFoods;track food){
       <label class="check-row"><input type="checkbox" [checked]="true" [disabled]="busy()" (change)="removeFood(food, $event)" /><span>{{food}}</span></label>
-    }@empty{<p class="hint">No foods excluded yet.</p>}
+    }@empty{@if(!avoidRedMeat){<p class="hint">No foods excluded yet.</p>}}
   </div>
   <label for="food-exclusions">Add a food</label><input id="food-exclusions" name="ingredients" [(ngModel)]="newFood" [disabled]="busy()" maxlength="600" placeholder="Tuna, spinach, olives..." (keydown.enter)="$event.preventDefault(); addFood()" />
   <button class="remove" type="button" [disabled]="busy() || !newFood.trim()" (click)="addFood()">Add food</button>
   <p class="hint">Use English names to match the recipes. You can add several foods separated by commas.</p>
   <label class="check-row"><input type="checkbox" name="sharing" [(ngModel)]="shareWithPartner" /><span>Let my partner see my list<small class="preference-help">Off keeps your list private. You can change this whenever you like.</small></span></label>
+  @if(notice()){<p class="hint" role="status">{{notice()}}</p>}
+  @if(error()){<p class="error" role="alert">{{error()}}</p>}
   <button class="primary" type="submit" [disabled]="busy()">Save my preferences</button>
   <p class="credit">Filters check listed ingredients and instructions. Review the recipe before cooking.</p>
 </form>
@@ -23,5 +25,3 @@
   @else{<p class="hint">Your partner's list is private. They can choose to share it from Cooking.</p>}
   <button class="remove" type="button" [disabled]="busy()" (click)="load(true)">Refresh</button>
 </section>
-@if(notice()){<p class="hint" role="status">{{notice()}}</p>}
-@if(error()){<p class="error" role="alert">{{error()}}</p>}

@@ -1,0 +1,36 @@
+@if(busy()){<app-loading-indicator label="Saving your cooking memory..." />}
+@if(!contestId()){
+  <button class="back" type="button" (click)="selected() ? selected.set(null) : back.emit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg><span>Back</span></button>
+  <header class="page-banner"><span class="page-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8" cy="9" r="1.5"/><path d="m4 18 6-6 4 4 3-3 4 5"/></svg></span><div><h2>Our recipe album</h2><p>What you made, in your own kitchens.</p></div></header>
+  @if(!selected()){
+    <p class="hint">Your latest 100 cooking memories. Each keeps the recipe and your own finished-dish photos.</p>
+    @for(entry of entries();track entry.contestId){<button class="recipe-row" type="button" (click)="open(entry)"><span><strong>{{entry.recipe.title}}</strong><small class="made-date">{{entry.startUtc | date:'d MMM yyyy'}} &middot; {{entry.completed ? 'Both dishes saved' : 'Waiting for a dish photo'}}</small></span><span aria-hidden="true">&#8250;</span></button>}
+    @if(!entries().length && !error()){<p class="hint">Your album is empty. Finish a contest and add a photo of your dish to start a memory.</p>}
+  }
+}
+@if(selected();as entry){
+  <section class="checklist-card">
+    <h3>{{contestId() ? 'Finished cooking?' : entry.recipe.title}}</h3>
+    <p class="hint">{{entry.completed ? 'Both of your dishes are saved in the album.' : ownPhoto() ? 'Your dish is saved. Your partner can finish and add their own photo.' : 'Take a photo or upload one to save your dish in your shared recipe album.'}}</p>
+    <div class="dish-photos">
+      @for(photo of entry.photos;track photo.accountId){<figure><img class="recipe-photo" [src]="photoUrl(photo)" [alt]="(photo.mine ? 'Your dish: ' : 'Your partner’s dish: ')+entry.recipe.title" /><figcaption>{{photo.mine ? 'Your dish' : 'Your person’s dish'}} &middot; {{photo.uploadedUtc | date:'d MMM yyyy'}}</figcaption></figure>}
+    </div>
+    @if(!finishing()){<button class="primary" type="button" [disabled]="busy()" (click)="finishing.set(true)">{{ownPhoto() ? 'Replace my dish photo' : 'I’ve finished cooking'}}</button>}
+    @if(finishing()){
+      <p class="hint">Show each other what you made. Your photo is shared only with your connected partner.</p>
+      <input #camera type="file" accept="image/jpeg,image/png,image/webp" capture="environment" hidden (change)="upload($event)" />
+      <input #library type="file" accept="image/jpeg,image/png,image/webp" hidden (change)="upload($event)" />
+      <div class="dish-actions"><button type="button" [disabled]="busy()" (click)="camera.click()">Take a photo</button><button type="button" [disabled]="busy()" (click)="library.click()">Upload a photo</button></div>
+      <button class="remove" type="button" [disabled]="busy()" (click)="finishing.set(false)">Later</button>
+    }
+    @if(ownPhoto()){<button class="remove" type="button" [disabled]="busy()" (click)="removePhoto()">Remove my photo</button>}
+    <p class="credit">JPEG, PNG or WebP, up to 10 MB. Saved as a 512 &times; 512 photo. Each of you adds your own photo; both are needed to complete the memory.</p>
+  </section>
+  @if(!contestId()){
+    <section class="checklist-card"><h3>Ingredients</h3>@for(item of entry.recipe.ingredients;track $index){<p class="hint">{{item}}</p>}</section>
+    <section class="checklist-card"><h3>Instructions</h3>@for(item of entry.recipe.instructions;track $index){<p class="hint">{{$index+1}}. {{item}}</p>}</section>
+    <p class="credit">Recipe by <a [href]="entry.recipe.sourceUrl" target="_blank" rel="noopener noreferrer">Wikibooks contributors</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>. Formatting adapted for Overlap.</p>
+  }
+}
+@if(notice()){<p class="hint" role="status">{{notice()}}</p>}
+@if(error()){<p class="error" role="alert">{{error()}}</p><button class="remove" type="button" [disabled]="busy()" (click)="load()">Refresh</button>}

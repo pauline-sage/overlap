@@ -38,10 +38,19 @@ public static class CookingEndpoints
     public static void MapCooking(this WebApplication app)
     {
         var group = app.MapGroup("/api/auth/cooking").RequireAuthorization();
-        group.MapPost("/search", async (RecipeQuery request, RecipeCatalog catalog, CancellationToken ct) =>
+        group.MapPost("/search", async (RecipeQuery request, ClaimsPrincipal user, AuthDbContext db, RecipeCatalog catalog, CancellationToken ct) =>
         {
             if (string.IsNullOrWhiteSpace(request.Query) || request.Query.Length > 120) return Results.Problem(statusCode:400,title:"Enter a dish name (up to 120 characters).");
-            try { return Results.Ok(await catalog.Search(request.Query.Trim(),ct)); }
+            try
+            {
+                var pair = await Pair(db,user,ct);
+                var account = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                var rows = pair is null
+                    ? await db.Set<FoodPreference>().AsNoTracking().Where(x=>x.AccountId==account).ToArrayAsync(ct)
+                    : await FoodPreferencesEndpoints.ForPair(db,pair,ct);
+                var preferences = rows.Select(FoodPreferencesEndpoints.Read).OfType<ContestPreferences>().ToArray();
+                return Results.Ok(await catalog.Search(request.Query.Trim(),preferences,ct));
+            }
             catch (Exception e) when (Unavailable(e,ct)) { return Results.Problem(statusCode:503,title:"Recipe search is unavailable. Please try again."); }
         }).RequireRateLimiting("watch");
         group.MapPost("/details", async (RecipeLookup request, ClaimsPrincipal user, AuthDbContext db, RecipeCatalog catalog, IDataProtectionProvider protection, CancellationToken ct) =>

@@ -17,6 +17,13 @@ describe('Cooking',()=>{
   tabs[3].dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true,cancelable:true}));await f.whenStable();f.detectChanges();
   expect(f.componentInstance.tab()).toBe('discover');expect(tabs[0].tabIndex).toBe(0);expect(tabs[3].tabIndex).toBe(-1);f.destroy();
  });
+ it('dismisses the phone keyboard on search touch before submitting',async()=>{
+  auth.submit.mockResolvedValue([]);const f=await render();f.componentInstance.query='feijoada';f.detectChanges();
+  const field=f.nativeElement.querySelector('#recipe-query');field.focus();
+  const button=f.nativeElement.querySelector('button[type="submit"]');button.dispatchEvent(new Event('pointerdown',{bubbles:true}));
+  expect(document.activeElement).not.toBe(field);expect(auth.submit).not.toHaveBeenCalled();
+  button.click();await f.whenStable();expect(auth.submit).toHaveBeenCalledExactlyOnceWith('cooking/search',{query:'feijoada'});f.destroy();
+ });
  it('submits from the keyboard without saving a recipe or sharing a search',async()=>{
   auth.submit.mockResolvedValue([{id:12,title:'Flan'}]);const f=await render();const c=f.componentInstance;c.query='flan';f.detectChanges();
   const field=f.nativeElement.querySelector('input');field.focus();field.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));await f.whenStable();
