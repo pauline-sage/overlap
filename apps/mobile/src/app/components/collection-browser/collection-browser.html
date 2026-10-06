@@ -1,0 +1,15 @@
+@if (total() || more()) {
+  @if (searchable()) {
+  <label [for]="searchId()">{{ searchLabel() }}</label>
+  <input [id]="searchId()" type="search" enterkeyhint="search" maxlength="120" [ngModel]="browser().query()" (ngModelChange)="browser().search($event)" />
+  <ng-content />
+  }
+  @if (count() > browser().size || more()) {
+  <nav class="pages" aria-label="Collection pages">
+    <button type="button" [disabled]="pending() || browser().current(count()) === 1" (click)="browser().page.set(browser().current(count()) - 1)">Previous</button>
+    <span role="status">Page {{ browser().current(count()) }}{{more() ? ' · More available' : ' of '+browser().pages(count())}}</span>
+    <button type="button" [disabled]="pending() || (!more() && browser().current(count()) === browser().pages(count()))" (click)="next()">Next</button>
+  </nav>
+  }
+  @if (searchable() && !count()) { <p role="status">No matching items. Try another search or filter.</p> }
+}

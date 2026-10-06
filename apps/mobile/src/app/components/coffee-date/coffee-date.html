@@ -49,8 +49,8 @@
         <button type="button" (click)="findArea()" aria-label="Find this city or address">&#8594;</button>
       </div>
       @if(choices.length) {
-        <ul class="area-choices" aria-label="Choose your location">
-          @for(choice of choices;track choice.token) { <li><button type="button" (click)="choose(choice)">{{choice.name}} <span>&#8250;</span></button></li> }
+        <app-collection-browser [browser]="areaPages" [total]="choices.length" [count]="choices.length" [searchable]="false" searchId="area-result-pages" /><ul class="area-choices" aria-label="Choose your location">
+          @for(choice of areaPages.slice(choices);track choice.token) { <li><button type="button" (click)="choose(choice)">{{choice.name}} <span>&#8250;</span></button></li> }
         </ul>
       }
       <button class="locate" type="button" (click)="useLocation()"><span aria-hidden="true">&#9678;</span> {{locating() ? 'Finding your location...' : 'Use my current location'}}</button>
@@ -69,18 +69,16 @@
     <section aria-live="polite">
       <div class="result-summary"><strong>{{results.places.length}}</strong><div>places for your {{activity.toLowerCase()}}<small>{{results.localStart}}</small></div></div>
       @if(!results.places.length) { <p class="fine">No suitable places in the listings checked for this time. Try another neighbourhood, a wider radius or another time.</p><button class="secondary" type="button" (click)="step.set(2)">Adjust search</button> }
-      @for(match of results.places;track match.place.id) {
+      <app-collection-browser [browser]="searchPages" [total]="results.places.length" [count]="results.places.length" [searchable]="false" searchId="venue-result-pages" /> @for(match of searchPages.slice(results.places);track match.place.id) {
         @let place=match.place;
         <article class="venue" [class.chosen]="picked()?.place?.id===place.id">
-          <div class="venue-heading"><h3>{{place.name}}</h3><span>{{place.distanceKm | number:'1.0-1'}} km</span></div>
+          <div class="venue-heading"><div class="venue-title"><h3>{{place.name}}</h3><p class="hours" [class.unknown]="place.hoursStatus!=='listed-open'"><span aria-hidden="true">&#9679;</span> {{place.hoursStatus==='listed-open' ? 'Listed open for your visit' : 'Check opening hours'}}</p></div><span>{{place.distanceKm | number:'1.0-1'}} km</span></div>
           <p class="address">{{place.address}}</p>
-          <p class="hours" [class.unknown]="place.hoursStatus!=='listed-open'"><span aria-hidden="true">&#9679;</span> {{place.hoursStatus==='listed-open' ? 'Listed open for your visit' : 'Check opening hours'}}</p>
-          <div class="venue-links"><a [href]="place.mapUrl" target="_blank" rel="noopener noreferrer">Map &#8599;</a>@if(place.website) { <a [href]="place.website" target="_blank" rel="noopener noreferrer">Website &#8599;</a> }</div>
           @if(place.hours) { <app-opening-hours [hours]="place.hours" /> }
-          <button class="choose-place" type="button" (click)="choosePlace(match)">{{picked()?.place?.id===place.id ? 'Selected' : 'Choose this place'}}</button>
+          <div class="venue-links"><a [href]="place.mapUrl" target="_blank" rel="noopener noreferrer">Map &#8599;</a>@if(place.website) { <a [href]="place.website" target="_blank" rel="noopener noreferrer">Website &#8599;</a> }<button class="choose-place" type="button" (click)="choosePlace(match)">{{picked()?.place?.id===place.id ? 'Selected' : 'Choose this place'}}</button></div>
         </article>
       }
-      <p class="fine">Among {{results.examined}} nearby listings checked, not an exhaustive total. Confirm hours before going. Distances are straight-line distances.</p>
+      <p class="fine">Among {{results.examined}} nearby listings checked, not an exhaustive total. Hours use local time at the venue; confirm before going. Distances are straight-line distances.</p>
       @if(picked();as chosen) {
         <section class="share-card" id="place-sharing" tabindex="-1">
           <p class="eyebrow">Your choice</p><h3>{{chosen.place.name}}</h3>

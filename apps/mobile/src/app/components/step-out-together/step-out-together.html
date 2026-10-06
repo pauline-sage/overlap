@@ -1,0 +1,12 @@
+@if(proposal() || view()==='search') {
+  <app-coffee-date [proposal]="proposal()" [partnerName]="partnerName()" (shared)="shared.emit()" (back)="proposal() ? back.emit() : view.set('menu')" />
+} @else if(view()==='places') {
+  <app-saved-places [partnerName]="partnerName()" (back)="view.set('menu')" />
+} @else {
+  <button class="back" type="button" (click)="back.emit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg><span>Back</span></button>
+  <header class="page-banner"><span class="page-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18M6 21V7l6-4 6 4v14M9 10h6M9 14h6"/></svg></span><div><h2 id="dashboard-heading" tabindex="-1">Step out together</h2><p>A place for today, or an idea for another day.</p></div></header>
+  <div class="idea-grid">
+    <button class="idea" type="button" (click)="view.set('search')"><span class="idea-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg></span><strong>Find a place</strong><small>Search near you</small></button>
+    <button class="idea coffee-idea" type="button" (click)="view.set('places')"><span class="idea-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 3h12v18l-6-4-6 4z"/></svg></span><strong>Places to visit</strong><small>Save ideas together</small></button>
+  </div>
+}

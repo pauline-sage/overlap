@@ -4,6 +4,19 @@ import { DateCardsComponent } from './date-cards';
 import { SharingService } from '../nav-bar/sharing/sharing.service';
 import { readableHours } from '../coffee-date/opening-hours/opening-hours';
 describe('Activity cards and hours',()=>{
+  it('shares the five-date page limit across outings and contests and leaves notifications complete',()=>{
+    const start=(hours:number)=>new Date(Date.now()+hours*3600000).toISOString();
+    const sharing={error:signal(''),busy:signal(false),state:signal({outingUpdates:[{mine:true,revision:'outing',venue:{activity:'Coffee',name:'First cafe',startUtc:start(1)}}],cookingContests:Array.from({length:19},(_,i)=>({id:i+1,revision:'contest-'+i,status:'accepted',mine:true,startUtc:start(i+2),recipeTitle:'Recipe '+i}))})};
+    TestBed.configureTestingModule({imports:[DateCardsComponent],providers:[{provide:SharingService,useValue:sharing}]});
+    const f=TestBed.createComponent(DateCardsComponent);const c=f.componentInstance;f.detectChanges();
+    expect(f.nativeElement.querySelectorAll('.date-card')).toHaveLength(5);expect(c.displayedGroups()[0].updates).toHaveLength(1);expect(f.nativeElement.textContent).toContain('Page 1 of 4');
+    c.collection.page.set(2);f.detectChanges();expect(c.displayedGroups()[0].contests.map(x=>x.id)).toEqual([5,6,7,8,9]);
+    const input=f.nativeElement.querySelector('#dates-search') as HTMLInputElement;input.value='First cafe';input.dispatchEvent(new Event('input'));f.detectChanges();
+    expect(c.collection.page()).toBe(1);expect(f.nativeElement.querySelectorAll('.date-card')).toHaveLength(1);
+    c.collection.search('not found');f.detectChanges();expect(f.nativeElement.textContent).toContain('No matching items');expect(f.nativeElement.textContent).not.toContain('No upcoming dates yet');
+    c.viewDates('passed');f.detectChanges();expect(c.collection.page()).toBe(1);expect(c.collection.query()).toBe('');expect(f.nativeElement.textContent).toContain('No passed dates yet');
+    f.componentRef.setInput('notifications',true);f.detectChanges();expect(f.nativeElement.querySelector('app-collection-browser')).toBeNull();expect(f.nativeElement.querySelectorAll('.date-card')).toHaveLength(20);f.destroy();
+  });
   it('separates Upcoming and Passed tabs and keeps Watch picks only in Notifications',()=>{
     const sharing={error:signal(''),busy:signal(false),state:signal({outingUpdates:[
       {mine:true,revision:'future',venue:{activity:'Coffee',name:'Future cafe',startUtc:new Date(Date.now()+3600000).toISOString()}},

@@ -60,3 +60,4 @@ button,a,summary {touch-action:manipulation;}
 button.back {display:inline-flex;align-items:center;gap:.35rem;min-height:44px;margin-bottom:1rem;padding:.5rem .85rem .5rem .6rem;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--text);font:500 .8rem 'Segoe UI',Arial,sans-serif;cursor:pointer;}
 button.back svg {width:18px;height:18px;}
 button.back:hover {background:var(--accent-soft);}
+button.back{box-sizing:border-box;align-self:flex-start;justify-self:start;flex:none;width:fit-content;margin-left:0;margin-right:0}button.back svg{display:block;flex-shrink:0;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}button.back:focus-visible{outline:2px solid var(--accent);outline-offset:3px}

@@ -27,10 +27,10 @@ describe('Personal outing search', () => {
     auth.submit.mockResolvedValue({places:[],examined:6,localStart:'12:00',localEnd:'13:00',checkedUtc:'2026-09-29T12:00Z'});
     const f=TestBed.createComponent(CoffeeDateComponent);
     f.componentInstance.choose({name:'Lyon',timeZone:'Europe/Paris',token:'local'});
-    f.componentInstance.when='hour';
+    f.componentInstance.when='now';
     await f.componentInstance.search();
     expect(auth.submit).toHaveBeenCalledExactlyOnceWith('outings/search',{
-      areaToken:'local',radius:3,activity:'Coffee',localStart:null,startInMinutes:60,minutes:60,includeUnknownHours:true
+      areaToken:'local',radius:3,activity:'Coffee',localStart:null,startInMinutes:null,minutes:60,includeUnknownHours:true
     });
     f.destroy();
   });
@@ -51,7 +51,7 @@ describe('Personal outing search', () => {
   it('requires a date when scheduling and moves from mood to location', () => {
     const f=TestBed.createComponent(CoffeeDateComponent);
     const c=f.componentInstance;f.detectChanges();
-    const plan=f.nativeElement.querySelectorAll('.when-options input')[2];
+    const plan=f.nativeElement.querySelectorAll('.when-options input')[1];
     expect(plan.closest('details')).toBeNull();
     plan.click();f.detectChanges();
     expect(c.when).toBe('later');

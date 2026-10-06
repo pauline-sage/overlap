@@ -1,21 +1,22 @@
 @use '../view-tabs';
+.saved-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;margin-top:.75rem}
 :host {
   display: block;
 }
 :host([hidden]) {
   display: none;
 }
-button,
+button:where(:not(.back)),
 input,
 select {
   font: inherit;
 }
-button,
+button:where(:not(.back)),
 a,
 summary {
   -webkit-tap-highlight-color: transparent;
 }
-button {
+button:where(:not(.back)) {
   cursor: pointer;
   min-height: 44px;
 }
@@ -23,11 +24,11 @@ button:disabled {
   opacity: 0.6;
   cursor: default;
 }
-:is(button, input, select, summary, a):focus-visible {
+:is(button:where(:not(.back)), input, select, summary, a):focus-visible {
   outline: 2px solid var(--text);
   outline-offset: 4px;
 }
-button {
+button:where(:not(.back)) {
   background: none;
   border: 0;
   color: var(--text);
@@ -57,7 +58,7 @@ nav {
   border-bottom: 0;
   margin-bottom: 1.2rem;
 }
-nav button {
+nav button:where(:not(.back)) {
   padding: 0.6rem .5rem;
   border-radius: .85rem;
   color: var(--muted);
@@ -78,7 +79,7 @@ nav span {
   border-radius: 2rem;
   margin-bottom: 1rem;
 }
-.formats button {
+.formats button:where(:not(.back)) {
   flex: 1;
   border-radius: 2rem;
   font-size: 0.85rem;
@@ -334,7 +335,7 @@ a {
   gap: 0.75rem;
   align-items: center;
 }
-.pick-actions button {
+.pick-actions button:where(:not(.back)) {
   flex: 1;
 }
 .pick-status {
@@ -345,7 +346,7 @@ a {
 nav {
   gap: 0.75rem;
 }
-nav button {
+nav button:where(:not(.back)) {
   min-width: 0;
   overflow-wrap: anywhere;
   flex: 1;

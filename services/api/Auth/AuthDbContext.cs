@@ -185,6 +185,13 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
             answer.HasOne<Overlap.Api.Quiz.QuizRound>().WithMany().HasForeignKey(x=>x.RoundId).OnDelete(DeleteBehavior.Cascade);
             answer.HasOne<Account>().WithMany().HasForeignKey(x=>x.AccountId).OnDelete(DeleteBehavior.Cascade);
         });
+        builder.Entity<Overlap.Api.Outings.SavedPlace>(place => {
+            place.Property(x=>x.PairId).HasMaxLength(32); place.Property(x=>x.AuthorId).HasMaxLength(255);
+            place.Property(x=>x.Name).HasMaxLength(160); place.Property(x=>x.Location).HasMaxLength(200);
+            place.Property(x=>x.IdentityJson).HasColumnType("longtext");
+            place.Property(x=>x.Link).HasMaxLength(2000); place.Property(x=>x.Note).HasMaxLength(1000); place.Property(x=>x.Revision).HasMaxLength(32);
+            place.HasIndex(x=>new{x.PairId,x.CreatedUtc}); place.HasOne<Account>().WithMany().HasForeignKey(x=>x.AuthorId).OnDelete(DeleteBehavior.Cascade);
+        });
         builder.Entity<Account>().Property(x => x.DisplayName).HasMaxLength(50);
         builder.Entity<Account>().Property(x => x.InvitationHash).HasMaxLength(64);
         builder.Entity<Account>().HasIndex(x => x.InvitationHash).IsUnique();

@@ -1,0 +1,9 @@
+:host{display:block;margin:1rem 0;color:var(--muted);font-size:.85rem}
+button,input{font:inherit;color:var(--text)}
+button{min-height:44px;padding:.6rem .8rem;border:1px solid var(--line);border-radius:.8rem;background:var(--surface);cursor:pointer}
+button:disabled{opacity:.5;cursor:default}
+label{display:block;margin:.8rem 0 .4rem}
+input{box-sizing:border-box;width:100%;min-height:48px;padding:.8rem;border:1px solid var(--line);border-radius:.8rem;background:var(--surface)}
+.pages{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin:.8rem 0;flex-wrap:wrap}
+.pages span{font-size:.8rem}
+:is(button,input):focus-visible{outline:2px solid var(--accent);outline-offset:3px}

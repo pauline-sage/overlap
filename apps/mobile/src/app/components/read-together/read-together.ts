@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../auth.service';
 import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator';
 import { BookRatingComponent } from './book-rating/book-rating';
+import { CollectionBrowser, CollectionBrowserComponent } from '../collection-browser/collection-browser';
 
 export interface BookTitle {
   id: string; title: string; authors: string[]; authorIds: string[]; subjects: string[];
@@ -14,10 +15,18 @@ interface Shelf { connected: boolean; entries: ReadingEntry[]; sharingBooks?: bo
 interface BookResults { books: BookTitle[]; hasMore: boolean; explanation: string | null; }
 
 @Component({
-  selector: 'app-read-together', imports: [FormsModule, LoadingIndicatorComponent, BookRatingComponent],
+  selector: 'app-read-together', imports: [FormsModule, LoadingIndicatorComponent, BookRatingComponent, CollectionBrowserComponent],
   templateUrl: './read-together.html', styleUrl: './read-together.scss',
 })
 export class ReadTogetherComponent implements OnInit, OnDestroy {
+  readonly collection = new CollectionBrowser(6);
+  readonly searchPages = new CollectionBrowser(6);
+  async nextSearchPage():Promise<void> {
+    const count=this.results()?.length ?? 0;const version=this.searchVersion;
+    const page=this.searchPages.current(this.results()?.length ?? 0);
+    await this.search(true);
+    if(version===this.searchVersion && count>=this.searchPages.size && this.searchPages.pages(this.results()?.length ?? 0)>page) this.searchPages.page.set(page+1);
+  }
   private readonly auth = inject(AuthService);
   readonly back = output<void>();
   readonly tab = signal<'discover' | 'planned' | 'read' | 'recommended'>('discover');
@@ -54,7 +63,7 @@ export class ReadTogetherComponent implements OnInit, OnDestroy {
     this.poll = setInterval(() => { if(document.visibilityState === 'visible') void this.loadShelf(); },10000);
   }
   ngOnDestroy(): void { this.disposed = true; clearInterval(this.poll); }
-  view(tab: 'discover' | 'planned' | 'read' | 'recommended'): void { this.selected.set(null); this.tab.set(tab); void this.loadShelf(); if(tab === 'recommended') void this.recommend(); }
+  view(tab: 'discover' | 'planned' | 'read' | 'recommended'): void { this.selected.set(null); this.collection.reset(); this.tab.set(tab); void this.loadShelf(); if(tab === 'recommended') void this.recommend(); }
   tabKey(event: KeyboardEvent): void {
     const tabs = ['discover','planned','read','recommended'] as const;
     let index = tabs.indexOf(this.tab());
@@ -66,7 +75,9 @@ export class ReadTogetherComponent implements OnInit, OnDestroy {
     event.preventDefault(); this.view(tabs[index]); document.getElementById('read-tab-'+tabs[index])?.focus();
   }
   entries(status: 'planned' | 'read'): ReadingEntry[] { return this.shelf().filter(x => x.status === status); }
-  displayed(): BookTitle[] { return this.tab() === 'discover' ? this.results() ?? [] : this.tab() === 'recommended' ? this.recommendations() : [...new Map(this.entries(this.tab() as 'planned' | 'read').map(x => [x.book.id,x.book])).values()]; }
+  savedBooks(): BookTitle[] { return [...new Map(this.entries(this.tab() === 'read' ? 'read' : 'planned').map(x => [x.book.id,x.book])).values()]; }
+  filteredBooks(): BookTitle[] { return this.savedBooks().filter(book => this.collection.matches(book.title+' '+book.authors.join(' '))); }
+  displayed(): BookTitle[] { return this.tab() === 'discover' ? this.searchPages.slice(this.results() ?? []) : this.tab() === 'recommended' ? this.searchPages.slice(this.recommendations()) : this.collection.slice(this.filteredBooks()); }
   entry(id: string): ReadingEntry | undefined { const entries=this.shelf().filter(x => x.book.id === id); return entries.find(x => x.status === 'read') ?? entries.find(x => x.mine !== false) ?? entries[0]; }
   async recommend(): Promise<void> {
     if(this.recommending()) return;
@@ -78,13 +89,13 @@ export class ReadTogetherComponent implements OnInit, OnDestroy {
     } catch(error) { if(!this.disposed) this.recommendationError.set(this.message(error)); }
     finally { this.recommending.set(false); }
   }
-  changed(): void { this.searchVersion++; this.results.set(null); this.hasMore.set(false); this.explanation.set(''); this.error.set(''); }
+  changed(): void { this.searchPages.reset(); this.searchVersion++; this.results.set(null); this.hasMore.set(false); this.explanation.set(''); this.error.set(''); }
   async search(more = false): Promise<void> {
     if(this.busy()) return;
     if (document.activeElement instanceof HTMLInputElement) document.activeElement.blur();
     this.busy.set(true); this.error.set('');
     const version = this.searchVersion; const page = more ? this.page+1 : 1;
-    if(!more) this.results.set(null);
+    if(!more) { this.searchPages.reset(); this.results.set(null); }
     try {
       const results = await this.auth.submit<BookResults>('books/search',{query:this.query,genre:this.genre,language:this.language,page,basedOn:this.basedOn});
       if(this.disposed || version !== this.searchVersion) return;

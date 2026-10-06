@@ -1,14 +1,17 @@
 @if (viewingPartner() && together()?.partner) {
   @let partner = together()!.partner!;
   <section class="partner-profile" aria-labelledby="partner-heading">
-    <button class="back" type="button" (click)="viewPartner(false)">&#8592; Back</button>
+    <button class="back" type="button" (click)="viewPartner(false)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg><span>Back</span></button>
+    <div class="profile-intro partner-intro">
     <h2 id="partner-heading" tabindex="-1">{{ partner.displayName || 'Your partner' }}'s profile</h2>
     <div class="photo-editor">
       @if (partner.hasPhoto) { <img class="profile-photo" [src]="photoUrl(partner.id)" [alt]="partner.displayName || 'Your partner'" /> }
       @else { <span class="profile-photo" aria-label="No profile photo">{{ partner.displayName?.charAt(0) || '' }}</span> }
       <span class="presence-dot" [hidden]="partner.online == null" [class.online]="partner.online" role="img" [attr.aria-label]="partner.online === undefined ? 'Status unavailable' : partner.online ? 'Online' : 'Away'"></span>
     </div>
-    <p class="partner-caption">Connected with you</p>
+    <p class="partner-caption"><svg viewBox="0 0 28 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="7"/><circle cx="18" cy="10" r="7"/></svg><span>Connected with you</span></p>
+    </div>
+    <app-partner-shares [partnerName]="partner.displayName || 'Your person'" (openRecipe)="openRecipe.emit($event)" (openContest)="openContest.emit($event)" (openQuiz)="openQuiz.emit($event)" />
   </section>
 } @else {
 <input

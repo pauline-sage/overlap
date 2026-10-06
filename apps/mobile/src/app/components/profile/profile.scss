@@ -32,7 +32,7 @@ h3 {
   gap: 0.5rem;
   margin-top: 0.75rem;
 }
-button,
+button:where(:not(.back)),
 input {
   font: inherit;
   color: var(--text);
@@ -53,8 +53,12 @@ button:disabled {
   display: block;
   margin: 0 auto;
 }
-.icon-button {
+button.icon-button {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
   width: 2.75rem;
+  height: 2.75rem;
   padding: 0;
   border-radius: 50%;
 }
@@ -111,14 +115,13 @@ p {
 
 .connection-card > .partner-row { display:flex; width:100%; text-align:left; margin:0; padding:1rem; }
 .partner-arrow { margin-left:auto; font-size:1.2rem; color:var(--muted); }
-.partner-profile .back { background:transparent; border:0; padding-left:0; margin-bottom:1rem; }
 .partner-caption { text-align:center; color:var(--muted); font-size:.85rem; }
 .presence-dot { position:absolute; right:.4rem; bottom:.4rem; width:1rem; height:1rem; border:3px solid var(--canvas); border-radius:50%; background:var(--muted); }
 .presence-dot.online { background:var(--online); }
 
-.profile-intro { @include personal-card.card; }
-.profile-intro h2 { @include personal-card.eyebrow; }
-.profile-intro .photo-editor{margin:1.5rem auto 1.25rem}
+.profile-intro { @include personal-card.card; display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.25rem;padding:1.75rem 1rem; }
+.profile-intro h2 { @include personal-card.eyebrow; margin:0;width:100%;text-align:center; }
+.profile-intro .photo-editor{margin:0;flex-shrink:0}
 .profile-photo{box-sizing:border-box;border:3px solid var(--hero);box-shadow:0 0 0 1px var(--line);background:var(--surface);color:var(--accent);font-size:2.4rem;font-weight:500}
 .photo-actions .icon-button{background:var(--surface);box-shadow:0 3px 10px rgba(0,0,0,.08)}
 .icon-button svg{display:block;width:20px;height:20px;margin:auto}
@@ -128,5 +131,6 @@ p {
 .partner-row img,.partner-initial{flex-shrink:0}
 .partner-row strong{font-size:1rem}
 .sharing{padding:.5rem .25rem}
-.partner-profile .photo-editor{padding:1rem;box-sizing:content-box;border-radius:2rem;background:radial-gradient(ellipse at top,color-mix(in srgb,var(--clay) 18%,transparent),transparent 75%),var(--hero)}
-.partner-profile .presence-dot{right:1.4rem;bottom:1.4rem;border-color:var(--hero)}
+.partner-intro .presence-dot{border-color:var(--hero)}
+.partner-intro .partner-caption{display:flex;align-items:center;justify-content:center;gap:.5rem;width:fit-content;max-width:100%;box-sizing:border-box;margin:0;padding:.55rem .85rem;border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);border-radius:999px;background:color-mix(in srgb,var(--surface) 65%,transparent);color:var(--text);font-size:.8rem;line-height:1.4}
+.partner-caption svg{width:28px;height:20px;flex-shrink:0;color:var(--accent)}

@@ -3,7 +3,7 @@ import { StayInRequest } from '../stay-in-together/stay-in.types';
 import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator';
 
 import { OutingUpdate, SharingService } from '../nav-bar/sharing/sharing.service';
-import { CoffeeDateComponent } from '../coffee-date/coffee-date';
+import { StepOutTogetherComponent } from '../step-out-together/step-out-together';
 import { ProfileComponent, ProfileAction } from '../profile/profile';
 import { Component, inject, input, output, signal, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -13,7 +13,7 @@ import { DashboardPage, NavBarComponent } from '../nav-bar/nav-bar';
 @Component({
   selector: 'app-dashboard',
   providers: [SharingService],
-  imports: [StayInTogetherComponent, LoadingIndicatorComponent, NavBarComponent, ProfileComponent, CoffeeDateComponent],
+  imports: [StayInTogetherComponent, LoadingIndicatorComponent, NavBarComponent, ProfileComponent, StepOutTogetherComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })

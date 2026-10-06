@@ -23,16 +23,20 @@ describe('Quiz together',()=>{
       f.nativeElement.querySelector('[aria-label="Next category"]').click();f.detectChanges();expect(f.nativeElement.querySelector('.carousel-controls span').textContent).toContain('2 / 2');
       f.nativeElement.querySelector('[aria-label="Add Affection"]').click();f.detectChanges();expect(c.categoryIds()).toEqual(['everyday','affection']);
       f.nativeElement.querySelector('[aria-label="Remove Affection"]').click();expect(c.categoryIds()).toEqual(['everyday']);expect(f.nativeElement.textContent).toContain('Personal, opt in');await c.open(7);f.detectChanges();
-      expect(f.nativeElement.textContent).toContain('1. Answer for yourself');
-      expect(f.nativeElement.querySelectorAll('input[type=radio]')).toHaveLength(4);
-      f.nativeElement.querySelector('input[type=radio]').click();c.nextAnswerStep();f.detectChanges();
-      expect(f.nativeElement.textContent).toContain('2. Guess for Your person');
-      f.nativeElement.querySelectorAll('input[type=radio]')[2].click();
+      expect(f.nativeElement.textContent).toContain('1. Your answer');
+      expect(f.nativeElement.querySelectorAll('input[type=radio]')).toHaveLength(8);
+      expect(f.nativeElement.querySelector('fieldset.player-sage input').name).toBe('ownAnswer');
+      expect(f.nativeElement.querySelector('fieldset.player-clay input').name).toBe('partnerGuess');
+      f.nativeElement.querySelector('input[type=radio]').click();f.detectChanges();
+      expect(f.nativeElement.textContent).toContain('2. Your guess for Your person');
+      expect((Array.from(f.nativeElement.querySelectorAll('button')) as HTMLButtonElement[]).find(x=>x.textContent?.includes('Validate my answers'))!.disabled).toBe(true);
+      f.nativeElement.querySelectorAll('input[name=partnerGuess]')[2].click();
       await vi.advanceTimersByTimeAsync(3000);expect(c.ownChoice()).toBe(0);expect(c.guessChoice()).toBe(2);
       await c.submit();f.detectChanges();expect(auth.submit).toHaveBeenCalledWith('quiz/rounds/7/answer',{questionIndex:0,ownChoice:0,guessChoice:2,skipped:false});expect(f.nativeElement.textContent).toContain('Waiting for Your person');expect(f.nativeElement.textContent).not.toContain('Did you know each other?');
-      state.questions[0]={...state.questions[0],partnerSubmitted:true,reveal:{ownAnswer:0,ownGuess:2,partnerAnswer:2,partnerGuess:0,ownSkipped:false,partnerSkipped:false,ownCorrect:true,partnerCorrect:true}};
+      state.questions[0]={...state.questions[0],partnerSubmitted:true,reveal:{ownAnswer:0,ownGuess:2,partnerAnswer:2,partnerGuess:1,ownSkipped:false,partnerSkipped:false,ownCorrect:true,partnerCorrect:false}};
       await vi.advanceTimersByTimeAsync(3000);f.detectChanges();expect(f.nativeElement.textContent).toContain('Your guess about Your person');expect(f.nativeElement.textContent).toContain('You got it right');expect(f.nativeElement.querySelectorAll('details')).toHaveLength(0);
-      await c.act('next');f.detectChanges();expect(c.round()?.currentIndex).toBe(1);expect(c.ownChoice()).toBeNull();expect(c.guessChoice()).toBeNull();expect(c.answerStep()).toBe('own');
+      expect(f.nativeElement.querySelectorAll('.result-label.correct')).toHaveLength(1);expect(f.nativeElement.querySelectorAll('.result-label.incorrect')).toHaveLength(1);
+      await c.act('next');f.detectChanges();expect(c.round()?.currentIndex).toBe(1);expect(c.ownChoice()).toBeNull();expect(c.guessChoice()).toBeNull();
     }finally{f.destroy();visibility.mockRestore();vi.useRealTimers();vi.unstubAllGlobals();}
   });
   it('requires a partner invitation response and confirms removal of saved shared answers',async()=>{

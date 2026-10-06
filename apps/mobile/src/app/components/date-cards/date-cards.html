@@ -1,17 +1,20 @@
 @if(!notifications() && !contestsOnly()) {
   <nav class="date-tabs" role="tablist" aria-label="Date views">
-    <button id="dates-tab-upcoming" type="button" role="tab" aria-controls="dates-panel" [attr.aria-selected]="dateTab()==='upcoming'" [tabIndex]="dateTab()==='upcoming'?0:-1" (keydown)="dateTabKey($event)" (click)="dateTab.set('upcoming')">Upcoming</button>
-    <button id="dates-tab-passed" type="button" role="tab" aria-controls="dates-panel" [attr.aria-selected]="dateTab()==='passed'" [tabIndex]="dateTab()==='passed'?0:-1" (keydown)="dateTabKey($event)" (click)="dateTab.set('passed')">Passed</button>
+    <button id="dates-tab-upcoming" type="button" role="tab" aria-controls="dates-panel" [attr.aria-selected]="dateTab()==='upcoming'" [tabIndex]="dateTab()==='upcoming'?0:-1" (keydown)="dateTabKey($event)" (click)="viewDates('upcoming')">Upcoming</button>
+    <button id="dates-tab-passed" type="button" role="tab" aria-controls="dates-panel" [attr.aria-selected]="dateTab()==='passed'" [tabIndex]="dateTab()==='passed'?0:-1" (keydown)="dateTabKey($event)" (click)="viewDates('passed')">Passed</button>
   </nav>
 }
 <section id="dates-panel" [attr.role]="!notifications() && !contestsOnly() ? 'tabpanel' : null" [attr.aria-labelledby]="!notifications() && !contestsOnly() ? 'dates-tab-'+dateTab() : null">
 @if(sharing.busy()) {<app-loading-indicator [label]="'Updating your date...'" />}
 @if(sharing.error()) {<p role="alert">{{sharing.error()}}</p>}
 @if(sharing.state();as state) {
+  @if (!notifications() && !contestsOnly()) {
+    <app-collection-browser [browser]="collection" [total]="dateCount()" [count]="filteredDateCount()" searchId="dates-search" searchLabel="Search activity, place or recipe" />
+  }
   @for(group of displayedGroups();track group.label) {
     @if(contestsOnly() && group.label && (group.updates.length || group.contests.length)) { <h2>{{group.label}}</h2> }
-    @if(group.label==='Upcoming dates' && !group.updates.length && !group.contests.length) { <p class="when">No upcoming dates yet. Plan a little time together.</p> }
-    @if(group.label==='Past dates' && !group.updates.length && !group.contests.length){<p class="when">No passed dates yet.</p>}
+    @if(group.label==='Upcoming dates' && !dateCount()) { <p class="when">No upcoming dates yet. Plan a little time together.</p> }
+    @if(group.label==='Past dates' && !dateCount()){<p class="when">No passed dates yet.</p>}
     @for(update of group.updates;track update.mine) {
     <article class="date-card" [class.new]="update.unread" [class.compact]="!notifications() && !contestsOnly()">
       @if(!notifications() && !contestsOnly()) {

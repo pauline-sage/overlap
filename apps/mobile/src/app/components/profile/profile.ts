@@ -1,6 +1,7 @@
 import { Component, input, output, signal, effect } from '@angular/core';
 
 import { TogetherStatus } from '../../auth.service';
+import { PartnerSharesComponent } from './partner-shares/partner-shares';
 export type ProfileAction =
   | 'removePhoto'
   | 'refresh'
@@ -11,8 +12,11 @@ export type ProfileAction =
   | 'revoke'
   | 'leave'
   | 'editProfile';
-@Component({ selector: 'app-profile', templateUrl: './profile.html', styleUrl: './profile.scss' })
+@Component({ selector: 'app-profile', imports:[PartnerSharesComponent], templateUrl: './profile.html', styleUrl: './profile.scss' })
 export class ProfileComponent {
+  readonly openRecipe=output<number>();
+  readonly openContest=output<number>();
+  readonly openQuiz=output<number>();
   readonly greetingName = input.required<string>();
   readonly together = input<TogetherStatus | null>(null);
   readonly busy = input(false);

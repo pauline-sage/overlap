@@ -1,3 +1,4 @@
+import { CollectionBrowser, CollectionBrowserComponent } from '../collection-browser/collection-browser';
 import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator';
 import { OpeningHoursComponent } from './opening-hours/opening-hours';
 import { OutingChoiceComponent } from './outing-choice/outing-choice';
@@ -14,8 +15,9 @@ interface SearchResult {
   localStart: string; localEnd: string;
   places: {place:Place;shareToken:string}[]; examined: number; checkedUtc: string;
 }
-@Component({selector:'app-coffee-date', imports: [LoadingIndicatorComponent,DatePipe, OpeningHoursComponent, FormsModule, DecimalPipe, OutingChoiceComponent, OutingCalendarComponent], templateUrl:'./coffee-date.html', styleUrl:'./coffee-date.scss'})
+@Component({selector:'app-coffee-date', imports: [CollectionBrowserComponent,LoadingIndicatorComponent,DatePipe, OpeningHoursComponent, FormsModule, DecimalPipe, OutingChoiceComponent, OutingCalendarComponent], templateUrl:'./coffee-date.html', styleUrl:'./coffee-date.scss'})
 export class CoffeeDateComponent implements OnDestroy, OnInit {
+  readonly searchPages=new CollectionBrowser(); readonly areaPages=new CollectionBrowser();
   readonly proposal=input<OutingUpdate|null>(null);
   ngOnInit():void {const proposal=this.proposal();if(proposal){this.activity=proposal.venue?.activity || 'Coffee';this.step.set(2);}}
   async confirmPlace(token:string):Promise<void> {const proposal=this.proposal();if(proposal && await this.sharing.reply(proposal.revision,'picked',token))this.shared.emit();}
@@ -38,7 +40,7 @@ export class CoffeeDateComponent implements OnDestroy, OnInit {
   readonly moodOptions = this.activities.map(value=>({value,label:value}));
   readonly hourOptions = this.hours.map(value=>({value,label:value}));
   readonly minuteOptions = this.minuteChoices.map(value=>({value,label:value}));
-  readonly whenOptions = [{value:'now',label:'Now'},{value:'hour',label:'In one hour'},{value:'later',label:'Plan a date'}];
+  readonly whenOptions = [{value:'now',label:'Now'},{value:'later',label:'Plan a date'}];
   readonly radiusOptions = [1,3,5,10].map(value=>({value:String(value),label:'Within '+value+' km'}));
   choosePlace(match: SearchResult['places'][number]):void {
     this.picked.set(match);this.notice.set('');
@@ -52,7 +54,7 @@ export class CoffeeDateComponent implements OnDestroy, OnInit {
   private focusHeading():void { setTimeout(()=>document.getElementById('dashboard-heading')?.focus()); }
   private disposed = false;
   ngOnDestroy(): void { this.disposed = true; this.choices = []; this.text = ''; this.area = null; this.result.set(null); }
-  changed(): void { this.result.set(null); this.visiblePlaces.set(false); this.picked.set(null); this.error.set(''); }
+  changed(): void { this.searchPages.reset(); this.areaPages.reset(); this.result.set(null); this.visiblePlaces.set(false); this.picked.set(null); this.error.set(''); }
   edit(): void { this.area = null; this.choices = []; this.changed(); }
   async findArea(): Promise<void> {
     if (this.locating() || this.busy()) return;
@@ -89,7 +91,7 @@ export class CoffeeDateComponent implements OnDestroy, OnInit {
       this.result.set(await this.auth.submit<SearchResult>('outings/search', {
         areaToken:this.area.token, radius:Number(this.radius), activity:this.activity,
         localStart:this.when !== 'later' ? null : this.date + 'T' + this.hour + ':' + this.minute,
-        startInMinutes:this.when === 'hour' ? 60 : null,
+        startInMinutes:null,
         minutes:Number(this.minutes), includeUnknownHours:this.includeUnknownHours,
         ...(this.proposal() ? {proposalRevision:this.proposal()!.revision} : {}),
       }));

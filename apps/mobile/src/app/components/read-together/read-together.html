@@ -78,6 +78,10 @@
     } @else if (tab() === 'planned') {
       <p class="fine">{{ sharingBooks() ? 'Your bookshelf is shared with your person.' : 'Your bookshelf is private. You can share it in Settings.' }} Books your person shares appear here too.</p>
     } @else { <p class="fine">Books you've read together. Each of you can give your own rating.</p> }
+    @if (tab() === 'planned' || tab() === 'read') {
+      <app-collection-browser [browser]="collection" [total]="savedBooks().length" [count]="filteredBooks().length" searchId="shelf-search" searchLabel="Search by title or author" />
+    }
+    @if (tab() === 'discover' || tab() === 'recommended') { <app-collection-browser [browser]="searchPages" [total]="tab() === 'discover' ? (results()?.length ?? 0) : recommendations().length" [count]="tab() === 'discover' ? (results()?.length ?? 0) : recommendations().length" [searchable]="false" [more]="tab() === 'discover' && hasMore()" [pending]="busy()" (nextBatch)="nextSearchPage()" searchId="book-result-pages" /> }
     <div class="books" aria-live="polite" [attr.aria-busy]="busy()">
       @for (book of displayed(); track book.id) {
         <div class="book-item">
@@ -98,9 +102,9 @@
         </div>
       }
     </div>
-    @if (!displayed().length && tab() !== 'recommended' && (tab() !== 'discover' || results())) { <p class="empty">{{ tab() === 'discover' ? 'No books in this batch. Try another title, genre or language.' : tab() === 'read' ? 'No shared reads yet. Find a book and choose Already read.' : 'Your bookshelf is empty. Discover a book to add.' }}</p> }
+    @if (!displayed().length && tab() !== 'recommended' && (tab() === 'discover' ? results() : !savedBooks().length)) { <p class="empty">{{ tab() === 'discover' ? 'No books in this batch. Try another title, genre or language.' : tab() === 'read' ? 'No shared reads yet. Find a book and choose Already read.' : 'Your bookshelf is empty. Discover a book to add.' }}</p> }
     @if (tab() === 'recommended' && !recommending() && !recommendationError() && !displayed().length && entries('read').length) { <p class="empty">No new matches in this catalogue batch. Try Discover or rate another book you enjoyed.</p> }
-    @if (tab() === 'discover' && hasMore()) { <button class="secondary" type="button" (click)="search(true)" [disabled]="busy()">Find more books</button> }
+
   </section>
 }
 <p class="credits">Book data and covers from <a href="https://openlibrary.org" target="_blank" rel="noopener noreferrer">Open Library</a>.</p>

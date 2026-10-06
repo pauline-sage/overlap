@@ -302,9 +302,20 @@
         }}
       </p>
     }
+    @if (tab() !== 'discover') {
+      <app-collection-browser [browser]="collection" [total]="collectionTitles().length" [count]="filteredTitles().length" searchId="watch-saved-search" searchLabel="Search saved titles">
+        <div class="saved-filters">
+          <div><label for="watch-saved-format">Format</label><select id="watch-saved-format" [ngModel]="savedFormat()" (ngModelChange)="savedFormat.set($event); collection.page.set(1)"><option value="">All formats</option><option value="Movie">Films</option><option value="Series">Series</option><option value="YouTube">YouTube</option></select></div>
+          @if (tab() !== 'watched') {
+            <div><label for="watch-saved-status">Status</label><select id="watch-saved-status" [ngModel]="savedStatus()" (ngModelChange)="savedStatus.set($event); collection.page.set(1)"><option value="">All statuses</option>@if (tab() === 'picks') { <option value="private">Private</option> }<option value="pending">Awaiting response</option><option value="accepted">Accepted</option><option value="declined">Declined</option></select></div>
+          }
+        </div>
+      </app-collection-browser>
+    }
+    @if (tab() === 'discover') { <app-collection-browser [browser]="searchPages" [total]="results()?.length ?? 0" [count]="results()?.length ?? 0" [searchable]="false" [more]="hasMore()" [pending]="busy()" (nextBatch)="nextSearchPage()" searchId="watch-result-pages" /> }
     <div class="posters">
       @for (
-        title of tab() === 'discover' ? (results() ?? []) : tab() === 'watched' ? watchedTitles() : pickTitles(tab() === 'picks');
+        title of displayedTitles();
         track title.id
       ) {
         <button
@@ -341,11 +352,7 @@
         </button>
       }
     </div>
-    @if (tab() === 'discover' && hasMore()) {
-      <button class="more" type="button" (click)="search(true)" [disabled]="busy()">
-        {{ busy() ? 'Searching...' : 'Find more titles' }}
-      </button>
-    }
+
     @if (tab() === 'watched' && !watched().length) {
       <p class="empty">No shared watches yet. Open a movie or series and mark it as watched together.</p>
     }

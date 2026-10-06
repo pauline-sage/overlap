@@ -26,6 +26,25 @@ const video = {
   thumbnail: 'https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg',
 };
 describe('Unified watch search', () => {
+  it('pages Watch search results six at a time without appending visible cards',async()=>{
+    auth.submit.mockImplementation(action=>Promise.resolve(action==='watch/youtube' ? [] : {titles:Array.from({length:12},(_,i)=>({...title,id:'result-'+i,title:'Result '+i})),hasMore:false}));
+    const f=render();const c=f.componentInstance;await c.search();f.detectChanges();expect(f.nativeElement.querySelectorAll('.title-card')).toHaveLength(6);
+    const next=Array.from(f.nativeElement.querySelectorAll('app-collection-browser button') as NodeListOf<HTMLButtonElement>).find(x=>x.textContent==='Next')!;
+    next.click();f.detectChanges();expect(c.displayedTitles()[0].title).toBe('Result 6');expect(f.nativeElement.querySelectorAll('.title-card')).toHaveLength(6);expect(next.disabled).toBe(true);
+    c.changed();expect(c.searchPages.page()).toBe(1);f.destroy();
+  });
+  it('bounds saved titles and combines search, format and shared response filters', async () => {
+    auth.picks.mockResolvedValue({connected:true,picks:Array.from({length:20},(_,i)=>({id:i+1,mine:true,shared:i!==0,status:i===19?'accepted':'pending',title:{...title,id:'saved-'+i,title:'Saved '+i,format:i===19?'Series':'Movie'}}))});
+    const f=TestBed.createComponent(SharedTimeComponent);f.componentRef.setInput('active',true);const c=f.componentInstance;c.view('picks');await f.whenStable();f.detectChanges();
+    expect(f.nativeElement.querySelectorAll('.title-card')).toHaveLength(6);expect(f.nativeElement.textContent).toContain('Page 1 of 4');
+    c.collection.page.set(2);f.detectChanges();expect(c.displayedTitles()[0].title).toBe('Saved 6');
+    const format=f.nativeElement.querySelector('#watch-saved-format') as HTMLSelectElement;format.value='Series';format.dispatchEvent(new Event('change'));f.detectChanges();
+    expect(c.collection.page()).toBe(1);expect(c.displayedTitles().map(x=>x.title)).toEqual(['Saved 19']);
+    c.savedStatus.set('accepted');c.collection.search('saved 19');f.detectChanges();expect(c.displayedTitles()).toHaveLength(1);
+    c.savedStatus.set('pending');f.detectChanges();expect(f.nativeElement.textContent).toContain('No matching items');expect(f.nativeElement.textContent).not.toContain('No picks yet');
+    c.savedFormat.set('');c.savedStatus.set('private');c.collection.search('');f.detectChanges();expect(c.displayedTitles().map(x=>x.title)).toEqual(['Saved 0']);
+    c.view('partner');await f.whenStable();expect(c.collection.page()).toBe(1);expect(c.savedStatus()).toBe('');f.destroy();
+  });
   const auth = { submit: vi.fn(), picks: vi.fn() };
   beforeEach(() => {
     vi.resetAllMocks();

@@ -99,7 +99,7 @@
           <p class="hint">No email yet? Allow ten minutes before requesting another link.</p>
         </div>
         <button class="primary" type="button" (click)="navigate(account() ? 'account' : 'login')">
-          {{ account() ? 'Back to account' : 'Back to sign in' }}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg><span>{{ account() ? 'Back to account' : 'Back to sign in' }}</span>
         </button>
         <button
           class="text-button secondary-link"
@@ -363,12 +363,12 @@
             </button>
           }
           <button
-            class="text-button back-link"
+            class="back"
             type="button"
             (click)="navigate(account() ? 'account' : 'login')"
             [disabled]="busy()"
           >
-            {{ account() ? 'Back to account' : 'Back to sign in' }}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg><span>{{ account() ? 'Back to account' : 'Back to sign in' }}</span>
           </button>
         }
       }

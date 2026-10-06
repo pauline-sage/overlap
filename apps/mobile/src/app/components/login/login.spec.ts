@@ -115,13 +115,13 @@ describe('Account screens', () => {
     await fill(fixture, { email: 'person@example.test', password: 'a sufficiently long password' });
     auth.submit.mockResolvedValue({ email: 'person@example.test', displayName: 'Person' });
     await submitForm(fixture);
-    expect(fixture.nativeElement.textContent).toContain('Welcome, Person');
+    expect(fixture.nativeElement.textContent).toContain('Hi, Person');
     expect(fixture.nativeElement.querySelector('app-dashboard')).toBeTruthy();
-    expect(fixture.nativeElement.textContent).toContain('Welcome, Person');
+    expect(fixture.nativeElement.textContent).toContain('Hi, Person');
     expect(fixture.nativeElement.querySelector('#password')).toBeNull();
     auth.submit.mockResolvedValue(undefined);
     click(fixture, 'Settings');
-    click(fixture, 'Sign out');
+    click(fixture, 'Log out');
     await fixture.whenStable();
     fixture.detectChanges();
     expect(auth.submit).toHaveBeenLastCalledWith('logout', {});
@@ -240,7 +240,7 @@ describe('Account screens', () => {
     auth.submit.mockResolvedValue({ email: 'person@example.test', displayName: 'My nickname' });
     await submitForm(fixture);
     expect(auth.submit).toHaveBeenCalledWith('profile', { displayName: 'My nickname' });
-    expect(fixture.nativeElement.textContent).toContain('Welcome, My nickname');
+    expect(fixture.nativeElement.textContent).toContain('Hi, My nickname');
     click(fixture, 'Profile');
     click(fixture, 'Edit display name');
     await fixture.whenStable();

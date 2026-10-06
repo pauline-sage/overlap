@@ -146,7 +146,7 @@ input[readonly] {
   clip-path: inset(50%);
   white-space: nowrap;
 }
-button {
+button:where(:not(.back)) {
   font: inherit;
   cursor: pointer;
   min-height: 2.75rem;
@@ -194,8 +194,7 @@ button:disabled {
   margin: 1.5rem 0 0;
   color: var(--muted);
 }
-.secondary-link,
-.back-link {
+.secondary-link {
   display: block;
   margin: 0.5rem auto;
   font-size: 0.85rem;
@@ -224,7 +223,7 @@ button:disabled {
   line-height: 1.5;
 }
 
-:is(button, input):focus-visible {
+:is(button:where(:not(.back)), input):focus-visible {
   outline: 2px solid var(--text);
   outline-offset: 3px;
 }

@@ -2,10 +2,10 @@
 
 :host{display:block}
 p{color:var(--muted);line-height:1.6}
-button:not(.back){min-height:3rem;padding:.8rem 1rem;width:100%;font:inherit;border:1px solid var(--line);border-radius:1rem;color:var(--text);background:var(--surface);cursor:pointer}
+button:where(:not(.back)){min-height:3rem;padding:.8rem 1rem;width:100%;font:inherit;border:1px solid var(--line);border-radius:1rem;color:var(--text);background:var(--surface);cursor:pointer}
 button:disabled{opacity:.5;cursor:default}
 button:focus-visible{outline:2px solid var(--clay);outline-offset:3px}
-button.back{border:0;background:none;font:inherit}
+
 .hero { @include personal-card.card; }
 .home-eyebrow { @include personal-card.eyebrow; }
 .orbit{display:flex;align-items:flex-start;justify-content:center;isolation:isolate;padding:.5rem 0;gap:0}

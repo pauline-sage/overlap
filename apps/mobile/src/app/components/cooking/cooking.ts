@@ -1,3 +1,4 @@
+import { CollectionBrowser, CollectionBrowserComponent } from '../collection-browser/collection-browser';
 import { CookingMemoriesComponent } from './memories/cooking-memories';
 import { Component, inject, OnInit, OnDestroy, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -12,8 +13,9 @@ import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicato
 interface RecipeHit { id: number; title: string; }
 interface Recipe extends RecipeHit { revision: number; ingredients: string[]; instructions: string[]; sourceUrl: string; photo: { url: string; author: string; license: string; licenseUrl: string; sourceUrl: string } | null; }
 interface Entry { ownMadeUtc?:string|null; partnerMadeUtc?:string|null; ownMade?: boolean; partnerMade?: boolean; ownRating?: number | null; partnerRating?: number | null; id: number; addedUtc: string; recipe: Recipe; }
-@Component({ selector: 'app-cooking', imports: [CookingMemoriesComponent, DatePipe, FormsModule, LoadingIndicatorComponent, BookRatingComponent, CookingContestsComponent, FoodPreferencesComponent], templateUrl: './cooking.html', styleUrl: './cooking.scss' })
+@Component({ selector: 'app-cooking', imports: [CollectionBrowserComponent, CookingMemoriesComponent, DatePipe, FormsModule, LoadingIndicatorComponent, BookRatingComponent, CookingContestsComponent, FoodPreferencesComponent], templateUrl: './cooking.html', styleUrl: './cooking.scss' })
 export class CookingComponent implements OnInit, OnDestroy {
+  readonly searchPages=new CollectionBrowser();
   private readonly auth = inject(AuthService);
   private readonly http = inject(HttpClient);
   readonly back = output<void>();
@@ -75,7 +77,7 @@ export class CookingComponent implements OnInit, OnDestroy {
   async search(): Promise<void> {
     this.dismissSearchKeyboard();
     if(this.busy() || !this.query.trim()) return;
-    this.busy.set(true); this.error.set(''); this.hits.set(null);
+    this.searchPages.reset(); this.busy.set(true); this.error.set(''); this.hits.set(null);
     try { const hits=await this.auth.submit<RecipeHit[]>('cooking/search',{query:this.query}); if(!this.disposed) this.hits.set(hits); }
     catch(e) { this.problem(e); } finally { this.busy.set(false); }
   }

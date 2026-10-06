@@ -787,6 +787,62 @@ namespace Overlap.Api.Migrations
                     b.ToTable("OutingUpdate");
                 });
 
+            modelBuilder.Entity("Overlap.Api.Outings.SavedPlace", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AuthorId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("IdentityJson")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Link")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("varchar(160)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("PairId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("Revision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("PairId", "CreatedUtc");
+
+                    b.ToTable("SavedPlace");
+                });
+
             modelBuilder.Entity("Overlap.Api.Quiz.CustomQuiz", b =>
                 {
                     b.Property<long>("Id")
@@ -1216,6 +1272,15 @@ namespace Overlap.Api.Migrations
                     b.HasOne("Overlap.Api.Auth.Account", null)
                         .WithMany()
                         .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Outings.SavedPlace", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

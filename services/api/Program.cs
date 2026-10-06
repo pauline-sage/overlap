@@ -25,6 +25,8 @@ builder.Services.AddSingleton<OnlinePresence>();
 
 builder.Services.AddSingleton<TmdbCache>();
 builder.Services.AddSingleton<BookCatalogCache>();
+builder.Services.AddHttpClient<SavedPlaceCatalog>(client => client.Timeout = TimeSpan.FromSeconds(12))
+    .RemoveAllLoggers().ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 builder.Services.AddHttpClient<RecipeCatalog>(client => client.Timeout = TimeSpan.FromSeconds(15))
     .RemoveAllLoggers().ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 builder.Services.AddHttpClient<BookCatalog>(client => client.Timeout = TimeSpan.FromSeconds(15))
@@ -236,6 +238,7 @@ if (authConfigured)
     app.MapBooks();
     app.MapQuiz();
     app.MapCustomQuizzes();
+    app.MapSavedPlaces();
     app.MapCooking();
     app.MapCookingContests();
     app.MapCookingMemories();

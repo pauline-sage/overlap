@@ -1,10 +1,11 @@
 ﻿import { TestBed } from '@angular/core/testing';
 import { SharingService } from '../nav-bar/sharing/sharing.service';
 import { ProfileComponent } from './profile';
+import { HttpClient } from '@angular/common/http';
 
 describe('Partner profile', () => {
   it('opens the connected partner read-only, returns back, and clears the view on disconnect', async () => {
-    await TestBed.configureTestingModule({imports:[ProfileComponent], providers:[{provide:SharingService,useValue:{state:()=>null,error:()=>""}}]}).compileComponents();
+    await TestBed.configureTestingModule({imports:[ProfileComponent], providers:[{provide:SharingService,useValue:{state:()=>null,error:()=>""}},{provide:HttpClient,useValue:{get:vi.fn()}}]}).compileComponents();
     const f=TestBed.createComponent(ProfileComponent);
     f.componentRef.setInput('greetingName','Lina');
     const own={id:'self',hasPhoto:false,invitationExpiresUtc:null};

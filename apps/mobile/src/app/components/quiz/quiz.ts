@@ -43,9 +43,7 @@ export class QuizComponent implements OnInit {
   openReview():void{this.reviewIndex.set(0);this.reviewOpened.set(true);}
   moveReview(direction:number):void{this.reviewIndex.update(index=>Math.max(0,Math.min((this.round()?.questions.length ?? 1)-1,index+direction)));}
   playAnother():void{this.close();this.area.set('home');this.notice.set('Your previous answers stay saved. Choose how to play next.');}
-  readonly answerStep=signal<'own'|'guess'>('own');
   partnerPrompt(prompt:string):string{return prompt.replace(/\bmyself\b/gi,'themselves').replace(/\bmy\b/gi,'their').replace(/\bme\b/gi,'them').replace(/\bI\b/g,'they').replace(/\bam they\b/gi,'are they');}
-  nextAnswerStep():void{if(this.ownChoice()===null || this.busy())return;this.answerStep.set('guess');queueMicrotask(()=>document.getElementById('quiz-question')?.focus());}
   readonly ownChoice=signal<number|null>(null);readonly guessChoice=signal<number|null>(null);
   readonly busy=signal(false);readonly error=signal('');readonly notice=signal('');readonly confirmCancel=signal(false);readonly confirmRemove=signal(false);
   readonly totalQuestions=computed(()=>this.categories().reduce((sum,x)=>sum+x.count,0));
@@ -80,7 +78,7 @@ export class QuizComponent implements OnInit {
         const round=await firstValueFrom(this.http.get<Round>('/api/auth/quiz/rounds/'+id));
         if(!this.destroyed && version===this.version && id===this.selectedId()){
           this.round.set(round);const key=id+':'+round.currentIndex;
-          if(key!==this.draftKey){this.draftKey=key;this.answerStep.set('own');this.notice.set('');this.ownChoice.set(null);this.guessChoice.set(null);}
+          if(key!==this.draftKey){this.draftKey=key;this.notice.set('');this.ownChoice.set(null);this.guessChoice.set(null);}
         }
       }else{
         const [result,templates]=await Promise.all([firstValueFrom(this.http.get<{connected:boolean;rounds:QuizRoundSummary[]}>('/api/auth/quiz/rounds')),firstValueFrom(this.http.get<CustomQuiz[]>('/api/auth/quiz/templates'))]);

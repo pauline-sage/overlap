@@ -99,6 +99,9 @@
     [photoVersion]="photoVersion()"
     (action)="profileAction($event)"
     (upload)="uploadPhoto($event)"
+    (openRecipe)="openCooking($event)"
+    (openContest)="openContest($event)"
+    (openQuiz)="openQuiz($event)"
   />
 }
 @if (page() === 'home' && !coffee() && !stayingIn()) {
@@ -144,7 +147,7 @@
         ></span>
         <div>
           <h3>Step out together @if(sharing.state()?.unreadOutings) { <span class="news-count">{{sharing.state()?.unreadOutings}} new</span> }</h3>
-          <p>Your own places. A shared coffee, drink or bite.</p>
+          <p>Find a place, or save somewhere for another day.</p>
         </div>
         <span class="card-arrow" aria-hidden="true">&#8594;</span>
       </button>
@@ -152,7 +155,7 @@
   </section>
 }
 <app-stay-in-together [active]="stayingIn() && page()==='home'" [hidden]="!stayingIn() || page()!=='home'" [request]="stayInRequest()" [ownName]="greetingName()" [partnerName]="together()?.partner?.displayName || 'Your person'" (back)="navigate('home')" />
-@if(coffee() && page() === 'home'){<app-coffee-date (shared)="navigate('home')" [proposal]="outingProposal()" [partnerName]="together()?.partner?.displayName || 'Your person'" (back)="navigate(outingProposal() ? 'dates' : 'home')" />}
+@if(coffee() && page() === 'home'){<app-step-out-together (shared)="navigate('home')" [proposal]="outingProposal()" [partnerName]="together()?.partner?.displayName || 'Your person'" (back)="navigate(outingProposal() ? 'dates' : 'home')" />}
 <app-nav-bar
   [current]="page()"
   [disabled]="busy()"

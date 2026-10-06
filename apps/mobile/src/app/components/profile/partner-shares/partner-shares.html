@@ -1,0 +1,49 @@
+<section aria-labelledby="partner-shares-heading">
+  @if (current()) {
+    <button class="back" type="button" (click)="view('')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg><span>Shared collections</span></button>
+  }
+  <div class="heading"><h3 id="partner-shares-heading">{{current()?.label || 'Shared with you'}}</h3><button type="button" (click)="sharing.load(true)" [disabled]="busy()">Refresh</button></div>
+  @if (!current()) {
+    <nav aria-label="Shared collections">
+      @for (group of menuGroups(); track group.title) {
+        <section class="menu-group" [attr.aria-label]="group.title">
+          <h4>{{group.title}}</h4>
+          <div class="menu-rows">
+            @for (section of group.sections; track section.key) {
+              <button class="menu-row" type="button" (click)="view(section.key)">
+                <span class="menu-copy"><strong>{{section.label}}</strong><span class="muted">{{section.description}}</span></span>
+                <span class="menu-count">{{section.items.length}}</span><span class="menu-arrow" aria-hidden="true">&#8250;</span>
+              </button>
+            }
+          </div>
+        </section>
+      }
+    </nav>
+  }
+  @if (busy()) { <app-loading-indicator label="Loading shared collections..." /> }
+  @if (current(); as section) {
+    <p class="muted">{{section.description}}</p>
+    @if (failed().includes(section.key) || (section.key==='watched' && failed().includes('watch'))) {
+      <p role="alert">This collection could not be loaded. Please refresh.</p>
+    } @else {
+      <app-collection-browser [browser]="collection" [total]="section.items.length" [count]="filtered().length" searchId="partner-shares-search" searchLabel="Search this collection" />
+      @for (item of collection.slice(filtered()); track item.id) {
+        <article>
+          <h4>{{item.title}}</h4>
+          @if (item.subtitle) { <p class="muted">{{item.subtitle}}</p> }
+          @if (item.time) { <p class="muted">{{item.time | date:'EEE, d MMM yyyy · HH:mm'}} · Your local time</p> }
+          @if (item.image) { <img [src]="item.image" [alt]="item.subtitle || item.title" loading="lazy" /> }
+          @if (item.note || item.lines?.length || item.links?.length) {
+            <details><summary>Details</summary>
+              @if (item.note) { <p>{{item.note}}</p> }
+              @for (line of item.lines ?? []; track $index) { <p>{{line}}</p> }
+              <div class="links">@for (link of item.links ?? []; track $index) { <a [href]="link.url" target="_blank" rel="noopener noreferrer">{{link.label}} &#8599;</a> }</div>
+            </details>
+          }
+          @if (item.action) { <button type="button" (click)="open(item)">{{item.action==='recipe' ? 'Open recipe' : item.action==='quiz' ? 'Open quiz' : 'Open contest'}} &#8599;</button> }
+        </article>
+      }
+      @if (!busy() && !section.items.length) { <p class="muted">Nothing shared in this collection yet.</p> }
+    }
+  }
+</section>

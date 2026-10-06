@@ -19,19 +19,17 @@
   @if(round.status==='active'){@if(question();as question){
     <section class="quiz-card"><p class="eyebrow">Question {{round.currentIndex+1}} of 5 &middot; {{categoryTitle(question.categoryId)}}</p>
       @if(!question.ownSubmitted){
-        <p class="step-label">{{answerStep()==='own' ? '1. Answer for yourself' : '2. Guess for '+partnerName()}}</p>
-        <h3 id="quiz-question" tabindex="-1">{{answerStep()==='own' ? question.prompt : partnerPrompt(question.prompt)}}</h3>
-        @if(answerStep()==='own'){
-          <p class="hint">Which answer fits you best?</p>
-          <fieldset [disabled]="busy()"><legend class="sr-only">Your answer</legend>@for(choice of question.choices;track $index){<label class="check-row"><input type="radio" name="ownAnswer" [checked]="ownChoice()===$index" (change)="ownChoice.set($index)" /><span>{{choice}}</span></label>}</fieldset>
-          <button class="primary" type="button" [disabled]="busy() || ownChoice()===null" (click)="nextAnswerStep()">Now guess for {{partnerName()}} <span aria-hidden="true">&#8594;</span></button>
-        }@else{
-          <p class="hint">What would {{partnerName()}} choose? Their answer is still hidden.</p>
-          <fieldset [disabled]="busy()"><legend class="sr-only">Your guess for {{partnerName()}}</legend>@for(choice of question.choices;track $index){<label class="check-row"><input type="radio" name="partnerGuess" [checked]="guessChoice()===$index" (change)="guessChoice.set($index)" /><span>{{choice}}</span></label>}</fieldset>
-          <p class="answer-summary">Your own answer: <strong>{{answerLabel(question,ownChoice())}}</strong></p>
-          <button class="quiet" type="button" [disabled]="busy()" (click)="answerStep.set('own')">Change my answer</button>
-          <button class="primary" type="button" [disabled]="busy() || ownChoice()===null || guessChoice()===null" (click)="submit()">Send my answer and guess</button>
-        }
+        <h3 id="quiz-question" tabindex="-1">{{question.prompt}}</h3>
+        <p class="hint">Answer for you, then guess what {{partnerName()}} would choose. Validate both choices together.</p>
+        <fieldset class="player-answers" [class.player-sage]="round.mine" [class.player-clay]="!round.mine" [disabled]="busy()">
+          <legend>1. Your answer</legend>
+          @for(choice of question.choices;track $index){<label class="check-row" [class.selected]="ownChoice()===$index"><input type="radio" name="ownAnswer" [checked]="ownChoice()===$index" (change)="ownChoice.set($index)" /><span>{{choice}}</span></label>}
+        </fieldset>
+        <fieldset class="player-answers" [class.player-sage]="!round.mine" [class.player-clay]="round.mine" [disabled]="busy()">
+          <legend>2. Your guess for {{partnerName()}}</legend>
+          @for(choice of question.choices;track $index){<label class="check-row" [class.selected]="guessChoice()===$index"><input type="radio" name="partnerGuess" [checked]="guessChoice()===$index" (change)="guessChoice.set($index)" /><span>{{choice}}</span></label>}
+        </fieldset>
+        <button class="primary" type="button" [disabled]="busy() || ownChoice()===null || guessChoice()===null" (click)="submit()">Validate my answers</button>
         <p class="credit">Both choices stay private until you both send them.</p>
         <button class="quiet" type="button" [disabled]="busy()" (click)="submit(true)">Skip this question</button>
       }@else{
@@ -41,22 +39,35 @@
       @if(!question.reveal && !question.ownSubmitted && question.partnerSubmitted){<p class="hint" role="status">{{partnerName()}} is ready. Take your time.</p>}
       @if(question.reveal;as reveal){
         <div class="reveal"><h4>Did you know each other?</h4>
-          <section class="person-result"><h5>Your guess about {{partnerName()}}</h5><dl><div><dt>You guessed</dt><dd>{{answerLabel(question,reveal.ownGuess)}}</dd></div><div><dt>{{partnerName()}} chose</dt><dd>{{answerLabel(question,reveal.partnerAnswer)}}</dd></div></dl><p class="result-label" [class.correct]="reveal.ownCorrect===true"><span aria-hidden="true">{{reveal.ownCorrect===null ? '—' : reveal.ownCorrect ? '✓' : '✕'}}</span> {{reveal.ownCorrect===null ? 'Skipped - no score' : reveal.ownCorrect ? 'You got it right' : 'Not this time'}}</p></section>
-          <section class="person-result"><h5>{{partnerName()}}'s guess about you</h5><dl><div><dt>{{partnerName()}} guessed</dt><dd>{{answerLabel(question,reveal.partnerGuess)}}</dd></div><div><dt>You chose</dt><dd>{{answerLabel(question,reveal.ownAnswer)}}</dd></div></dl><p class="result-label" [class.correct]="reveal.partnerCorrect===true"><span aria-hidden="true">{{reveal.partnerCorrect===null ? '—' : reveal.partnerCorrect ? '✓' : '✕'}}</span> {{reveal.partnerCorrect===null ? 'Skipped - no score' : reveal.partnerCorrect ? partnerName()+' got it right' : 'Not this time'}}</p></section>
+          <section class="person-result" [class.player-sage]="round.mine" [class.player-clay]="!round.mine"><h5>Your guess about {{partnerName()}}</h5><dl><div><dt>You guessed</dt><dd>{{answerLabel(question,reveal.ownGuess)}}</dd></div><div><dt>{{partnerName()}} chose</dt><dd>{{answerLabel(question,reveal.partnerAnswer)}}</dd></div></dl><p class="result-label" [class.correct]="reveal.ownCorrect===true" [class.incorrect]="reveal.ownCorrect===false"><span aria-hidden="true">{{reveal.ownCorrect===null ? '—' : reveal.ownCorrect ? '✓' : '✕'}}</span> {{reveal.ownCorrect===null ? 'Skipped - no score' : reveal.ownCorrect ? 'You got it right' : 'Not this time'}}</p></section>
+          <section class="person-result" [class.player-sage]="!round.mine" [class.player-clay]="round.mine"><h5>{{partnerName()}}'s guess about you</h5><dl><div><dt>{{partnerName()}} guessed</dt><dd>{{answerLabel(question,reveal.partnerGuess)}}</dd></div><div><dt>You chose</dt><dd>{{answerLabel(question,reveal.ownAnswer)}}</dd></div></dl><p class="result-label" [class.correct]="reveal.partnerCorrect===true" [class.incorrect]="reveal.partnerCorrect===false"><span aria-hidden="true">{{reveal.partnerCorrect===null ? '—' : reveal.partnerCorrect ? '✓' : '✕'}}</span> {{reveal.partnerCorrect===null ? 'Skipped - no score' : reveal.partnerCorrect ? partnerName()+' got it right' : 'Not this time'}}</p></section>
         </div>
         @if(round.currentIndex<4){<button class="primary" type="button" [disabled]="busy()" (click)="act('next')">Next question <span aria-hidden="true">&#8594;</span></button>}@else{<button class="primary" type="button" [disabled]="busy()" (click)="load()">See our results</button>}
       }
     </section>
   }}
-  @if(round.status==='completed'){<section class="quiz-card"><h3>Five questions, a little closer</h3><p class="hint">Your guesses: {{ownScore()}} / {{scored()}} correct. {{partnerName()}}: {{partnerScore()}} / {{scored()}} correct. Skipped questions are not scored.</p><p class="hint">Saved in Our quizzes. Review them whenever you like.</p><div class="actions"><button type="button" (click)="openReview()">Review answers</button><button type="button" (click)="playAnother()">Play another quiz</button></div></section>}
+  @if(round.status==='completed'){
+    <section class="quiz-card completed-summary">
+      <p class="eyebrow">Round complete</p><h3>A little closer</h3>
+      <p class="hint">Here's how well you guessed each other.</p>
+      <div class="score-panels">
+        <div class="score-panel" [class.player-sage]="round.mine" [class.player-clay]="!round.mine"><span class="score-name">You</span><strong>{{ownScore()}}<small> / {{scored()}}</small></strong><span class="score-caption">correct guesses</span></div>
+        <div class="score-panel" [class.player-sage]="!round.mine" [class.player-clay]="round.mine"><span class="score-name">{{partnerName()}}</span><strong>{{partnerScore()}}<small> / {{scored()}}</small></strong><span class="score-caption">correct guesses</span></div>
+      </div>
+      @if(scored()<round.questions.length){<p class="hint skipped-note">{{round.questions.length-scored()}} skipped &middot; not scored</p>}
+      <button class="primary" type="button" (click)="playAnother()">Play another quiz <span aria-hidden="true">&#8594;</span></button>
+      <button class="review-results" type="button" (click)="openReview()">Review answers</button>
+      <p class="credit saved-caption">Saved in Our quizzes</p>
+    </section>
+  }
   @if(round.status==='cancelled' || round.status==='declined'){<p class="hint">This round is closed. Previously submitted answers remain saved; unrevealed partner answers stay private.</p>}
   @if(round.status!=='pending'){
     @if(!reviewOpened() && round.status!=='completed'){<button class="quiet" type="button" (click)="openReview()">Review saved answers</button>}
     @if(reviewOpened()){@if(reviewQuestion();as question){
       <section class="quiz-card review-card"><div class="review-heading"><p class="eyebrow">Review &middot; Question {{reviewIndex()+1}} of {{round.questions.length}}</p><button class="quiet" type="button" (click)="reviewOpened.set(false)">Close review</button></div><h3>{{question.prompt}}</h3>
         @if(question.reveal;as reveal){
-          <div class="reveal"><section class="person-result"><h5>Your guess about {{partnerName()}}</h5><dl><div><dt>You guessed</dt><dd>{{answerLabel(question,reveal.ownGuess)}}</dd></div><div><dt>{{partnerName()}} chose</dt><dd>{{answerLabel(question,reveal.partnerAnswer)}}</dd></div></dl><p class="result-label">{{reveal.ownCorrect===null ? 'Skipped - no score' : reveal.ownCorrect ? 'You got it right' : 'Not this time'}}</p></section>
-          <section class="person-result"><h5>{{partnerName()}}'s guess about you</h5><dl><div><dt>{{partnerName()}} guessed</dt><dd>{{answerLabel(question,reveal.partnerGuess)}}</dd></div><div><dt>You chose</dt><dd>{{answerLabel(question,reveal.ownAnswer)}}</dd></div></dl><p class="result-label">{{reveal.partnerCorrect===null ? 'Skipped - no score' : reveal.partnerCorrect ? partnerName()+' got it right' : 'Not this time'}}</p></section></div>
+          <div class="reveal"><section class="person-result" [class.player-sage]="round.mine" [class.player-clay]="!round.mine"><h5>Your guess about {{partnerName()}}</h5><dl><div><dt>You guessed</dt><dd>{{answerLabel(question,reveal.ownGuess)}}</dd></div><div><dt>{{partnerName()}} chose</dt><dd>{{answerLabel(question,reveal.partnerAnswer)}}</dd></div></dl><p class="result-label" [class.correct]="reveal.ownCorrect===true" [class.incorrect]="reveal.ownCorrect===false">{{reveal.ownCorrect===null ? 'Skipped - no score' : reveal.ownCorrect ? 'You got it right' : 'Not this time'}}</p></section>
+          <section class="person-result" [class.player-sage]="!round.mine" [class.player-clay]="round.mine"><h5>{{partnerName()}}'s guess about you</h5><dl><div><dt>{{partnerName()}} guessed</dt><dd>{{answerLabel(question,reveal.partnerGuess)}}</dd></div><div><dt>You chose</dt><dd>{{answerLabel(question,reveal.ownAnswer)}}</dd></div></dl><p class="result-label" [class.correct]="reveal.partnerCorrect===true" [class.incorrect]="reveal.partnerCorrect===false">{{reveal.partnerCorrect===null ? 'Skipped - no score' : reveal.partnerCorrect ? partnerName()+' got it right' : 'Not this time'}}</p></section></div>
         }@else if(question.ownAnswer;as answer){<p class="hint">Your saved answer: {{answerLabel(question,answer.ownChoice)}}</p><p class="hint">Your saved guess: {{answerLabel(question,answer.guessChoice)}}</p><p class="hint">Your partner's answers are still hidden.</p>}
         @else{<p class="hint">No answers to review yet.</p>}
         <div class="actions"><button type="button" [disabled]="reviewIndex()===0" (click)="moveReview(-1)">Previous</button><button type="button" [disabled]="reviewIndex()===round.questions.length-1" (click)="moveReview(1)">Next</button></div>

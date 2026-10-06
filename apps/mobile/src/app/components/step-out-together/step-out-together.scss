@@ -1,0 +1,4 @@
+@use '../stay-in-together/activity-cards';
+@use '../nav-bar/page-banner';
+@include activity-cards.cards;
+.page-banner{@include page-banner.banner}small{color:var(--muted);line-height:1.4}h2:focus{outline:none}

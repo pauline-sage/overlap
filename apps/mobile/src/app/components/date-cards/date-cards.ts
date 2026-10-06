@@ -3,20 +3,48 @@ import { Component, inject, input, output, signal, DestroyRef } from '@angular/c
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { SharingService, OutingUpdate, CookingContest } from '../nav-bar/sharing/sharing.service';
+import { CollectionBrowser, CollectionBrowserComponent } from '../collection-browser/collection-browser';
 
 @Component({
-  selector:'app-date-cards',imports: [LoadingIndicatorComponent,DatePipe,FormsModule],templateUrl:'./date-cards.html',styleUrl:'./date-cards.scss'
+  selector:'app-date-cards',imports: [LoadingIndicatorComponent,DatePipe,FormsModule,CollectionBrowserComponent],templateUrl:'./date-cards.html',styleUrl:'./date-cards.scss'
 })
 export class DateCardsComponent {
+  readonly collection = new CollectionBrowser();
+  viewDates(tab: 'upcoming' | 'passed'): void { this.dateTab.set(tab); this.collection.reset(); this.expanded.set(null); }
+  dateGroup(): ReturnType<DateCardsComponent['groups']>[number] {
+    return this.groups().find(x => x.label === (this.dateTab() === 'upcoming' ? 'Upcoming dates' : 'Past dates'))!;
+  }
+  dateCount(): number { const group = this.dateGroup(); return group.updates.length + group.contests.length; }
+  filteredDateGroup(): ReturnType<DateCardsComponent['groups']>[number] {
+    const group = this.dateGroup();
+    return {...group,
+      updates: group.updates.filter(x => this.collection.matches([x.venue?.activity,x.venue?.name,x.venue?.address,x.replyVenue?.name,x.replyVenue?.address].join(' '))),
+      contests: group.contests.filter(x => this.collection.matches('Cooking contest '+(x.recipeTitle ?? ''))),
+    };
+  }
+  filteredDateCount(): number { const group = this.filteredDateGroup(); return group.updates.length + group.contests.length; }
   private readonly now=signal(Date.now());
   readonly dateTab=signal<'upcoming'|'passed'>('upcoming');
   readonly expanded=signal<string|null>(null);
   dateTabKey(event:KeyboardEvent):void {
     if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();
-    this.dateTab.set(event.key==='Home' ? 'upcoming' : event.key==='End' ? 'passed' : this.dateTab()==='upcoming' ? 'passed' : 'upcoming');
+    this.viewDates(event.key==='Home' ? 'upcoming' : event.key==='End' ? 'passed' : this.dateTab()==='upcoming' ? 'passed' : 'upcoming');
     document.getElementById('dates-tab-'+this.dateTab())?.focus();
   }
-  displayedGroups():ReturnType<DateCardsComponent['groups']>{const groups=this.groups();return this.notifications() || this.contestsOnly() ? groups : groups.filter(x=>x.label===(this.dateTab()==='upcoming' ? 'Upcoming dates' : 'Past dates'));}
+  displayedGroups(): ReturnType<DateCardsComponent['groups']> {
+    if (this.notifications() || this.contestsOnly()) return this.groups();
+    const group = this.filteredDateGroup();
+    const direction = this.dateTab() === 'upcoming' ? 1 : -1;
+    const items = [
+      ...group.updates.map(x => ({key: 'outing-'+x.revision, time: Date.parse(x.venue!.startUtc!)})),
+      ...group.contests.map(x => ({key: 'contest-'+x.id, time: Date.parse(x.startUtc)})),
+    ].sort((a,b) => direction*(a.time-b.time));
+    const visible = new Set(this.collection.slice(items).map(x => x.key));
+    return [{...group,
+      updates: group.updates.filter(x => visible.has('outing-'+x.revision)),
+      contests: group.contests.filter(x => visible.has('contest-'+x.id)).sort((a,b) => direction*(Date.parse(a.startUtc)-Date.parse(b.startUtc))),
+    }];
+  }
   constructor(){
     const refresh=()=>this.now.set(Date.now());
     const timer=setInterval(refresh,15000);

@@ -4,6 +4,38 @@ import { BookTitle, ReadTogetherComponent } from './read-together';
 
 const book: BookTitle = {id:'/works/OL1W',title:'A shared story',authors:['An author'],authorIds:['OL1A'],subjects:['fantasy'],coverId:123,year:2020};
 describe('Read together',() => {
+  it('shows six search results and fills provider boundaries before advancing without skipping books',async()=>{
+    auth.submit.mockImplementation((_action,body)=>Promise.resolve({books:Array.from({length:20},(_,i)=>({...book,id:'/works/'+((body.page-1)*20+i),title:'Result '+((body.page-1)*20+i)})),hasMore:body.page===1,explanation:null}));
+    const f=await render();const c=f.componentInstance;await c.search();f.detectChanges();
+    expect(f.nativeElement.querySelectorAll('.book-card')).toHaveLength(6);
+    const next=()=>Array.from(f.nativeElement.querySelectorAll('app-collection-browser button') as NodeListOf<HTMLButtonElement>).find(x=>x.textContent==='Next')!;
+    next().click();f.detectChanges();expect(c.displayed()[0].title).toBe('Result 6');
+    next().click();f.detectChanges();expect(c.displayed()[0].title).toBe('Result 12');expect(auth.submit).toHaveBeenCalledTimes(1);
+    next().click();await vi.waitFor(()=>expect(c.busy()).toBe(false));f.detectChanges();
+    expect(c.displayed().map(x=>x.title)).toEqual(['Result 18','Result 19','Result 20','Result 21','Result 22','Result 23']);
+    expect(auth.submit).toHaveBeenLastCalledWith('books/search',expect.objectContaining({page:2}));
+    next().click();f.detectChanges();expect(c.displayed()[0].title).toBe('Result 24');
+    Array.from(f.nativeElement.querySelectorAll('app-collection-browser button') as NodeListOf<HTMLButtonElement>).find(x=>x.textContent==='Previous')!.click();f.detectChanges();expect(c.displayed()[0].title).toBe('Result 18');
+    c.changed();expect(c.searchPages.page()).toBe(1);expect(c.results()).toBeNull();f.destroy();
+  });
+  it('pages saved books six at a time and searches without mixing read books', async () => {
+    auth.books.mockResolvedValue({connected:true,entries:[
+      ...Array.from({length:20},(_,i)=>({id:20-i,status:'planned',book:{...book,id:'/works/'+i,title:'Book '+i}})),
+      {id:21,status:'read',book:{...book,id:'/works/read',title:'Finished book'}},
+    ]});
+    const f=await render();const c=f.componentInstance;c.view('planned');await f.whenStable();f.detectChanges();
+    expect(f.nativeElement.querySelectorAll('.book-card')).toHaveLength(6);
+    expect(f.nativeElement.textContent).toContain('Page 1 of 4');
+    expect(f.nativeElement.textContent).not.toContain('View all');
+    const next=Array.from(f.nativeElement.querySelectorAll('app-collection-browser button') as NodeListOf<HTMLButtonElement>).find(b=>b.textContent==='Next')!;
+    next.click();f.detectChanges();expect(c.displayed()[0].title).toBe('Book 6');
+    const input=f.nativeElement.querySelector('#shelf-search') as HTMLInputElement;input.value='Book 19';input.dispatchEvent(new Event('input'));f.detectChanges();
+    expect(c.collection.page()).toBe(1);expect(c.displayed().map(x=>x.title)).toEqual(['Book 19']);
+    c.collection.search('');c.collection.page.set(4);c.shelf.set(c.shelf().slice(0,7));f.detectChanges();
+    expect(c.collection.current(c.filteredBooks().length)).toBe(2);expect(c.displayed()).toHaveLength(1);
+    c.view('read');await f.whenStable();f.detectChanges();expect(c.collection.page()).toBe(1);expect(c.collection.query()).toBe('');expect(c.displayed().map(x=>x.title)).toEqual(['Finished book']);
+    f.destroy();
+  });
   const auth={books:vi.fn(),submit:vi.fn()};
   beforeEach(() => {
     vi.resetAllMocks(); auth.books.mockResolvedValue({connected:true,entries:[]});

@@ -3,6 +3,7 @@ import { Component, effect, inject, input, output, signal, untracked, OnDestroy 
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../auth.service';
+import { CollectionBrowser, CollectionBrowserComponent } from '../collection-browser/collection-browser';
 export interface WatchTitle {
   id: string;
   title: string;
@@ -49,11 +50,35 @@ interface WatchResults {
 }
 @Component({
   selector: 'app-shared-time',
-  imports: [LoadingIndicatorComponent,FormsModule],
+  imports: [LoadingIndicatorComponent,FormsModule,CollectionBrowserComponent],
   templateUrl: './shared-time.html',
   styleUrl: './shared-time.scss',
 })
 export class SharedTimeComponent implements OnDestroy {
+  readonly collection = new CollectionBrowser(6);
+  readonly searchPages = new CollectionBrowser(6);
+  async nextSearchPage():Promise<void> {
+    const count=this.results()?.length ?? 0;const version=this.searchVersion;
+    const page=this.searchPages.current(this.results()?.length ?? 0);
+    await this.search(true);
+    if(version===this.searchVersion && count>=this.searchPages.size && this.searchPages.pages(this.results()?.length ?? 0)>page) this.searchPages.page.set(page+1);
+  }
+  readonly savedFormat = signal('');
+  readonly savedStatus = signal('');
+  collectionTitles(): WatchTitle[] {
+    return this.tab() === 'watched' ? this.watchedTitles() : this.pickTitles(this.tab() === 'picks');
+  }
+  filteredTitles(): WatchTitle[] {
+    return this.collectionTitles().filter(title => (
+      this.collection.matches(title.title+' '+(title.channel ?? '')) &&
+      (!this.savedFormat() || title.format === this.savedFormat()) &&
+      (!this.savedStatus() || this.tab() === 'watched' || (this.savedStatus() === 'private'
+        ? !this.pick(title.id)?.shared : !!this.pick(title.id)?.shared && this.pick(title.id)?.status === this.savedStatus()))
+    ));
+  }
+  displayedTitles(): WatchTitle[] {
+    return this.tab() === 'discover' ? this.searchPages.slice(this.results() ?? []) : this.collection.slice(this.filteredTitles());
+  }
   private readonly auth = inject(AuthService);
   readonly active = input(false);
   readonly partnerName = input('Your person');
@@ -117,6 +142,7 @@ export class SharedTimeComponent implements OnDestroy {
   }
   view(tab: 'discover' | 'picks' | 'partner' | 'watched'): void {
     this.selected.set(null);
+    this.collection.reset(); this.savedFormat.set(''); this.savedStatus.set('');
     this.tab.set(tab);
     void this.loadPicks();
   }
@@ -136,6 +162,7 @@ export class SharedTimeComponent implements OnDestroy {
   private searchVersion = 0;
   private opener: HTMLElement | null = null;
   changed(): void {
+    this.searchPages.reset();
     this.searchVersion++;
     this.results.set(null);
     this.hasMore.set(false);
@@ -170,6 +197,7 @@ export class SharedTimeComponent implements OnDestroy {
     const ownCountry = this.ownCountry,
       partnerCountry = this.partnerCountry;
     if (!more) {
+      this.searchPages.reset();
       this.results.set(null);
       this.hasMore.set(false);
     }
