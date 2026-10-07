@@ -34,6 +34,7 @@ public static class DeleteAccountEndpoints
                 await db.Set<Overlap.Api.Quiz.CustomQuiz>().Where(x=>x.PairId==pair).ExecuteDeleteAsync();
                 await db.Set<Overlap.Api.Outings.SavedPlace>().Where(x=>x.PairId==pair).ExecuteDeleteAsync();
                 await db.Set<Overlap.Api.Schedule.CalendarEntry>().Where(x=>x.PairId==pair).ExecuteDeleteAsync();
+                await db.Set<Overlap.Api.Drawing.DrawingRound>().Where(x=>x.PairId==pair).ExecuteDeleteAsync();
                 await db.Set<SharingGrant>().Where(x=>x.PairId==pair).ExecuteDeleteAsync();
                 await db.PairMembers.Where(x=>x.PairId==pair).ExecuteDeleteAsync();
             }

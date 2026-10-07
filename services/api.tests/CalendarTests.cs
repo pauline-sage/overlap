@@ -12,6 +12,15 @@ namespace Overlap.Api.Tests;
 public sealed class CalendarTimeTests
 {
     private static SaveCalendarEntry Request(string date,string start="09:00",string end="10:00",string zone="Europe/Paris",bool allDay=false,bool yearly=false)=>new("Appointment",null,date,date,start,end,zone,allDay,yearly,null);
+    [Fact]
+    public void SingleTimeAppointmentHasNoInventedEndAndIncludesDayBoundary()
+    {
+        var entry=CalendarTime.Create(new SaveCalendarEntry("Dentist",null,"2026-10-12",null,"00:00",null,"Europe/Paris",false,false,null),"pair","owner",DateTime.UtcNow);
+        Assert.Null(entry.EndUtc);
+        var occurrence=Assert.Single(CalendarTime.Occurrences([entry],new DateTime(2026,10,12),new DateTime(2026,10,13),"Europe/Paris","owner"));
+        Assert.Null(occurrence.EndUtc);
+        Assert.Empty(CalendarTime.Occurrences([entry],new DateTime(2026,10,11),new DateTime(2026,10,12),"Europe/Paris","owner"));
+    }
     [Theory]
     [InlineData("2026-03-29","02:30","04:00")]
     [InlineData("2026-10-25","02:30","04:00")]
@@ -49,13 +58,13 @@ public sealed partial class TogetherTests
     {
         using var factory=new AuthFactory(unlimitedAuthRequests:true);using var first=factory.Client();using var second=factory.Client();using var outsider=factory.Client();
         await SignIn(factory,first,"calendar-first");await SignIn(factory,second,"calendar-second");await SignIn(factory,outsider,"calendar-outsider");
-        var request=new SaveCalendarEntry("Doctor", "Bring the form","2026-10-14","2026-10-14","10:00","11:00","Europe/Paris",false,false,null);
+        var request=new SaveCalendarEntry("Doctor", "Bring the form","2026-10-14","2026-10-14","11:00",null,"Europe/Paris",false,false,null);
         Assert.Equal(HttpStatusCode.Conflict,(await Post(first,"calendar",request)).StatusCode);
         (await Post(second,"together/accept",new{token=await Invite(first)})).EnsureSuccessStatusCode();
         using var unsafeRequest=new HttpRequestMessage(HttpMethod.Post,"/api/auth/calendar"){Content=JsonContent.Create(request)};Assert.Equal(HttpStatusCode.BadRequest,(await first.SendAsync(unsafeRequest)).StatusCode);
         (await Post(first,"calendar",request)).EnsureSuccessStatusCode();
         const string list="/api/auth/calendar?year=2026&month=10&timeZone=Europe%2FParis";
-        var item=Assert.Single((await second.GetFromJsonAsync<JsonElement>(list)).GetProperty("items").EnumerateArray());Assert.Equal("Doctor",item.GetProperty("title").GetString());Assert.False(item.GetProperty("mine").GetBoolean());var id=item.GetProperty("id").GetInt64();var revision=item.GetProperty("revision").GetString();
+        var item=Assert.Single((await second.GetFromJsonAsync<JsonElement>(list)).GetProperty("items").EnumerateArray());Assert.Equal("Doctor",item.GetProperty("title").GetString());Assert.False(item.GetProperty("mine").GetBoolean());Assert.Equal(JsonValueKind.Null,item.GetProperty("endUtc").ValueKind);var id=item.GetProperty("id").GetInt64();var revision=item.GetProperty("revision").GetString();
         Assert.Empty((await outsider.GetFromJsonAsync<JsonElement>(list)).GetProperty("items").EnumerateArray());
         Assert.Equal(HttpStatusCode.Forbidden,(await Post(second,$"calendar/{id}",request with{Revision=revision})).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound,(await Post(outsider,$"calendar/{id}/remove",new{revision})).StatusCode);

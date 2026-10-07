@@ -1,5 +1,4 @@
 import { CollectionBrowser, CollectionBrowserComponent } from '../collection-browser/collection-browser';
-import { CookingMemoriesComponent } from './memories/cooking-memories';
 import { Component, inject, OnInit, OnDestroy, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
@@ -13,7 +12,7 @@ import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicato
 interface RecipeHit { id: number; title: string; }
 interface Recipe extends RecipeHit { revision: number; ingredients: string[]; instructions: string[]; sourceUrl: string; photo: { url: string; author: string; license: string; licenseUrl: string; sourceUrl: string } | null; }
 interface Entry { ownMadeUtc?:string|null; partnerMadeUtc?:string|null; ownMade?: boolean; partnerMade?: boolean; ownRating?: number | null; partnerRating?: number | null; id: number; addedUtc: string; recipe: Recipe; }
-@Component({ selector: 'app-cooking', imports: [CollectionBrowserComponent, CookingMemoriesComponent, DatePipe, FormsModule, LoadingIndicatorComponent, BookRatingComponent, CookingContestsComponent, FoodPreferencesComponent], templateUrl: './cooking.html', styleUrl: './cooking.scss' })
+@Component({ selector: 'app-cooking', imports: [CollectionBrowserComponent, DatePipe, FormsModule, LoadingIndicatorComponent, BookRatingComponent, CookingContestsComponent, FoodPreferencesComponent], templateUrl: './cooking.html', styleUrl: './cooking.scss' })
 export class CookingComponent implements OnInit, OnDestroy {
   readonly searchPages=new CollectionBrowser();
   private readonly auth = inject(AuthService);
@@ -29,7 +28,7 @@ export class CookingComponent implements OnInit, OnDestroy {
   readonly contestsView=viewChild(CookingContestsComponent);
   refreshFoodPreferences():void {const view=this.contestsView();if(view?.selectedId())void view.loadRecipe(view.selectedId());}
   closeFoodPreferences():void {this.preferencesOpened.set(false);this.refreshFoodPreferences();}
-  readonly albumOpened=signal(false);
+
   readonly contestsOpened=signal(false);
   readonly busy = signal(false);
   readonly error = signal('');

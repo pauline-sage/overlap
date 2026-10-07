@@ -1,4 +1,6 @@
 import { Component, DestroyRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { OutingCalendarComponent } from '../coffee-date/outing-calendar/outing-calendar';
+import { OutingChoiceComponent } from '../coffee-date/outing-choice/outing-choice';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
@@ -17,7 +19,7 @@ interface Appointment {id:string;title:string;start?:string;end?:string;mine:boo
 interface CalendarList {connected:boolean;items:CalendarRow[];ownToday:number;partnerToday:number;}
 
 @Component({
-  selector:'app-schedule',imports:[DatePipe,FormsModule,CollectionBrowserComponent,LoadingIndicatorComponent],
+  selector:'app-schedule',imports:[OutingCalendarComponent,OutingChoiceComponent,DatePipe,FormsModule,CollectionBrowserComponent,LoadingIndicatorComponent],
   templateUrl:'./schedule.html',styleUrl:'./schedule.scss',
 })
 export class ScheduleComponent {
@@ -34,6 +36,9 @@ export class ScheduleComponent {
   readonly busy=signal(false);readonly loading=signal(false);readonly connected=signal(false);readonly ready=signal(false);
   readonly entries=signal<CalendarRow[]>([]);readonly todayCounts=signal({own:0,partner:0});readonly zones=signal([this.zone]);
   readonly pager=new CollectionBrowser();
+  readonly hours=Array.from({length:24},(_,i)=>({value:String(i).padStart(2,'0'),label:String(i).padStart(2,'0')}));
+  readonly minutes=Array.from({length:60},(_,i)=>({value:String(i).padStart(2,'0'),label:String(i).padStart(2,'0')}));
+  setTime(which:'start'|'end',part:'hour'|'minute',value:string):void { const current=(which==='start'?this.startTime:this.endTime).split(':'); current[part==='hour'?0:1]=value; if(which==='start')this.startTime=current.join(':');else this.endTime=current.join(':'); }
   title='';startTime='09:00';endTime='10:00';note='';entryDate='';endDate='';timeZone=this.zone;allDay=false;yearly=false;
   private version=0;private disposed=false;
   constructor(){
@@ -65,6 +70,15 @@ export class ScheduleComponent {
     ...this.outings().filter(x=>!x.cancelled && !!x.venue?.startUtc).map(x=>({id:'outing-'+x.revision,title:(x.venue!.activity || 'Outing')+' · '+x.venue!.name,start:x.venue!.startUtc!,mine:x.mine,sharedDate:true})),
     ...this.contests().filter(x=>x.status==='accepted').map(x=>({id:'contest-'+x.id,title:'Cooking together',start:x.startUtc,mine:x.mine,sharedDate:true})),
   ].sort((a:Appointment,b:Appointment)=>(a.entry?.allDay ? 0 : 1)-(b.entry?.allDay ? 0 : 1) || Date.parse(a.start ?? '')-Date.parse(b.start ?? '')));
+  readonly sharedToday=computed(() => { this.todayCounts(); const today=this.instantDay(new Date().toISOString()); return this.all().filter(x=>x.sharedDate && this.onDay(x,today)).length; });
+  readonly todaySummary=computed(() => {
+    const shared=this.sharedToday()>0; const counts=this.todayCounts();
+    const own=shared || counts.own>0; const partner=shared || counts.partner>0;
+    if(own && partner)return "Both of you have plans today";
+    if(own)return this.ownName()+" has plans today";
+    if(partner)return this.partnerName()+" has plans today";
+    return "No plans for either of you today";
+  });
   readonly agenda=computed(()=>{
     return this.all().filter(x=>this.onDay(x,this.selected()));
   });
@@ -84,7 +98,7 @@ export class ScheduleComponent {
   edit(item:Appointment):void{const entry=item.entry;if(!entry?.mine)return;this.editing.set(entry);this.title=entry.title;this.note=entry.note ?? '';this.entryDate=entry.sourceDate;this.endDate=entry.sourceEndDate;this.startTime=entry.startTime;this.endTime=entry.endTime;this.timeZone=entry.timeZone;this.allDay=entry.allDay;this.yearly=entry.yearly;this.error.set('');this.formOpened.set(true);}
   async save():Promise<void>{
     if(this.busy())return;this.busy.set(true);++this.version;this.error.set('');
-    try{const entry=this.editing();await this.auth.submit('calendar'+(entry ? '/'+entry.id : ''),{title:this.title,note:this.note,date:this.entryDate,endDate:this.endDate,startTime:this.startTime,endTime:this.endTime,timeZone:this.timeZone,allDay:this.allDay,yearly:this.yearly,revision:entry?.revision});this.formOpened.set(false);this.notice.set('Appointment saved and shared with your person.');this.pager.reset();}
+    try{const entry=this.editing();await this.auth.submit('calendar'+(entry ? '/'+entry.id : ''),{title:this.title,note:this.note,date:this.entryDate,endDate:this.entryDate,startTime:this.startTime,endTime:null,timeZone:this.timeZone,allDay:this.allDay,yearly:this.yearly,revision:entry?.revision});this.formOpened.set(false);this.notice.set('Appointment saved and shared with your person.');this.pager.reset();}
     catch(error){this.error.set(this.message(error));}
     finally{this.busy.set(false);await this.load();}
   }

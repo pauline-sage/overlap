@@ -11,6 +11,7 @@ export class CookingMemoriesComponent {
   readonly contestId=input(0);readonly back=output<void>();readonly archivedChange=output<boolean>();
   readonly entries=signal<Memory[]>([]);readonly selected=signal<Memory|null>(null);
   readonly busy=signal(false);readonly error=signal('');readonly notice=signal('');readonly finishing=signal(false);
+  readonly fetching=signal(false);
   private readonly http=inject(HttpClient);private readonly auth=inject(AuthService);
   private version=0;private loading=false;private destroyed=false;
   constructor(){
@@ -22,6 +23,7 @@ export class CookingMemoriesComponent {
   async load(force=false):Promise<void>{
     if(!force && (this.loading || this.busy()))return;
     this.loading=true;const version=++this.version;
+    if(force)this.fetching.set(true);
     try{
       if(this.contestId()){
         const entry=await firstValueFrom(this.http.get<Memory>('/api/auth/cooking/memories/'+this.contestId()));
@@ -31,7 +33,7 @@ export class CookingMemoriesComponent {
         if(!this.destroyed && version===this.version){this.entries.set(entries);const id=this.selected()?.contestId;if(id)this.selected.set(entries.find(x=>x.contestId===id) ?? null);}
       }
     }catch{if(!this.destroyed && version===this.version)this.error.set('Your cooking memories could not be refreshed. Try again.');}
-    finally{if(version===this.version)this.loading=false;}
+    finally{if(version===this.version){this.loading=false;this.fetching.set(false);}}
   }
   open(entry:Memory):void {this.selected.set(entry);this.finishing.set(false);this.error.set('');this.notice.set('');}
   ownPhoto():DishPhoto|undefined{return this.selected()?.photos.find(x=>x.mine);}

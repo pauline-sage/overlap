@@ -5,6 +5,7 @@ using Overlap.Api.Books;
 using Overlap.Api.Cooking;
 using Overlap.Api.Notifications;
 using Overlap.Api.Schedule;
+using Overlap.Api.Drawing;
 using System.Threading.RateLimiting;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -222,6 +223,13 @@ if (authConfigured)
     {
         if (HttpMethods.IsPost(context.Request.Method) && context.Request.Path.StartsWithSegments("/api/auth"))
         {
+            // Canonical 512x512 RGB uploads are about 1 MB after base64 encoding.
+            if ((context.Request.Path.StartsWithSegments("/api/auth/drawing") || context.Request.Path.StartsWithSegments("/api/auth/cooking/memories"))
+                && context.Request.Path.Value!.EndsWith("/photo", StringComparison.Ordinal))
+            {
+                var limit = context.Features.Get<Microsoft.AspNetCore.Http.Features.IHttpMaxRequestBodySizeFeature>();
+                if (limit is { IsReadOnly: false }) limit.MaxRequestBodySize = 1_100_000;
+            }
             try { await context.RequestServices.GetRequiredService<IAntiforgery>().ValidateRequestAsync(context); }
             catch (AntiforgeryValidationException)
             {
@@ -245,6 +253,7 @@ if (authConfigured)
     app.MapCooking();
     app.MapCookingContests();
     app.MapCookingMemories();
+    app.MapDrawing();
     app.MapFoodPreferences();
     app.MapPhoneReminders();
     app.MapCalendar();

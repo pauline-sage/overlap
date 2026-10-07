@@ -5,10 +5,12 @@
     <button type="button" [attr.aria-pressed]="group()==='cozy'" (click)="group.set('cozy')">Cozy time</button>
     <button type="button" [attr.aria-pressed]="group()==='know'" (click)="group.set('know')">Get to know</button>
     <button type="button" [attr.aria-pressed]="group()==='make'" (click)="group.set('make')">Make together</button>
+    <button type="button" [attr.aria-pressed]="group()==='albums'" (click)="group.set('albums')">Albums</button>
   </nav>
 }
 <div class="groups" [class.menu]="activity()==='menu'">
   <app-cozy-time [active]="active()" [activity]="activity()" [ownName]="ownName()" [partnerName]="partnerName()" [partnerPicks]="entry().partnerPicks || false" [hidden]="activity()==='menu' ? group()!=='cozy' : (activity()!=='menu' && activity()!=='watch' && activity()!=='read')" (choose)="choose($event)" (back)="choose('menu')" />
   <app-get-to-know [active]="active()" [activity]="activity()" [partnerName]="partnerName()" [roundId]="entry().entryId || 0" [hidden]="activity()==='menu' ? group()!=='know' : (activity()!=='menu' && activity()!=='quiz')" (choose)="choose($event)" (back)="choose('menu')" />
-  <app-make-together [active]="active()" [activity]="activity()" [ownName]="ownName()" [partnerName]="partnerName()" [recipeId]="entry().entryId || 0" [contestId]="entry().contestId || 0" [hidden]="activity()==='menu' ? group()!=='make' : (activity()!=='menu' && activity()!=='cooking')" (choose)="choose($event)" (back)="choose('menu')" />
+  <app-make-together [active]="active()" [activity]="activity()" [ownName]="ownName()" [partnerName]="partnerName()" [recipeId]="entry().entryId || 0" [contestId]="entry().contestId || 0" [hidden]="activity()==='menu' ? group()!=='make' : (activity()!=='menu' && activity()!=='cooking' && activity()!=='drawing')" (choose)="choose($event)" (back)="choose('menu')" />
+  @if(active() && activity()==='menu' && group()==='albums'){<app-albums [ownName]="ownName()" [partnerName]="partnerName()" />}
 </div>

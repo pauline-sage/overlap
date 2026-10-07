@@ -664,6 +664,92 @@ namespace Overlap.Api.Migrations
                     b.ToTable("SavedRecipe");
                 });
 
+            modelBuilder.Entity("Overlap.Api.Drawing.DrawingPhoto", b =>
+                {
+                    b.Property<long>("RoundId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("AccountId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int?>("OwnerRating")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PartnerRating")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("Png")
+                        .IsRequired()
+                        .HasColumnType("mediumblob");
+
+                    b.Property<string>("Revision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<DateTime>("UploadedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("RoundId", "AccountId");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("DrawingPhoto");
+                });
+
+            modelBuilder.Entity("Overlap.Api.Drawing.DrawingRound", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<bool>("Cancelled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("EndUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("PairId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("Prompt")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("varchar(160)");
+
+                    b.Property<string>("Revision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<int>("Seconds")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("StartUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("PairId", "CreatedUtc");
+
+                    b.ToTable("DrawingRound");
+                });
+
             modelBuilder.Entity("Overlap.Api.Notifications.ContestReminderDelivery", b =>
                 {
                     b.Property<long>("ContestId")
@@ -1348,6 +1434,30 @@ namespace Overlap.Api.Migrations
                     b.HasOne("Overlap.Api.Auth.Account", null)
                         .WithMany()
                         .HasForeignKey("AddedBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Drawing.DrawingPhoto", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Overlap.Api.Drawing.DrawingRound", null)
+                        .WithMany()
+                        .HasForeignKey("RoundId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Drawing.DrawingRound", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

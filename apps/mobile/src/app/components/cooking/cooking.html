@@ -1,6 +1,6 @@
 @if(preferencesOpened()){<app-food-preferences (back)="closeFoodPreferences()" (saved)="refreshFoodPreferences()" />}
 <div [hidden]="preferencesOpened()">
-@if(albumOpened()){<app-cooking-memories (back)="albumOpened.set(false)" />} @else if(contestsOpened()) { <app-cooking-contests (managePreferences)="preferencesOpened.set(true)" [contestId]="initialContestId()" (back)="contestsOpened.set(false)" /> } @else {
+@if(contestsOpened()) { <app-cooking-contests (managePreferences)="preferencesOpened.set(true)" [contestId]="initialContestId()" (back)="contestsOpened.set(false)" /> } @else {
 @if(busy()) { <app-loading-indicator label="Getting your recipe ready..." /> }
 <button class="back" type="button" (click)="selected() ? close() : back.emit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg><span>Back</span></button>
 @if(selected(); as recipe) {
@@ -43,7 +43,6 @@
 } @else {
   <header class="page-banner"><span class="page-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 10a4 4 0 0 1-1-8 4 4 0 0 1 6 1 4 4 0 0 1 6-1 4 4 0 0 1-1 8v10H7zM7 16h10"/></svg></span><div><h2 id="dashboard-heading" tabindex="-1">Cooking</h2><p>Find a recipe to make your own.</p></div></header>
   <button class="contest-entry" type="button" (click)="preferencesOpened.set(true)"><span class="entry-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M4 17h16M8 4v6M16 14v6"/></svg></span><strong>Food preferences</strong> <span aria-hidden="true">&#8599;</span></button>
-  <button class="contest-entry" type="button" (click)="albumOpened.set(true)"><span class="entry-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8" cy="9" r="1.5"/><path d="m4 18 6-6 4 4 3-3 4 5"/></svg></span><strong>Our recipe album</strong><span aria-hidden="true">&#8599;</span></button>
   <button class="contest-entry" type="button" (click)="contestsOpened.set(true)"><span class="entry-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3h8v6a4 4 0 0 1-8 0zM8 5H4v2a4 4 0 0 0 4 4M16 5h4v2a4 4 0 0 1-4 4M12 13v5M8 21h8M9 18h6"/></svg></span><strong>Cooking contest</strong> <span aria-hidden="true">&#8599;</span></button>
   <nav class="cooking-tabs" role="tablist" aria-label="Cooking views">
     <button id="cooking-tab-discover" type="button" role="tab" [attr.aria-selected]="tab()==='discover'" [tabIndex]="tab()==='discover'?0:-1" aria-controls="cooking-panel" (keydown)="tabKey($event)" (click)="view('discover')">Discover</button>

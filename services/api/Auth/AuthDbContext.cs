@@ -161,6 +161,23 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
             photo.HasOne<Overlap.Api.Cooking.CookingMemory>().WithMany().HasForeignKey(x=>x.ContestId).OnDelete(DeleteBehavior.Cascade);
             photo.HasOne<Account>().WithMany().HasForeignKey(x=>x.AccountId).OnDelete(DeleteBehavior.Cascade);
         });
+        builder.Entity<Overlap.Api.Drawing.DrawingRound>(round => {
+            round.HasKey(x => x.Id);
+            round.Property(x => x.PairId).HasMaxLength(32);
+            round.Property(x => x.CreatedBy).HasMaxLength(255);
+            round.Property(x => x.Prompt).HasMaxLength(160);
+            round.Property(x => x.Revision).HasMaxLength(32);
+            round.HasIndex(x => new { x.PairId, x.CreatedUtc });
+            round.HasOne<Account>().WithMany().HasForeignKey(x => x.CreatedBy).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<Overlap.Api.Drawing.DrawingPhoto>(photo => {
+            photo.HasKey(x => new { x.RoundId, x.AccountId });
+            photo.Property(x => x.AccountId).HasMaxLength(255);
+            photo.Property(x => x.Revision).HasMaxLength(32);
+            photo.Property(x => x.Png).HasColumnType("mediumblob");
+            photo.HasOne<Overlap.Api.Drawing.DrawingRound>().WithMany().HasForeignKey(x => x.RoundId).OnDelete(DeleteBehavior.Cascade);
+            photo.HasOne<Account>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Cascade);
+        });
         builder.Entity<Overlap.Api.Cooking.FoodPreference>(preference=>{
             preference.HasKey(x=>x.AccountId);
             preference.Property(x=>x.AccountId).HasMaxLength(255);

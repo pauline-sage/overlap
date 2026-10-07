@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, effect, input, output } from '@angular/core';
 
 @Component({
   selector:'app-outing-calendar',
@@ -18,7 +18,8 @@ import { Component, input, output } from '@angular/core';
   `]
 })
 export class OutingCalendarComponent {
-  minimum():string {const now=new Date();return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');}
+  readonly minDate = input<string | null>(null);
+  minimum():string {if(this.minDate() !== null)return this.minDate()!;const now=new Date();return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');}
   previousDisabled():boolean {return this.key(1)<=this.minimum().slice(0,7)+'-01';}
   select(day:number):void {if(this.key(day)>=this.minimum())this.valueChange.emit(this.key(day));}
 
@@ -26,6 +27,7 @@ export class OutingCalendarComponent {
   readonly valueChange=output<string>();
   private readonly today=new Date();
   year=this.today.getFullYear(); month=this.today.getMonth();
+  constructor() { effect(() => { const value=this.value(); if (/^\d{4}-\d{2}-\d{2}$/.test(value)) { this.year=Number(value.slice(0,4)); this.month=Number(value.slice(5,7))-1; } }); }
   monthLabel(): string { return new Intl.DateTimeFormat('en',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(Date.UTC(this.year,this.month,1))); }
   move(delta:number):void { if(delta<0 && this.previousDisabled())return; const next=new Date(Date.UTC(this.year,this.month+delta,1));this.year=next.getUTCFullYear();this.month=next.getUTCMonth(); }
   days():number[] { const offset=(new Date(Date.UTC(this.year,this.month,1)).getUTCDay()+6)%7;const count=new Date(Date.UTC(this.year,this.month+1,0)).getUTCDate();return [...Array(offset).fill(0),...Array.from({length:count},(_,i)=>i+1)]; }

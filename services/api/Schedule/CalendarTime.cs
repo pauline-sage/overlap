@@ -67,10 +67,11 @@ public static class CalendarTime
             return DateTime.SpecifyKind(local,DateTimeKind.Unspecified);
         }
         var start=Parse(request.Date,request.StartTime);
-        var end=request.AllDay ? Parse(request.EndDate ?? request.Date,"00:00").AddDays(1) : Parse(request.EndDate ?? request.Date,request.EndTime);
-        if(end<=start || end-start>TimeSpan.FromDays(7))throw new ArgumentException("The end must be after the start, within seven days.");
+        var singleTime=!request.AllDay && string.IsNullOrEmpty(request.EndTime);
+        var end=singleTime ? start : request.AllDay ? Parse(request.EndDate ?? request.Date,"00:00").AddDays(1) : Parse(request.EndDate ?? request.Date,request.EndTime);
+        if((!singleTime && end<=start) || end-start>TimeSpan.FromDays(7))throw new ArgumentException("The end must be after the start, within seven days.");
         DateTime? startUtc=null,endUtc=null;
-        if(!request.AllDay){startUtc=Instant(start,zone).UtcDateTime;endUtc=Instant(end,zone).UtcDateTime;if(endUtc<=startUtc)throw new ArgumentException("The end must be after the start.");}
+        if(!request.AllDay){startUtc=Instant(start,zone).UtcDateTime;endUtc=singleTime ? null : Instant(end,zone).UtcDateTime;if(endUtc is not null && endUtc<=startUtc)throw new ArgumentException("The end must be after the start.");}
         return new(){PairId=pair,AuthorId=account,Title=request.Title.Trim(),Note=string.IsNullOrWhiteSpace(request.Note)?null:request.Note.Trim(),TimeZone=request.TimeZone!,LocalStart=start,LocalEnd=end,StartUtc=startUtc,EndUtc=endUtc,AllDay=request.AllDay,Yearly=request.Yearly,UpdatedUtc=now};
     }
     public static IReadOnlyList<CalendarOccurrence> Occurrences(IEnumerable<CalendarEntry> entries,DateTime fromLocalDate,DateTime toLocalDate,string viewerZone,string viewerAccount)
@@ -85,10 +86,10 @@ public static class CalendarTime
                 DateTimeOffset? startInstant=null,endInstant=null;
                 if(entry.AllDay){if(start.Date>=toLocalDate || end.Date<=fromLocalDate)continue;}
                 else {
-                    try{startInstant=Instant(start,Zone(entry.TimeZone));endInstant=Instant(end,Zone(entry.TimeZone));}
+                    try{startInstant=Instant(start,Zone(entry.TimeZone));endInstant=entry.EndUtc is null ? null : Instant(end,Zone(entry.TimeZone));}
                     // A yearly timed appointment in a DST gap/overlap needs an owner correction; never guess an offset.
                     catch(ArgumentException){continue;}
-                    if(startInstant>=toUtc || endInstant<=fromUtc)continue;
+                    if(startInstant>=toUtc || (endInstant is null ? startInstant<fromUtc : endInstant<=fromUtc))continue;
                 }
                 result.Add(new(entry.Id,entry.Title,entry.Note,entry.AuthorId==viewerAccount,entry.AllDay,entry.Yearly,entry.TimeZone,start.ToString("yyyy-MM-dd"),end.ToString("yyyy-MM-dd"),startInstant,endInstant,entry.LocalStart.ToString("yyyy-MM-dd"),(entry.AllDay ? entry.LocalEnd.AddDays(-1) : entry.LocalEnd).ToString("yyyy-MM-dd"),entry.LocalStart.ToString("HH:mm"),entry.LocalEnd.ToString("HH:mm"),entry.Revision));
             }

@@ -1,0 +1,31 @@
+<button class="back" type="button" (click)="!roundId() && selected() ? selected.set(0) : back.emit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg><span>Back</span></button>
+<header class="page-banner"><div><h2 id="dashboard-heading" tabindex="-1">{{albumOnly() ? 'Our drawings' : 'Draw together'}}</h2><p>One idea. Two imaginations.</p></div></header>
+@if(loading() || busy()){<app-loading-indicator [inline]="!busy()" label="Updating your drawings..." />}
+@if(error()){<p class="error" role="alert">{{error()}}</p><button type="button" [disabled]="busy() || loading()" (click)="load(true)">Refresh</button>}
+@if(notice()){<p role="status" class="hint">{{notice()}}</p>}
+@if(current();as round){
+  <section class="prompt-card"><p class="hint">{{duration(round.seconds)}} &middot; {{round.createdUtc | date:'d MMM yyyy'}}</p><h3>{{round.prompt}}</h3>
+    @switch(state(round)){
+      @case('waiting'){
+        <p>{{round.mine ? 'Ask your person to open Draw and join. You are ready; joining starts the same timer for both of you.' : 'Ready to draw the same idea? Joining starts the timer for both of you.'}}</p>
+        @if(round.mine){<button type="button" [disabled]="busy()" (click)="action('shuffle')">Shuffle idea</button>}
+        @else{<button class="primary" type="button" [disabled]="busy()" (click)="action('join')">Join and start timer</button>}
+      }
+      @case('drawing'){<p class="timer" role="timer" aria-label="Time remaining">{{timer(round)}}</p><p>Draw on paper or with your favourite tools. Come back when the timer ends to share a photo.</p>}
+      @case('finished'){<p role="status">Time’s up. Show each other what you made.</p><input #camera type="file" accept="image/jpeg,image/png,image/webp" capture="environment" hidden (change)="upload($event)" /><input #uploadPicker type="file" accept="image/jpeg,image/png,image/webp" hidden (change)="upload($event)" /><div class="actions"><button class="primary" type="button" [disabled]="busy()" (click)="camera.click()">Take a photo</button><button type="button" [disabled]="busy()" (click)="uploadPicker.click()">Upload a photo</button></div><p class="hint">Each person adds their own photo. Shared only between you. JPEG, PNG or WebP, up to 10 MB.</p>}
+      @case('cancelled'){<p>This drawing round was cancelled.</p>}
+    }
+    @if(state(round)==='drawing' || state(round)==='waiting'){<button class="quiet" type="button" [disabled]="busy()" (click)="confirm.set('cancel')">Cancel round</button>}
+    @else{<button class="quiet" type="button" [disabled]="busy()" (click)="confirm.set('remove')">Remove round from album</button>}
+  </section>
+  <div class="photos">@for(photo of round.photos;track photo.accountId){<figure><img [src]="photoUrl(round,photo)" [alt]="(photo.mine ? 'Your drawing: ' : 'Your partner’s drawing: ')+round.prompt" /><figcaption>{{photo.mine ? ownName() : partnerName()}} &middot; {{photo.uploadedUtc | date:'d MMM yyyy'}}</figcaption><p class="hint">Your rating: {{photo.myRating ? photo.myRating+' / 5' : 'Not rated'}} &middot; {{partnerName()}}: {{photo.partnerRating ? photo.partnerRating+' / 5' : 'Not rated'}}</p><div class="ratings" role="group" aria-label="Your rating">@for(score of [1,2,3,4,5];track score){<button type="button" [attr.aria-label]="'Rate '+score+' out of 5'" [attr.aria-pressed]="photo.myRating===score" [disabled]="busy()" (click)="rating(photo,score)">{{score}}<span aria-hidden="true"> ★</span></button>}</div>@if(photo.myRating){<button class="quiet" type="button" [disabled]="busy()" (click)="rating(photo,null)">Clear my rating</button>}@if(photo.mine){<button class="quiet" type="button" [disabled]="busy()" (click)="confirm.set('photo')">Remove my photo</button>}</figure>}</div>
+  @if(confirm();as action){<section class="confirmation"><p>{{action==='photo' ? 'Remove your drawing photo and its ratings?' : action==='cancel' ? 'Cancel this round for both of you?' : 'Remove this round, both photos and ratings from your shared album?'}}</p><div class="actions"><button type="button" [disabled]="busy()" (click)="action==='photo' ? removePhoto() : action==='cancel' ? this.action('cancel') : this.action('remove')">Confirm</button><button type="button" [disabled]="busy()" (click)="confirm.set(null)">Keep it</button></div></section>}
+} @else {
+  @if(!albumOnly()){
+    @if(!connected() && !loading()){<p>Connect with your person to draw together.</p>}
+    <section class="setup"><h3>A little creative challenge</h3><p>Shuffle an idea, draw together against the clock, then save your work and rate each other’s drawings.</p><app-outing-choice compact label="Timer" [value]="seconds" [options]="timers" (valueChange)="seconds=$event" /><button class="primary" type="button" [disabled]="busy() || loading() || !connected() || activeRound()" (click)="create()">Set up a drawing round</button></section>
+  }
+  <h3>{{albumOnly() ? 'Saved drawings' : 'Our rounds'}}</h3>
+  @for(round of list().slice((page()-1)*10,page()*10);track round.id){<button class="round-row" type="button" (click)="open(round)"><span><strong>{{round.prompt}}</strong><small>{{state(round)}} &middot; {{duration(round.seconds)}} &middot; {{round.photos.length}} photos</small></span><span aria-hidden="true">›</span></button>}@empty{<p class="hint">No drawing rounds yet.</p>}
+  @if(list().length>10){<div class="actions"><button type="button" [disabled]="page()===1" (click)="page.set(page()-1)">Previous</button><span>Page {{page()}}</span><button type="button" [disabled]="page()*10>=list().length" (click)="page.set(page()+1)">Next</button></div>}
+}
