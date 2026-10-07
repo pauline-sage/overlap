@@ -50,3 +50,6 @@ services/api/**
 
 !services/api/Quiz/
 !services/api/Quiz/**
+
+!services/api/Schedule/
+!services/api/Schedule/**
