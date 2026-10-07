@@ -34,11 +34,11 @@
           </div>
           <div><h3>{{venue.activity || 'An outing'}} with {{state.partnerName || 'your partner'}}</h3>
             @if(venue.startUtc) { <p class="date-time"><span>{{venue.startUtc | date:'EEEE, d MMMM'}}</span><strong>at {{venue.startUtc | date:'HH:mm'}}</strong></p><small>For you &middot; {{deviceZone}}</small>
-              @if(venue.timeZone && venue.timeZone!==deviceZone) {<p class="when">{{localTime(venue.startUtc,venue.timeZone)}} at {{update.mine ? 'your' : (state.partnerName || 'your partner') + "?s"}} place &middot; {{venue.timeZone}}</p>} }
+              @if(venue.timeZone && venue.timeZone!==deviceZone) {<p class="when">{{localTime(venue.startUtc,venue.timeZone)}} at {{update.mine ? 'your' : (state.partnerName || 'your partner') + "'s"}} place &middot; {{venue.timeZone}}</p>} }
             @else { <p class="when">No time selected</p> }
           </div>
         </div>
-        <div class="place"><span class="detail-label">{{update.mine ? 'Your place' : (state.partnerName || 'Your partner') + "?s place"}}</span><h4>{{venue.name}}</h4><p>{{venue.address}}</p><span class="picked-by">{{update.mine ? 'You picked' : (state.partnerName || 'Your partner') + ' picked'}}</span></div>
+        <div class="place"><span class="detail-label">{{update.mine ? 'Your place' : (state.partnerName || 'Your partner') + "'s place"}}</span><h4>{{venue.name}}</h4><p>{{venue.address}}</p><span class="picked-by">{{update.mine ? 'You picked' : (state.partnerName || 'Your partner') + ' picked'}}</span></div>
         <div class="place-actions"><a [href]="venue.mapUrl" target="_blank" rel="noopener noreferrer">View place &#8599;</a>@if(!update.cancelled && cancelling!==update.revision) {<button class="cancel-date" type="button" [disabled]="sharing.busy()" (click)="startCancellation(update)">Cancel date</button>}</div><div class="links">@if(venue.website) {<a [href]="venue.website" target="_blank" rel="noopener noreferrer">Website &#8599;</a>}</div>
       } @else if(update.onMyWay) {
         <div class="card-top"><span class="category">On the way</span>@if(update.unread){<span class="new-label">New</span>}</div>
@@ -61,7 +61,7 @@
       }
       @if(update.replyKind) {
         <div class="reply">
-          <span class="detail-label">{{update.mine ? (state.partnerName || 'Your partner') + "?s place" : 'Your place'}}</span>
+          <span class="detail-label">{{update.mine ? (state.partnerName || 'Your partner') + "'s place" : 'Your place'}}</span>
           @if(update.replyKind==='surprise') {<h4>It's a surprise</h4><p>Joining the date, choosing a place later.</p>}
           @else if(update.replyVenue;as picked) {<h4>{{picked.name}}</h4><p>{{picked.address}}</p><div class="place-actions"><a [href]="picked.mapUrl" target="_blank" rel="noopener noreferrer">View place &#8599;</a>@if(picked.website){<a [href]="picked.website" target="_blank" rel="noopener noreferrer">Website &#8599;</a>}</div>}
         </div>

@@ -19,4 +19,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
 .delete-account input{width:100%;min-height:48px;border:1px solid var(--line);border-radius:.8rem;background:var(--field);color:var(--text);padding:.75rem;font:inherit;margin-bottom:1rem}
 
 .page-banner { @include page-banner.banner; }
-app-phone-reminders{margin-bottom:1.75rem}
+.notification-section{margin-bottom:2rem}
+.notification-preferences{border:1px solid var(--line);border-radius:1rem;overflow:hidden;background:var(--surface)}
+.notification-help{margin:1rem 0 0;padding:.85rem 1rem;border-left:3px solid var(--accent);border-radius:.25rem .85rem .85rem .25rem;background:var(--accent-soft);color:var(--text);font-size:.9rem;line-height:1.6}

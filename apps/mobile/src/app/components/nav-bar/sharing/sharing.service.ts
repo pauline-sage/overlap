@@ -25,10 +25,13 @@ export class SharingService implements OnDestroy {
     catch { if(!this.disposed && version === this.version) { this.state.set(null); this.error.set('Sharing settings are unavailable. Try again.'); } }
     finally { if(version === this.version) this.loading=false; }
   }
-  async act(action: 'request' | 'cancel', category: Category): Promise<void> {
+  async act(action: 'request' | 'cancel', category: Category | Category[]): Promise<void> {
     if(this.busy()) return; this.busy.set(true); this.error.set('');
-    try { await this.auth.submit('privacy/'+action,{category}); await this.load(true); }
-    catch(error) { this.error.set(error instanceof HttpErrorResponse ? error.error?.title || 'Unable to update sharing.' : 'Unable to update sharing.'); }
+    try {
+      for(const key of Array.isArray(category) ? category : [category]) await this.auth.submit('privacy/'+action,{category:key});
+      await this.load(true);
+    }
+    catch(error) { await this.load(true); this.error.set(error instanceof HttpErrorResponse ? error.error?.title || 'Unable to update sharing.' : 'Unable to update sharing.'); }
     finally { this.busy.set(false); }
   }
   async markRead(kind:'outing'|'outing-reply'|'pick'|'recipe'|'contest', revision:string, id?:number, dismiss=false):Promise<void> {

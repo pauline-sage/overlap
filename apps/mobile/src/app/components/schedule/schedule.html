@@ -1,0 +1,45 @@
+@if (!opened()) {
+  <button class="schedule-entry" type="button" (click)="open.emit()">
+    <span class="calendar-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4M17 3v4M3 11h18M7 15h3"/></svg></span>
+    <span class="entry-copy"><strong>Your schedules</strong><span>See what's coming up for both of you</span><span class="today-summary">@if(ready()){Today · {{ownName()}} {{todayCounts().own}} · {{partnerName()}} {{todayCounts().partner}}} @else{Check both your schedules}</span></span><span aria-hidden="true">&#8250;</span>
+  </button>
+} @else {
+  <button class="back" type="button" (click)="back.emit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg><span>Back</span></button>
+  <header class="page-banner"><span class="calendar-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4M17 3v4M3 11h18"/></svg></span><div><h2 id="dashboard-heading" tabindex="-1">Your schedules</h2><p>A little room for everyday life.</p></div></header>
+  @if(loading() || busy()){<app-loading-indicator [inline]="!busy() && ready()" label="Updating your schedule..." />} @if(error() && !formOpened()){<p class="error" role="alert">{{error()}}</p><button type="button" (click)="load()">Refresh</button>} @if(ready() && !connected()){<p class="muted">Connect with your person to save appointments together.</p>}
+  <div class="toolbar"><button type="button" (click)="goToday()">Today</button><button type="button" [attr.aria-expanded]="monthOpened()" (click)="monthOpened.set(!monthOpened())">{{monthOpened() ? 'Hide calendar' : 'Month calendar'}}</button><button class="add-button" type="button" (click)="add()" [disabled]="busy() || !ready() || !connected()">+ Add appointment</button></div>
+  @if (monthOpened()) {
+    <section class="month-calendar" aria-label="Month calendar">
+      <div class="month-heading"><button type="button" aria-label="Previous month" (click)="moveMonth(-1)">&#8249;</button><strong>{{month() | date:'MMMM yyyy'}}</strong><button type="button" aria-label="Next month" (click)="moveMonth(1)">&#8250;</button></div>
+      <div class="month-grid"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+        @for (day of monthDays(); track $index) {@if (day) {<button type="button" [attr.aria-label]="(day | date:'fullDate')+' · '+count(day)+' plans'" [attr.aria-pressed]="selected()===dayKey(day)" (click)="choose(day)">{{day.getDate()}}<i [class.has-plans]="count(day)>0" aria-hidden="true"></i></button>} @else {<span></span>}}
+      </div>
+    </section>
+  }
+  <div class="week-heading"><button type="button" aria-label="Previous week" (click)="moveWeek(-1)">&#8249;</button><strong>{{week()[0] | date:'d MMM'}} – {{week()[6] | date:'d MMM yyyy'}}</strong><button type="button" aria-label="Next week" (click)="moveWeek(1)">&#8250;</button></div>
+  <div class="week-strip" aria-label="Choose a day">@for (day of week(); track dayKey(day)) {<button type="button" [attr.aria-pressed]="selected()===dayKey(day)" [attr.aria-label]="day | date:'fullDate'" (click)="choose(day)"><span>{{day | date:'EEE'}}</span><strong>{{day.getDate()}}</strong><i [class.has-plans]="count(day)>0" aria-hidden="true"></i></button>}</div>
+  <div class="people-legend"><span class="person-own">● {{ownName()}}</span><span class="person-partner">● {{partnerName()}}</span></div>
+  @if (formOpened()) {
+    <form class="appointment-form" (ngSubmit)="save()">
+      <h3>{{editing() ? 'Edit your appointment' : 'Add your appointment'}}</h3><p class="muted">Saved for both of you. Only you can edit or remove your entries.</p>
+      <label for="schedule-title">Title</label><input id="schedule-title" name="title" [(ngModel)]="title" required maxlength="160" enterkeyhint="done" placeholder="Doctor, work, an errand..." />
+      <div class="time-fields"><div><label for="schedule-date">Start date</label><input id="schedule-date" name="date" type="date" [(ngModel)]="entryDate" (ngModelChange)="endDate=entryDate" required /></div><div><label for="schedule-end-date">End date</label><input id="schedule-end-date" name="endDate" type="date" [(ngModel)]="endDate" required /></div></div><div class="schedule-options"><label><input type="checkbox" name="allDay" [(ngModel)]="allDay" /> All day</label><label><input type="checkbox" name="yearly" [(ngModel)]="yearly" /> Repeat yearly</label></div>@if(yearly){<p class="muted">February 29 repeats on February 28 in non-leap years. Use all day for birthdays; yearly times in a clock-change gap or overlap are omitted that year.</p>}@if(!allDay){<div class="time-fields"><div><label for="schedule-start">Start</label><input id="schedule-start" name="start" type="time" [(ngModel)]="startTime" required /></div><div><label for="schedule-end">End</label><input id="schedule-end" name="end" type="time" [(ngModel)]="endTime" required /></div></div>
+      }<label for="schedule-zone">Appointment timezone</label><select id="schedule-zone" name="timeZone" [(ngModel)]="timeZone">@for(item of zones();track item){<option [value]="item">{{item}}</option>}</select><label for="schedule-note">Note (optional)</label><textarea id="schedule-note" name="note" [(ngModel)]="note" maxlength="1000" rows="2"></textarea>
+      @if(error()){<p class="error" role="alert">{{error()}}</p>}
+      <div class="form-actions"><button class="add-button" type="submit" [disabled]="busy() || !title.trim()">Save and share</button><button type="button" (click)="formOpened.set(false)">Cancel</button></div>
+    </form>
+  }
+  @if(notice()){<p class="muted" role="status">{{notice()}}</p>}
+  <h3 id="schedule-agenda" tabindex="-1">{{selected() | date:'EEEE, d MMMM'}}</h3><p class="muted">Times for you · {{zone}}</p>
+  <app-collection-browser [browser]="pager" [total]="agenda().length" [count]="agenda().length" [searchable]="false" searchId="schedule-pages" />
+  @for (item of pager.slice(agenda()); track item.id) {
+    <article class="appointment" [class.partner]="!item.mine">
+      <div class="time-column">@if(item.entry?.allDay){<strong>All day</strong>}@else{<strong>{{clockTime(item.start)}}</strong>@if(item.end){<span>{{clockTime(item.end)}}</span>}}</div>
+      <div class="appointment-copy"><h4>{{item.title}}</h4><p>{{item.mine ? ownName() : partnerName()}} <span class="tag">{{item.sharedDate ? 'From Dates' : item.entry?.yearly ? 'Yearly' : 'Appointment'}}</span></p>
+        @if(item.note){<p class="muted">{{item.note}}</p>}
+        @if(item.mine && !item.sharedDate){<div class="form-actions"><button type="button" (click)="edit(item)">Edit</button><button type="button" (click)="removing.set(item.id)" [disabled]="busy()">Remove</button></div>}
+        @if(removing()===item.id){<p>Remove this appointment for both of you?</p><div class="form-actions"><button type="button" (click)="remove(item)" [disabled]="busy()">Confirm removal</button><button type="button" (click)="removing.set(null)">Keep it</button></div>}
+      </div>
+    </article>
+  } @empty {<div class="empty"><strong>A little breathing room.</strong><p>Nothing planned for this day.</p></div>}
+}

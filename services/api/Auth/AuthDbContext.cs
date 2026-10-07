@@ -193,6 +193,16 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
             place.HasIndex(x=>new{x.PairId,x.CreatedUtc}); place.HasOne<Account>().WithMany().HasForeignKey(x=>x.AuthorId).OnDelete(DeleteBehavior.Cascade);
         });
         builder.Entity<Account>().Property(x => x.DisplayName).HasMaxLength(50);
+        builder.Entity<Overlap.Api.Schedule.CalendarEntry>(entry=>{
+            entry.Property(x=>x.PairId).HasMaxLength(32);entry.Property(x=>x.AuthorId).HasMaxLength(255);entry.Property(x=>x.Title).HasMaxLength(160);entry.Property(x=>x.Note).HasMaxLength(1000);entry.Property(x=>x.TimeZone).HasMaxLength(100);entry.Property(x=>x.Revision).HasMaxLength(32);
+            entry.HasIndex(x=>new{x.PairId,x.LocalStart});entry.HasOne<Account>().WithMany().HasForeignKey(x=>x.AuthorId).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<Overlap.Api.Schedule.CalendarPreference>(preference=>{
+            preference.HasKey(x=>x.AccountId);preference.Property(x=>x.AccountId).HasMaxLength(255);preference.Property(x=>x.TimeZone).HasMaxLength(100);preference.HasOne<Account>().WithMany().HasForeignKey(x=>x.AccountId).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<Overlap.Api.Schedule.CalendarDailyDelivery>(delivery=>{
+            delivery.HasKey(x=>new{x.SubscriptionId,x.LocalDate});delivery.Property(x=>x.LocalDate).HasMaxLength(10);delivery.HasOne<Overlap.Api.Notifications.PhoneSubscription>().WithMany().HasForeignKey(x=>x.SubscriptionId).OnDelete(DeleteBehavior.Cascade);
+        });
         builder.Entity<Account>().Property(x => x.InvitationHash).HasMaxLength(64);
         builder.Entity<Account>().HasIndex(x => x.InvitationHash).IsUnique();
         builder.Entity<PairMember>().HasKey(x => x.AccountId);

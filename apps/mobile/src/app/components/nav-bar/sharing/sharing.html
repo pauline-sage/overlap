@@ -24,7 +24,7 @@
               [disabled]="sharing.busy() || !state.connected"
               (change)="toggle(category.key, $event)" />
             <span class="track" aria-hidden="true"></span>
-            <span class="state">{{ outgoing(category.key) === 'accepted' ? 'Shared' : 'Private' }}</span>
+            <span class="state">{{ outgoing(category.key) === 'accepted' ? 'Shared' : outgoing(category.key) === 'partial' ? 'Partly shared' : 'Private' }}</span>
           </span>
         </label>
       }

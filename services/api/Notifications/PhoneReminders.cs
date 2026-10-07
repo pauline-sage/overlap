@@ -90,12 +90,12 @@ public static class PhoneReminderEndpoints
             var hash=Hash(request.Endpoint);var account=user.FindFirstValue(ClaimTypes.NameIdentifier);
             await db.Set<PhoneSubscription>().Where(x=>x.AccountId==account && x.EndpointHash==hash).ExecuteDeleteAsync(ct);return Results.NoContent();
         });
-        app.MapPost("/api/reminders/dispatch",async(HttpContext context,IConfiguration config,ContestReminderDispatcher dispatcher)=>{
+        app.MapPost("/api/reminders/dispatch",async(HttpContext context,IConfiguration config,ContestReminderDispatcher dispatcher,Overlap.Api.Schedule.CalendarReminderDispatcher calendar)=>{
             var secret=config["Push:SchedulerSecret"];
             if(string.IsNullOrWhiteSpace(secret) || secret.Length<32)return Results.NotFound();
             var expected=SHA256.HashData(Encoding.UTF8.GetBytes("Bearer "+secret));var supplied=SHA256.HashData(Encoding.UTF8.GetBytes(context.Request.Headers.Authorization.ToString()));
             if(!CryptographicOperations.FixedTimeEquals(expected,supplied))return Results.Unauthorized();
-            await dispatcher.Dispatch(context.RequestAborted);return Results.NoContent();
+            await dispatcher.Dispatch(context.RequestAborted);await calendar.Dispatch(context.RequestAborted);return Results.NoContent();
         }).RequireRateLimiting("auth");
     }
 }
@@ -134,13 +134,13 @@ public sealed class ContestReminderDispatcher(IServiceScopeFactory scopes,IConfi
         } finally{gate.Release();}
     }
 }
-public sealed class PhoneReminderWorker(ContestReminderDispatcher dispatcher,ILogger<PhoneReminderWorker> log):BackgroundService
+public sealed class PhoneReminderWorker(ContestReminderDispatcher dispatcher,Overlap.Api.Schedule.CalendarReminderDispatcher calendar,ILogger<PhoneReminderWorker> log):BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var timer=new PeriodicTimer(TimeSpan.FromSeconds(15));
         while(await timer.WaitForNextTickAsync(stoppingToken)){
-            try{await dispatcher.Dispatch(stoppingToken);}catch(OperationCanceledException) when(stoppingToken.IsCancellationRequested){break;}catch(Exception){log.LogWarning("Phone reminder dispatch failed; it will retry on the next tick.");}
+            try{await dispatcher.Dispatch(stoppingToken);await calendar.Dispatch(stoppingToken);}catch(OperationCanceledException) when(stoppingToken.IsCancellationRequested){break;}catch(Exception){log.LogWarning("Phone reminder dispatch failed; it will retry on the next tick.");}
         }
     }
 }

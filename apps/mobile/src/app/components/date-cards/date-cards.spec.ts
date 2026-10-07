@@ -4,6 +4,13 @@ import { DateCardsComponent } from './date-cards';
 import { SharingService } from '../nav-bar/sharing/sharing.service';
 import { readableHours } from '../coffee-date/opening-hours/opening-hours';
 describe('Activity cards and hours',()=>{
+  it('preserves accents and apostrophes in partner place labels',()=>{
+    const sharing={error:signal(''),busy:signal(false),state:signal({partnerName:"Anaïs O'Connor",outingUpdates:[{mine:false,revision:'encoding',venue:{activity:'Coffee',name:'Régal café',address:'São Paulo',mapUrl:'https://example.test',startUtc:new Date(Date.now()+3600000).toISOString()}}]})};
+    TestBed.configureTestingModule({imports:[DateCardsComponent],providers:[{provide:SharingService,useValue:sharing}]});
+    const f=TestBed.createComponent(DateCardsComponent);f.detectChanges();
+    expect(f.nativeElement.querySelector('.detail-label').textContent).toBe("Anaïs O'Connor's place");
+    expect(f.nativeElement.textContent).toContain('Régal café');expect(f.nativeElement.textContent).toContain('São Paulo');f.destroy();
+  });
   it('shares the five-date page limit across outings and contests and leaves notifications complete',()=>{
     const start=(hours:number)=>new Date(Date.now()+hours*3600000).toISOString();
     const sharing={error:signal(''),busy:signal(false),state:signal({outingUpdates:[{mine:true,revision:'outing',venue:{activity:'Coffee',name:'First cafe',startUtc:start(1)}}],cookingContests:Array.from({length:19},(_,i)=>({id:i+1,revision:'contest-'+i,status:'accepted',mine:true,startUtc:start(i+2),recipeTitle:'Recipe '+i}))})};

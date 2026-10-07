@@ -1,4 +1,5 @@
 import { StayInTogetherComponent } from '../stay-in-together/stay-in-together';
+import { ScheduleComponent } from '../schedule/schedule';
 import { StayInRequest } from '../stay-in-together/stay-in.types';
 import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator';
 
@@ -13,11 +14,13 @@ import { DashboardPage, NavBarComponent } from '../nav-bar/nav-bar';
 @Component({
   selector: 'app-dashboard',
   providers: [SharingService],
-  imports: [StayInTogetherComponent, LoadingIndicatorComponent, NavBarComponent, ProfileComponent, StepOutTogetherComponent],
+  imports: [ScheduleComponent, StayInTogetherComponent, LoadingIndicatorComponent, NavBarComponent, ProfileComponent, StepOutTogetherComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  readonly scheduleOpened=signal(false);
+  openSchedule():void {this.navigate('home');this.scheduleOpened.set(true);queueMicrotask(()=>document.getElementById('dashboard-heading')?.focus());}
   readonly sharing = inject(SharingService);
   openPartnerPicks():void {this.openActivity({activity:'watch',partnerPicks:true});}
   readonly firstSteps = signal(false);
@@ -42,6 +45,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   openSharedTime():void{this.openActivity({activity:'watch'});}
   private openReminderLink():void{
     const url=new URL(window.location.href);const value=url.searchParams.get('cookingContest');
+    if(url.searchParams.get('schedule')==='1'){this.openSchedule();url.searchParams.delete('schedule');history.replaceState(null,'',url.pathname+url.search+url.hash);return;}
     if(value && /^\d+$/.test(value) && Number.isSafeInteger(Number(value)) && Number(value)>0){this.openContest(Number(value));url.searchParams.delete('cookingContest');history.replaceState(null,'',url.pathname+url.search+url.hash);}
   }
   readonly outingProposal=signal<OutingUpdate|null>(null);
@@ -49,7 +53,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   openCoffee():void{this.navigate('home');this.outingProposal.set(null);this.coffee.set(true);}
   readonly page=signal<DashboardPage>('home');
   readonly sessionExpired=output<void>();
-  navigate(page:DashboardPage):void{this.stayingIn.set(false);this.coffee.set(false);this.page.set(page);queueMicrotask(()=>document.getElementById('dashboard-heading')?.focus());}
+  navigate(page:DashboardPage):void{this.scheduleOpened.set(false);this.stayingIn.set(false);this.coffee.set(false);this.page.set(page);queueMicrotask(()=>document.getElementById('dashboard-heading')?.focus());}
   private readonly auth = inject(AuthService);
   readonly invitationToken = input('');
   readonly invitationHandled = output<void>();

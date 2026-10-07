@@ -4,6 +4,7 @@ using Overlap.Api.Watch;
 using Overlap.Api.Books;
 using Overlap.Api.Cooking;
 using Overlap.Api.Notifications;
+using Overlap.Api.Schedule;
 using System.Threading.RateLimiting;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -171,6 +172,8 @@ if (authConfigured)
     builder.Services.AddHttpClient("phone-push",client=>client.Timeout=TimeSpan.FromSeconds(8)).RemoveAllLoggers()
         .ConfigurePrimaryHttpMessageHandler(()=>new HttpClientHandler{AllowAutoRedirect=false});
     builder.Services.AddSingleton<ContestReminderDispatcher>();
+    builder.Services.AddSingleton<ICalendarPushSender,CalendarPushSender>();
+    builder.Services.AddSingleton<CalendarReminderDispatcher>();
     builder.Services.AddHostedService<PhoneReminderWorker>();
     builder.Services.AddRateLimiter(options =>
     {
@@ -244,6 +247,7 @@ if (authConfigured)
     app.MapCookingMemories();
     app.MapFoodPreferences();
     app.MapPhoneReminders();
+    app.MapCalendar();
     app.MapOutings();
     app.MapOutingUpdates();
     app.MapOutingReplies();

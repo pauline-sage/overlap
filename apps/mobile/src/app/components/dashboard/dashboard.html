@@ -19,7 +19,7 @@
   (change)="uploadPhoto($event)"
 />
 
-@if (page() === 'home' && !coffee() && !stayingIn()) {
+@if (page() === 'home' && !coffee() && !stayingIn() && !scheduleOpened()) {
   <section class="hero" aria-labelledby="dashboard-heading">
     <p class="home-eyebrow">YOUR LITTLE CORNER</p>
     <div class="orbit">
@@ -104,7 +104,7 @@
     (openQuiz)="openQuiz($event)"
   />
 }
-@if (page() === 'home' && !coffee() && !stayingIn()) {
+@if (page() === 'home' && !coffee() && !stayingIn() && !scheduleOpened()) {
   @if (error()) {
     <p role="alert">{{ error() }}</p>
   }
@@ -112,7 +112,8 @@
     <button type="button" (click)="navigate('profile')">Review invitation</button>
   }
 }
-@if (page() === 'home' && !coffee() && !stayingIn()) {
+<app-schedule [hidden]="page()!=='home' || coffee() || stayingIn()" [opened]="scheduleOpened()" [active]="page()==='home' && !coffee() && !stayingIn()" [connectionId]="together()?.partner?.id || ''" [ownName]="greetingName()" [partnerName]="together()?.partner?.displayName || 'Your person'" [outings]="sharing.state()?.outingUpdates ?? []" [contests]="sharing.state()?.cookingContests ?? []" (open)="openSchedule()" (back)="navigate('home')" />
+@if (page() === 'home' && !coffee() && !stayingIn() && !scheduleOpened()) {
 
   <section class="next" aria-labelledby="next-title">
     <div class="section-heading">

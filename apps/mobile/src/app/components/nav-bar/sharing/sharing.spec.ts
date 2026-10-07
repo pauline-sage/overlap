@@ -25,20 +25,22 @@ describe('Owner sharing preferences', () => {
     expect(f.nativeElement.textContent).not.toContain('Request sharing');
     controls[0].click(); await f.whenStable();
     expect(auth.submit).toHaveBeenCalledWith('privacy/request', { category: 'profile' });
+    expect(auth.submit).toHaveBeenCalledWith('privacy/request', { category: 'presence' });
     f.destroy();
   });
   it('lets the owner stop sharing', async () => {
-    http.get.mockReturnValue(of({ ...state, outgoing: [{ category: 'profile', status: 'accepted' }] }));
+    http.get.mockReturnValue(of({ ...state, outgoing: [{ category: 'profile', status: 'accepted' }, { category: 'presence', status: 'accepted' }] }));
     const f = TestBed.createComponent(SharingComponent); await f.whenStable(); f.detectChanges();
     const control = f.nativeElement.querySelector('input');
     expect(control.checked).toBe(true);
     control.click(); await f.whenStable();
     expect(auth.submit).toHaveBeenCalledWith('privacy/cancel', { category: 'profile' });
+    expect(auth.submit).toHaveBeenCalledWith('privacy/cancel', { category: 'presence' });
     f.destroy();
   });
   it('keeps book interests private by default and lets the owner share them', async () => {
     const f=TestBed.createComponent(SharingComponent);await f.whenStable();f.detectChanges();
-    const control=f.nativeElement.querySelectorAll('input[role="switch"]')[3];
+    const control=f.nativeElement.querySelectorAll('input[role="switch"]')[2];
     expect(control.checked).toBe(false);
     control.click();await f.whenStable();
     expect(auth.submit).toHaveBeenCalledWith('privacy/request',{category:'books'});

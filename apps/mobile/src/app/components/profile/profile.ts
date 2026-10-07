@@ -2,6 +2,7 @@ import { Component, input, output, signal, effect } from '@angular/core';
 
 import { TogetherStatus } from '../../auth.service';
 import { PartnerSharesComponent } from './partner-shares/partner-shares';
+import { ProfileTimezoneComponent } from './profile-timezone';
 export type ProfileAction =
   | 'removePhoto'
   | 'refresh'
@@ -12,7 +13,7 @@ export type ProfileAction =
   | 'revoke'
   | 'leave'
   | 'editProfile';
-@Component({ selector: 'app-profile', imports:[PartnerSharesComponent], templateUrl: './profile.html', styleUrl: './profile.scss' })
+@Component({ selector: 'app-profile', imports:[PartnerSharesComponent,ProfileTimezoneComponent], templateUrl: './profile.html', styleUrl: './profile.scss' })
 export class ProfileComponent {
   readonly openRecipe=output<number>();
   readonly openContest=output<number>();

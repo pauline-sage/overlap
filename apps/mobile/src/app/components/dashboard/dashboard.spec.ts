@@ -3,6 +3,13 @@ import { DashboardComponent } from './dashboard';
 import { AuthService } from '../../auth.service';
 
 describe('Dashboard photos and invitations', () => {
+  it('opens the shared schedule from Home and returns to activity cards',async()=>{
+    const f=await render();
+    f.nativeElement.querySelector('.schedule-entry').click();f.detectChanges();
+    expect(f.componentInstance.scheduleOpened()).toBe(true);expect(f.nativeElement.querySelector('.hero')).toBeNull();expect(f.nativeElement.querySelector('.next')).toBeNull();
+    expect(f.nativeElement.textContent).toContain('Your schedules');
+    f.nativeElement.querySelector('app-schedule .back').click();f.detectChanges();expect(f.componentInstance.scheduleOpened()).toBe(false);expect(f.nativeElement.querySelector('.hero')).not.toBeNull();expect(f.nativeElement.querySelector('.next')).not.toBeNull();f.destroy();
+  });
   const auth = { together: vi.fn(), submit: vi.fn() };
   const status = { id: 'self', hasPhoto: false, invitationExpiresUtc: null, partner: null };
   beforeEach(async () => {

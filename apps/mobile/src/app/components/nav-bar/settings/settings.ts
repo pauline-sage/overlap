@@ -1,3 +1,4 @@
+import { CalendarNotificationsComponent } from './calendar-notifications/calendar-notifications';
 import { SharingComponent } from '../sharing/sharing';
 import { PhoneRemindersComponent } from './phone-reminders/phone-reminders';
 import { PrivacyNoticeComponent } from '../../privacy-notice/privacy-notice';
@@ -10,7 +11,7 @@ import { LoadingIndicatorComponent } from '../../loading-indicator/loading-indic
 import { Component, inject, signal, input, output } from '@angular/core';
 @Component({
   selector: 'app-settings',
-  imports: [FormsModule, LoadingIndicatorComponent,PrivacyNoticeComponent, SharingComponent,PhoneRemindersComponent],
+  imports: [CalendarNotificationsComponent,FormsModule, LoadingIndicatorComponent,PrivacyNoticeComponent, SharingComponent,PhoneRemindersComponent],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
 })

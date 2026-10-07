@@ -1,18 +1,19 @@
+import { LoadingIndicatorComponent } from '../../../loading-indicator/loading-indicator';
 import {Component,inject,signal,OnInit} from '@angular/core';
 import {HttpClient,HttpErrorResponse} from '@angular/common/http';
 import {firstValueFrom} from 'rxjs';
 import {AuthService} from '../../../../auth.service';
 
-@Component({selector:'app-phone-reminders',template:`
+@Component({selector:'app-phone-reminders',imports:[LoadingIndicatorComponent],template:`
+  @if(busy()){<app-loading-indicator [inline]="true" label="Updating phone notifications..." />}
   <section class="reminder-card" aria-labelledby="phone-reminder-title">
-    <div class="copy"><strong id="phone-reminder-title">Cooking reminders</strong><p>A phone notification a minute or two before your accepted contest. Enabled on this device only.</p></div>
-    <button type="button" role="switch" aria-label="Cooking reminders on this device" [attr.aria-checked]="enabled()" [disabled]="busy() || !supported || !available()" (click)="toggle()"><span class="track" [class.on]="enabled()" aria-hidden="true"></span><small>{{enabled()?'On':'Off'}}</small></button>
+    <div class="copy"><strong id="phone-reminder-title">On this device</strong><p>Allow phone notifications, including reminders before cooking contests.</p></div>
+    <button type="button" role="switch" aria-label="Phone notifications on this device" [attr.aria-checked]="enabled()" [disabled]="busy() || !supported || !available()" (click)="toggle()"><span class="track" [class.on]="enabled()" aria-hidden="true"></span><small>{{enabled()?'On':'Off'}}</small></button>
     @if(!supported){<p class="help">On iPhone, add Overlap to your Home Screen and open it there to enable notifications. Otherwise, use a browser that supports phone notifications.</p>}
     @else if(!available() && !busy()){<p class="help">Phone reminders are not configured yet.</p>}
-    @if(supported){<p class="help">Only notification permission is needed. Reminders can arrive while Overlap is closed; delivery may be delayed if your phone is offline.</p>}
     @if(error()){<p class="help" role="alert">{{error()}}</p>}
   </section>`,styles:`
-  :host{display:block}.reminder-card{display:flex;align-items:center;flex-wrap:wrap;gap:1rem;padding:1rem;border:1px solid var(--line);border-radius:1rem;background:var(--surface)}.copy{flex:1;min-width:180px}.copy strong{font-size:1rem;font-weight:650}.copy p,.help{font-size:.85rem;line-height:1.6;color:var(--muted);margin:.4rem 0 0}.help{flex-basis:100%}button{display:grid;justify-items:center;gap:.25rem;min-width:52px;min-height:44px;border:0;background:transparent;color:var(--muted);cursor:pointer;font:inherit}small{font-size:.7rem}.track{width:44px;height:26px;box-sizing:border-box;border:1px solid var(--muted);padding:3px;border-radius:2rem}.track::after{content:'';display:block;width:18px;height:18px;background:var(--muted);border-radius:50%}.track.on{background:var(--accent);border-color:var(--accent)}.track.on::after{background:#172511;transform:translateX(18px)}button:disabled{opacity:.5;cursor:default}button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  :host{display:block}.reminder-card{display:flex;align-items:center;flex-wrap:wrap;gap:1rem;padding:1rem;border:0;border-radius:0;background:transparent}.copy{flex:1;min-width:0}.copy strong{font-size:1rem;font-weight:650}.copy p,.help{font-size:.85rem;line-height:1.6;color:var(--muted);margin:.4rem 0 0}.help{flex-basis:100%}button{display:grid;justify-items:center;gap:.25rem;min-width:52px;min-height:44px;border:0;background:transparent;color:var(--muted);cursor:pointer;font:inherit}small{font-size:.7rem}.track{width:44px;height:26px;box-sizing:border-box;border:1px solid var(--muted);padding:3px;border-radius:2rem}.track::after{content:'';display:block;width:18px;height:18px;background:var(--muted);border-radius:50%}.track.on{background:var(--accent);border-color:var(--accent)}.track.on::after{background:var(--on-accent);transform:translateX(18px)}button:disabled{opacity:.5;cursor:default}button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
   `})
 export class PhoneRemindersComponent implements OnInit {
   private readonly auth=inject(AuthService);private readonly http=inject(HttpClient);

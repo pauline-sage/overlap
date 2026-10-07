@@ -971,6 +971,115 @@ namespace Overlap.Api.Migrations
                     b.ToTable("QuizRound");
                 });
 
+            modelBuilder.Entity("Overlap.Api.Schedule.CalendarDailyDelivery", b =>
+                {
+                    b.Property<long>("SubscriptionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("LocalDate")
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<DateTime>("AttemptedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("SentUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("SubscriptionId", "LocalDate");
+
+                    b.ToTable("CalendarDailyDelivery");
+                });
+
+            modelBuilder.Entity("Overlap.Api.Schedule.CalendarEntry", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<bool>("AllDay")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("AuthorId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime?>("EndUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("LocalEnd")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("LocalStart")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("PairId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("Revision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<DateTime?>("StartUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("TimeZone")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("varchar(160)");
+
+                    b.Property<DateTime>("UpdatedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("Yearly")
+                        .HasColumnType("tinyint(1)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("PairId", "LocalStart");
+
+                    b.ToTable("CalendarEntry");
+                });
+
+            modelBuilder.Entity("Overlap.Api.Schedule.CalendarPreference", b =>
+                {
+                    b.Property<string>("AccountId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<bool>("DailyEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("NotifyMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TimeZone")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("AccountId");
+
+                    b.ToTable("CalendarPreference");
+                });
+
             modelBuilder.Entity("Overlap.Api.Watch.SharedPick", b =>
                 {
                     b.Property<long>("Id")
@@ -1314,6 +1423,33 @@ namespace Overlap.Api.Migrations
                     b.HasOne("Overlap.Api.Auth.Account", null)
                         .WithMany()
                         .HasForeignKey("ProposedBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Schedule.CalendarDailyDelivery", b =>
+                {
+                    b.HasOne("Overlap.Api.Notifications.PhoneSubscription", null)
+                        .WithMany()
+                        .HasForeignKey("SubscriptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Schedule.CalendarEntry", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Schedule.CalendarPreference", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
