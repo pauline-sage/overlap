@@ -322,3 +322,10 @@ h1:focus {
 .login-page form { margin-top:30px; }
 .login-page .page-footer { margin-top:auto;padding-top:30px; }
 @media(max-height:640px){.login-page .auth-panel{padding-top:24px}.login-page .intro{margin-bottom:24px}}
+
+.name-page .auth-panel { flex:none;padding:1.5rem 0; }
+.name-page h1 { font-size:1.55rem;line-height:1.25;letter-spacing:-.04em;margin:.5rem 0 .75rem; }
+.name-page .intro { font-size:.85rem;line-height:1.6;margin-bottom:1.25rem; }
+.name-page input { box-sizing:border-box;min-height:48px;padding:.65rem .85rem; }
+.name-page .primary { width:auto;min-height:44px;padding:.65rem 1rem;font-size:.85rem;margin-top:.75rem; }
+.name-page .back { margin-top:.75rem; }

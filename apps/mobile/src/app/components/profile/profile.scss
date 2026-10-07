@@ -138,3 +138,6 @@ p {
 .profile-intro > button { border:0;background:transparent;font-size:.85rem;padding:.5rem .75rem; }
 .sharing { margin-top:1.25rem; }
 .sharing > button { background:transparent;font-size:.85rem; }
+
+.profile-intro > .edit-name { display:inline-flex;align-items:center;gap:.5rem;border:1px solid var(--line);border-radius:999px;padding:.4rem .85rem;color:var(--detail); }
+.edit-name svg { width:16px;height:16px; }

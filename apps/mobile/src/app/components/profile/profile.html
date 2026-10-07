@@ -59,8 +59,8 @@
       }
     </div>
   </div>
-  <button type="button" (click)="action.emit('editProfile')" [disabled]="busy() || working()">
-    Edit display name
+  <button class="edit-name" type="button" (click)="action.emit('editProfile')" [disabled]="busy() || working()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 16 12-12 4 4L8 20H4zM14 6l4 4"/></svg><span>Edit display name</span>
   </button>
   </div>
   <app-profile-timezone />
