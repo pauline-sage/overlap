@@ -54,3 +54,18 @@ button:focus-visible{outline:2px solid var(--clay);outline-offset:3px}
 
 
 .stay-in-section + .stay-in-section { margin-top: 1.75rem; }
+
+.hero { padding:1.5rem .5rem 1.4rem;margin-bottom:1.3rem; }
+.orbit .person { width:104px;height:104px;border:0;box-shadow:0 0 0 1px var(--detail-line);font-size:1.8rem;background:var(--accent);color:var(--on-accent); }
+.orbit .partner { background:var(--clay-soft); }
+
+.person-slot { width:104px;gap:.85rem; }
+.person-slot+.person-slot { margin-left:-24px; }
+.presence-dot { width:10px;height:10px;border-width:1px;right:3px;bottom:3px; }
+.hero h2 { margin-top:1.3rem; }
+.idea-grid { grid-template-columns:repeat(2,minmax(0,1fr));gap:13px; }
+.idea { flex-direction:column;align-items:flex-start;min-width:0;min-height:200px;padding:20px 15px;border-radius:29px 29px 14px 29px;background:var(--home-stay,var(--surface));box-shadow:var(--shadow);gap:0; }
+.coffee-idea { border-radius:29px 29px 29px 14px;background:color-mix(in srgb,var(--clay-soft) 25%,var(--surface)); }
+.idea-icon { width:43px;height:43px;border-radius:14px;margin-bottom:27px;background:var(--accent);color:var(--on-accent); }
+.coffee-idea .idea-icon { background:var(--clay-soft);color:var(--clay); }
+.idea .card-arrow { display:none; }

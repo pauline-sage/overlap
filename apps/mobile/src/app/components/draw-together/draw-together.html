@@ -27,5 +27,5 @@
   }
   <h3>{{albumOnly() ? 'Saved drawings' : 'Our rounds'}}</h3>
   @for(round of list().slice((page()-1)*10,page()*10);track round.id){<button class="round-row" type="button" (click)="open(round)"><span><strong>{{round.prompt}}</strong><small>{{state(round)}} &middot; {{duration(round.seconds)}} &middot; {{round.photos.length}} photos</small></span><span aria-hidden="true">›</span></button>}@empty{<p class="hint">No drawing rounds yet.</p>}
-  @if(list().length>10){<div class="actions"><button type="button" [disabled]="page()===1" (click)="page.set(page()-1)">Previous</button><span>Page {{page()}}</span><button type="button" [disabled]="page()*10>=list().length" (click)="page.set(page()+1)">Next</button></div>}
+  @if(list().length>10){<div class="app-pagination"><button type="button" aria-label="Previous page" [disabled]="page()===1" (click)="page.set(page()-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></button><span aria-live="polite">{{page()}} <span class="page-total">/ {{(list().length + 9 - (list().length + 9) % 10) / 10}}</span></span><button type="button" [disabled]="page()*10>=list().length" (click)="page.set(page()+1)">Next</button></div>}
 }

@@ -304,3 +304,21 @@ h1:focus {
 .header-actions {display:flex;align-items:center;gap:.4rem;flex-shrink:0;}
 .logout-button {display:grid;place-items:center;width:2.75rem;height:2.75rem;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--text);}
 .logout-button svg {width:1.15rem;height:1.15rem;}
+
+/* Continuous header atmosphere shared with every screen. */
+.auth-page { position:relative;isolation:isolate; }
+.auth-page::before { content:"";position:absolute;inset:0 0 auto;height:365px;pointer-events:none;z-index:-1;background:radial-gradient(ellipse at 25% 42%,color-mix(in srgb,var(--accent) 23%,transparent),transparent 66%),radial-gradient(ellipse at 76% 45%,color-mix(in srgb,var(--clay) 20%,transparent),transparent 68%);filter:blur(22px); }
+.topbar { position:relative;padding-bottom:17px; }
+.topbar::after { content:"";position:absolute;left:0;right:0;bottom:0;height:1px;pointer-events:none;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--detail-line) 48%,transparent),transparent); }
+.brand-mark i { border-color:var(--detail); }
+.brand-mark i:last-child { background:transparent; }
+.theme-toggle,.logout-button { border:0;background:transparent; }
+.login-page .auth-panel { flex:1;margin-block:0;padding:46px .4rem 22px; }
+.login-page h1 { font-size:1.55rem;font-weight:700;letter-spacing:-.04em;text-align:center;margin:0 0 13px; }
+.login-page .intro { text-align:center;font-size:.8rem;margin-bottom:36px; }
+.login-page label { font-size:.75rem;margin-bottom:11px; }
+.login-page input { min-height:52px;border-radius:16px;background:var(--field); }
+.login-page .primary { min-height:50px;margin-top:27px; }
+.login-page form { margin-top:30px; }
+.login-page .page-footer { margin-top:auto;padding-top:30px; }
+@media(max-height:640px){.login-page .auth-panel{padding-top:24px}.login-page .intro{margin-bottom:24px}}

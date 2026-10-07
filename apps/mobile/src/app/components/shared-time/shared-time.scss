@@ -44,7 +44,7 @@ header {
   color: var(--muted);
 }
 h2 {
-  font-size: clamp(1.7rem, 7vw, 2.1rem);
+  font-size: 1.55rem;
   line-height: 1.08;
   letter-spacing: -0.045em;
   margin: 0.7rem 0;
@@ -368,3 +368,11 @@ nav button:where(:not(.back)) {
 .search-line select { border-left:1px solid var(--line); border-radius:0 .85rem .85rem 0; }
 
 .watch-tabs { @include view-tabs.tabs; }
+
+.formats { background:var(--surface);padding:.25rem;border-radius:1rem;gap:.25rem; }
+.formats button:where(:not(.back)) { border:0;border-radius:.75rem; }
+.formats button[aria-pressed='true'] { background:var(--accent-soft);color:var(--text); }
+input[type='search'],select { background:var(--field);border-color:var(--line);font-size:.9rem; }
+.search-line { background:var(--field);border:1px solid var(--line); }
+.search-line input,.search-line select { border:0;background:transparent; }
+.search-line select { border-left:1px solid var(--line); }

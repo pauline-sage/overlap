@@ -30,8 +30,8 @@
         <p class="eyebrow">Choose your day</p>
         <app-outing-calendar [value]="date" (valueChange)="date=$event;changed()" />
         <div class="row time">
-          <app-outing-choice label="Hour" [value]="hour" [options]="hourOptions" (valueChange)="hour=$event;changed()" />
-          <app-outing-choice label="Minutes" [value]="minute" [options]="minuteOptions" (valueChange)="minute=$event;changed()" />
+          <app-outing-choice compact label="Hour" [value]="hour" [options]="hourOptions" (valueChange)="hour=$event;changed()" />
+          <app-outing-choice compact label="Minutes" [value]="minute" [options]="minuteOptions" (valueChange)="minute=$event;changed()" />
         </div>
         <p class="fine">{{date || 'Select a day'}} &middot; {{hour}}:{{minute}} in the local time of your search location.</p>
       </div>

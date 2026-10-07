@@ -20,7 +20,7 @@ export class SavedPlacesComponent implements OnInit {
   readonly brokenImages=signal<string[]>([]);
   imageFailed(url:string):void{this.brokenImages.update(items=>[...items,url]);}
   async find():Promise<void>{if(this.searching()||!this.query.trim())return;(document.activeElement as HTMLElement|null)?.blur();this.searchPages.reset(); this.searching.set(true);this.error.set('');this.matches.set([]);try{this.matches.set(await firstValueFrom(this.http.get<Match[]>('/api/auth/saved-places/search',{params:{query:this.query,language:this.language}})));this.searched.set(true);}catch(e){this.fail(e);}finally{this.searching.set(false);}}
-  select(match:Match):void{this.selected.set(match.place);this.selectionToken=match.token;this.clearIdentity=false;this.name=match.place.name;if(!this.link)this.link=match.place.sourceUrl;this.matches.set([]);}
+  select(match:Match):void{this.selected.set(match.place);this.selectionToken=match.token;this.clearIdentity=false;this.name=match.place.name;this.matches.set([]);}
   detach():void{this.selected.set(null);this.selectionToken=undefined;this.clearIdentity=true;}
 
   readonly filtered=computed(()=>{const q=this.filter().trim().toLocaleLowerCase();return this.places().filter(p=>(p.name+' '+p.location+' '+(p.note||'')).toLocaleLowerCase().includes(q));});

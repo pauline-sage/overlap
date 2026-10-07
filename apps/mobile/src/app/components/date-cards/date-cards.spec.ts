@@ -16,7 +16,7 @@ describe('Activity cards and hours',()=>{
     const sharing={error:signal(''),busy:signal(false),state:signal({outingUpdates:[{mine:true,revision:'outing',venue:{activity:'Coffee',name:'First cafe',startUtc:start(1)}}],cookingContests:Array.from({length:19},(_,i)=>({id:i+1,revision:'contest-'+i,status:'accepted',mine:true,startUtc:start(i+2),recipeTitle:'Recipe '+i}))})};
     TestBed.configureTestingModule({imports:[DateCardsComponent],providers:[{provide:SharingService,useValue:sharing}]});
     const f=TestBed.createComponent(DateCardsComponent);const c=f.componentInstance;f.detectChanges();
-    expect(f.nativeElement.querySelectorAll('.date-card')).toHaveLength(5);expect(c.displayedGroups()[0].updates).toHaveLength(1);expect(f.nativeElement.textContent).toContain('Page 1 of 4');
+    expect(f.nativeElement.querySelectorAll('.date-card')).toHaveLength(5);expect(c.displayedGroups()[0].updates).toHaveLength(1);expect(f.nativeElement.textContent).toContain('1 / 4');
     c.collection.page.set(2);f.detectChanges();expect(c.displayedGroups()[0].contests.map(x=>x.id)).toEqual([5,6,7,8,9]);
     const input=f.nativeElement.querySelector('#dates-search') as HTMLInputElement;input.value='First cafe';input.dispatchEvent(new Event('input'));f.detectChanges();
     expect(c.collection.page()).toBe(1);expect(f.nativeElement.querySelectorAll('.date-card')).toHaveLength(1);
@@ -111,6 +111,9 @@ describe('Activity cards and hours',()=>{
     f.componentInstance.reason='Something came up';
     await f.componentInstance.cancel(update as any);
     expect(sharing.cancel).toHaveBeenCalledWith('proposal','Something came up');
+    update.venue.startUtc=new Date(Date.now()-1000).toISOString();f.detectChanges();
+    expect(f.nativeElement.querySelector('button.cancel-date')).toBeNull();
+    await f.componentInstance.cancel(update as any);expect(sharing.cancel).toHaveBeenCalledTimes(1);
     update.cancelled=true;f.detectChanges();
     expect(f.componentInstance.groups().find(x=>x.label==='Upcoming dates')?.updates).toHaveLength(0);
     expect(f.nativeElement.querySelector('.date-card')).toBeNull();

@@ -5,10 +5,10 @@
   <ng-content />
   }
   @if (count() > browser().size || more()) {
-  <nav class="pages" aria-label="Collection pages">
-    <button type="button" [disabled]="pending() || browser().current(count()) === 1" (click)="browser().page.set(browser().current(count()) - 1)">Previous</button>
-    <span role="status">Page {{ browser().current(count()) }}{{more() ? ' · More available' : ' of '+browser().pages(count())}}</span>
-    <button type="button" [disabled]="pending() || (!more() && browser().current(count()) === browser().pages(count()))" (click)="next()">Next</button>
+  <nav class="pages app-pagination" aria-label="Collection pages">
+    <button type="button" aria-label="Previous page" [disabled]="pending() || browser().current(count()) === 1" (click)="browser().page.set(browser().current(count()) - 1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></button>
+    <span role="status">{{ browser().current(count()) }} <span class="page-total">{{more() ? '· More available' : '/ '+browser().pages(count())}}</span></span>
+    <button type="button" aria-label="Next page" [disabled]="pending() || (!more() && browser().current(count()) === browser().pages(count()))" (click)="next()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button>
   </nav>
   }
   @if (searchable() && !count()) { <p role="status">No matching items. Try another search or filter.</p> }

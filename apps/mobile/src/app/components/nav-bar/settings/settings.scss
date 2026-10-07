@@ -22,3 +22,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
 .notification-section{margin-bottom:2rem}
 .notification-preferences{border:1px solid var(--line);border-radius:1rem;overflow:hidden;background:var(--surface)}
 .notification-help{margin:1rem 0 0;padding:.85rem 1rem;border-left:3px solid var(--accent);border-radius:.25rem .85rem .85rem .25rem;background:var(--accent-soft);color:var(--text);font-size:.9rem;line-height:1.6}
+
+.page-banner h2::after { content:"";display:block;width:54px;height:1px;margin-top:12px;background:linear-gradient(90deg,color-mix(in srgb,var(--detail-line) 38%,transparent),transparent); }
+.notification-preferences,.account-actions { border-radius:24px;background:var(--surface);box-shadow:var(--shadow);padding:4px 17px; }
+.account-actions button { font-size:.8rem;padding:15px 0; }
+.notification-help { background:transparent;border:0;padding:.5rem 0;font-size:.75rem; }

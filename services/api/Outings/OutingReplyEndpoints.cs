@@ -24,12 +24,16 @@ public static class OutingReplyEndpoints
     }
     public static void MapOutingReplies(this WebApplication app)
     {
-        app.MapPost("/api/auth/outings/cancel", async (CancelOuting request, ClaimsPrincipal user, AuthDbContext db) =>
+        app.MapPost("/api/auth/outings/cancel", async (CancelOuting request, ClaimsPrincipal user, AuthDbContext db, TimeProvider clock) =>
         {
             if (request.ProposalRevision is not { Length:32 } || request.Reason?.Length > 500)
                 return Results.BadRequest();
             var id = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
             var pair = await db.PairMembers.Where(x => x.AccountId == id).Select(x => x.PairId).SingleOrDefaultAsync();
+            var proposal = await db.Set<OutingUpdate>().AsNoTracking().SingleOrDefaultAsync(x => pair != null && x.PairId == pair && x.Revision == request.ProposalRevision);
+            var venue = proposal?.VenueJson is null ? null : JsonSerializer.Deserialize<SharedVenue>(proposal.VenueJson);
+            if (venue?.StartUtc is not DateTimeOffset start || start <= clock.GetUtcNow())
+                return Results.Problem(statusCode:409,title:"This date has passed or changed. Refresh Dates.");
             var revision = Guid.NewGuid().ToString("N");
             var reason = string.IsNullOrWhiteSpace(request.Reason) ? null : request.Reason.Trim();
             var count = await db.Set<OutingUpdate>().Where(x => pair != null && x.PairId == pair &&

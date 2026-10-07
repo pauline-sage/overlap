@@ -1,38 +1,18 @@
 @mixin card {
   box-sizing: border-box;
   width: 100%;
-  min-height: 20rem;
+  min-height: 17rem;
   text-align: center;
   padding: 1.5rem 1rem 1.25rem;
-  background: var(--hero);
-  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  background: transparent;
+  border: 0;
   border-radius: 2rem;
   margin: .25rem 0 2rem;
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  box-shadow: 0 12px 32px rgba(0,0,0,.06);
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background: radial-gradient(ellipse at 20% 18%,color-mix(in srgb,var(--accent) 24%,transparent),transparent 60%),radial-gradient(ellipse at 85% 28%,color-mix(in srgb,var(--clay) 18%,transparent),transparent 55%),linear-gradient(180deg,transparent 40%,var(--hero) 95%);
-  }
-  &::after {
-    content: '';
-    position: absolute;
-    top: 2.8rem;
-    left: 50%;
-    width: 17rem;
-    height: 10rem;
-    transform: translateX(-50%);
-    border-radius: 50%;
-    background: radial-gradient(ellipse,color-mix(in srgb,var(--accent) 12%,transparent),transparent 70%);
-    z-index: -1;
-    pointer-events: none;
-  }
+  box-shadow:none;
+
 }
 @mixin eyebrow {
   font-size: .62rem;

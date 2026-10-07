@@ -9,7 +9,7 @@
     min-height: 44px;
     padding: .65rem .35rem;
     border: 0;
-    border-bottom: 3px solid transparent;
+    border-bottom: 2px solid transparent;
     border-radius: .7rem .7rem 0 0;
     background: transparent;
     color: var(--muted);
@@ -18,8 +18,8 @@
     overflow-wrap: anywhere;
   }
   button[aria-selected='true'] {
-    border-bottom-color: var(--accent);
-    background: var(--accent-soft);
+    border-bottom-color: var(--detail);
+    background: transparent;
     color: var(--text);
   }
 }

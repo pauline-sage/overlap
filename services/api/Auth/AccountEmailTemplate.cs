@@ -28,30 +28,30 @@ public static class AccountEmailTemplate
             {
                 var url = Escape(value);
                 content.Append($$"""
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:24px 0"><tr><td bgcolor="#c5d4b4" style="border-radius:12px;text-align:center">
-                    <a href="{{url}}" style="display:inline-block;padding:16px 28px;border:1px solid #c5d4b4;border-radius:12px;background-color:#c5d4b4;color:#263422;font-size:16px;font-weight:700;line-height:20px;text-decoration:none;mso-padding-alt:0;text-underline-color:#c5d4b4">{{Escape(action)}}</a>
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:24px 0"><tr><td bgcolor="#9ac4ab" style="border-radius:12px;text-align:center">
+                    <a href="{{url}}" style="display:inline-block;padding:16px 28px;border:1px solid #9ac4ab;border-radius:12px;background-color:#9ac4ab;color:#253d2f;font-size:16px;font-weight:700;line-height:20px;text-decoration:none;mso-padding-alt:0;text-underline-color:#9ac4ab">{{Escape(action)}}</a>
                     </td></tr></table>
-                    <p style="margin:0 0 24px;font-size:13px;line-height:20px;color:#646b5f">Button not working? <a href="{{url}}" style="color:#88563c;text-decoration:underline">Open the secure link</a>.</p>
+                    <p style="margin:0 0 24px;font-size:13px;line-height:20px;color:#57695e">Button not working? <a href="{{url}}" style="color:#476652;text-decoration:underline">Open the secure link</a>.</p>
                     """);
             }
-            else content.Append($"<p style=\"margin:0 0 20px;font-size:16px;line-height:26px;color:#30382e;overflow-wrap:anywhere\">{Escape(value).Replace("\n", "<br />")}</p>");
+            else content.Append($"<p style=\"margin:0 0 20px;font-size:16px;line-height:26px;color:#25392d;overflow-wrap:anywhere\">{Escape(value).Replace("\n", "<br />")}</p>");
         }
         return $$"""
             <!doctype html>
             <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><title>{{Escape(email.Subject)}}</title></head>
-            <body style="margin:0;padding:0;background-color:#f6f3ec;font-family:'Segoe UI',Arial,sans-serif;-webkit-text-size-adjust:100%">
-            <div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:#f6f3ec;mso-hide:all">{{Escape(title)}}. A notification from Overlap.</div>
-            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f6f3ec"><tr><td align="center" style="padding:32px 12px">
+            <body style="margin:0;padding:0;background-color:#f4f7f4;font-family:'Segoe UI',Arial,sans-serif;-webkit-text-size-adjust:100%">
+            <div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:#f4f7f4;mso-hide:all">{{Escape(title)}}. A notification from Overlap.</div>
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f4f7f4"><tr><td align="center" style="padding:32px 12px">
             <!--[if mso]><table role="presentation" width="560" cellspacing="0" cellpadding="0" border="0"><tr><td><![endif]-->
             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:560px;border-collapse:separate">
-            <tr><td bgcolor="#202321" style="padding:24px 28px;border-radius:20px 20px 0 0;background-color:#202321;color:#f2eee5;font-size:28px;line-height:34px;font-weight:700;letter-spacing:-1px">overlap<span style="color:#deb49a">.</span></td></tr>
-            <tr><td bgcolor="#fffcf6" style="padding:32px 28px 20px;border:1px solid #dcded2;border-top:0;border-radius:0 0 20px 20px">
-            <p style="margin:0 0 12px;font-size:11px;line-height:18px;letter-spacing:2px;font-weight:700;color:#646b5f">{{(email.Subject == "New Overlap registration" ? "SITE NOTIFICATION" : "YOUR ACCOUNT")}}</p>
-            <h1 style="margin:0 0 24px;font-size:28px;line-height:35px;letter-spacing:-.6px;color:#30382e;font-weight:700">{{Escape(title)}}</h1>
+            <tr><td bgcolor="#e0eae2" style="padding:24px 28px;border-radius:20px 20px 0 0;background-color:#e0eae2;color:#25392d;font-size:28px;line-height:34px;font-weight:700;letter-spacing:-1px">overlap<span style="color:#476652">.</span></td></tr>
+            <tr><td bgcolor="#ffffff" style="padding:32px 28px 20px;border:1px solid #cad8ce;border-top:1px solid #cad8ce;border-radius:0 0 24px 24px">
+            <p style="margin:0 0 12px;font-size:11px;line-height:18px;letter-spacing:2px;font-weight:700;color:#57695e">{{(email.Subject == "New Overlap registration" ? "SITE NOTIFICATION" : "YOUR ACCOUNT")}}</p>
+            <h1 style="margin:0 0 24px;font-size:25px;line-height:32px;letter-spacing:-.6px;color:#25392d;font-weight:700">{{Escape(title)}}</h1>
             {{content}}
-            <p style="margin:12px 0 0;padding-top:20px;border-top:1px solid #dcded2;font-size:13px;line-height:21px;color:#646b5f">Keep account links private. Overlap will never ask you to send your password by email.</p>
+            <p style="margin:12px 0 0;padding-top:20px;border-top:1px solid #cad8ce;font-size:13px;line-height:21px;color:#57695e">Keep account links private. Overlap will never ask you to send your password by email.</p>
             </td></tr>
-            <tr><td align="center" style="padding:20px 12px;font-size:12px;line-height:20px;color:#646b5f">Overlap &middot; Account notifications</td></tr>
+            <tr><td align="center" style="padding:20px 12px;font-size:12px;line-height:20px;color:#57695e">Overlap &middot; Account notifications</td></tr>
             </table>
             <!--[if mso]></td></tr></table><![endif]-->
             </td></tr></table></body></html>

@@ -14,7 +14,7 @@ import { AuthService } from '../../auth.service';
     <button type="submit" [disabled]="busy() || !ready()">Save timezone</button>
     @if(error()){<p role="alert">{{error()}}</p>}@if(notice()){<p role="status">{{notice()}}</p>}
   </form>`,styles:`
-  :host{display:block;margin-top:1.25rem}form{padding:1rem;border:1px solid var(--line);border-radius:1rem;background:var(--surface)}label{font-weight:650}p{font-size:.85rem;line-height:1.6;color:var(--muted)}select,button{font:inherit;color:var(--text);min-height:48px;border:1px solid var(--line);border-radius:.8rem;padding:.7rem;background:var(--field)}select{width:100%;box-sizing:border-box}button{margin-top:.75rem;background:var(--surface);cursor:pointer}button:disabled,select:disabled{opacity:.5}:is(button,select):focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  :host{display:block;margin-top:1.25rem}form{padding:1rem;border:1px solid var(--line);border-radius:1.5rem;background:var(--surface)}label{font-weight:650}p{font-size:.8rem;line-height:1.6;color:var(--muted)}select,button{font:inherit;color:var(--text);min-height:48px;border:1px solid var(--line);border-radius:.8rem;padding:.7rem;background:var(--field)}select{width:100%;box-sizing:border-box}button{margin-top:.5rem;background:transparent;border-color:transparent;font-size:.85rem;cursor:pointer}button:disabled,select:disabled{opacity:.5}:is(button,select):focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 `})
 export class ProfileTimezoneComponent implements OnInit {
   private readonly http=inject(HttpClient);private readonly auth=inject(AuthService);

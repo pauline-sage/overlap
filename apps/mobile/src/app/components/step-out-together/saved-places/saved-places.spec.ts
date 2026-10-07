@@ -8,9 +8,9 @@ it('shows five places per page and searches the full collection',async()=>{
  const http={get:vi.fn().mockReturnValue(of({connected:true,items}))};
  TestBed.configureTestingModule({imports:[SavedPlacesComponent],providers:[{provide:HttpClient,useValue:http},{provide:AuthService,useValue:{submit:vi.fn()}}]});
  const f=TestBed.createComponent(SavedPlacesComponent);f.detectChanges();await vi.waitFor(()=>expect(f.componentInstance.busy()).toBe(false));f.detectChanges();const c=f.componentInstance;
- expect(c.visible()).toHaveLength(5);expect(f.nativeElement.textContent).toContain('Page 1 of 3');
- const next=Array.from(f.nativeElement.querySelectorAll('nav button') as NodeListOf<HTMLButtonElement>).find(b=>b.textContent==='Next')!;
- next.click();f.detectChanges();expect(c.visible()[0].name).toBe('Place 5');expect(f.nativeElement.textContent).toContain('Page 2 of 3');
+ expect(c.visible()).toHaveLength(5);expect(f.nativeElement.textContent).toContain('1 / 3');
+ const next=Array.from(f.nativeElement.querySelectorAll('nav button') as NodeListOf<HTMLButtonElement>).find(b=>b.getAttribute('aria-label')==='Next page')!;
+ next.click();f.detectChanges();expect(c.visible()[0].name).toBe('Place 5');expect(f.nativeElement.textContent).toContain('2 / 3');
  next.click();f.detectChanges();expect(c.visible()).toHaveLength(2);expect(next.disabled).toBe(true);
  c.search('Place 11');f.detectChanges();expect(c.page()).toBe(0);expect(c.visible().map(x=>x.name)).toEqual(['Place 11']);f.destroy();
 });

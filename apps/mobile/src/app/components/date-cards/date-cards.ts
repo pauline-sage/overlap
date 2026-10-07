@@ -63,8 +63,9 @@ export class DateCardsComponent {
   }
   cancelling:string|null=null;
   reason='';
-  startCancellation(update:OutingUpdate):void {this.cancelling=update.revision;this.reason='';}
-  async cancel(update:OutingUpdate):Promise<void> {if(await this.sharing.cancel(update.revision,this.reason))this.cancelling=null;}
+  canCancel(update:OutingUpdate):boolean {return !update.cancelled && !!update.venue?.startUtc && Date.parse(update.venue.startUtc)>Date.now();}
+  startCancellation(update:OutingUpdate):void {if(this.canCancel(update)){this.cancelling=update.revision;this.reason='';}}
+  async cancel(update:OutingUpdate):Promise<void> {if(this.canCancel(update) && await this.sharing.cancel(update.revision,this.reason))this.cancelling=null;}
   canReply(update:OutingUpdate):boolean {return !update.cancelled && !update.mine && !!update.venue?.activity && !!update.venue.startUtc && Date.parse(update.venue.startUtc)+3600000>Date.now();}
   contestFuture(contest:CookingContest):boolean {return Date.parse(contest.startUtc)>this.now();}
   async cancelContest(contest:CookingContest):Promise<void> {if(await this.sharing.contestAction(contest,'cancel'))this.cancelling=null;}

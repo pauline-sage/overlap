@@ -17,3 +17,8 @@
 .appointment-copy .form-actions { gap:.4rem; margin-top:.35rem; }
 .appointment-copy .form-actions button { min-height:44px; padding:.3rem .5rem; border:0; border-radius:.5rem; background:transparent; color:var(--muted); font-size:.75rem; }
 .appointment-copy .form-actions button:hover { background:var(--field); color:var(--text); }
+
+button.schedule-entry { background:var(--schedule);border-color:color-mix(in srgb,var(--schedule-text) 15%,var(--schedule));color:var(--schedule-text);border-radius:20px;padding:14px 16px;box-shadow:none; }
+.schedule-entry .calendar-icon { background:var(--schedule-icon);color:var(--schedule-text);width:38px;height:38px;border-radius:12px; }
+.schedule-entry .entry-copy>span,.schedule-entry .entry-copy .today-summary { color:var(--schedule-muted);font-size:.7rem; }
+.schedule-entry .entry-copy strong { font-size:.85rem; }

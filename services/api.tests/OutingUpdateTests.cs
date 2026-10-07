@@ -17,6 +17,18 @@ public sealed partial class TogetherTests
         (await Post(second,"together/accept",new {token=await Invite(first)})).EnsureSuccessStatusCode();
         var token=factory.Services.GetRequiredService<IDataProtectionProvider>().CreateProtector("Overlap.OutingVenue.v1").ToTimeLimitedDataProtector()
             .Protect(JsonSerializer.Serialize(new SharedVenue("Cafe","Public address","https://example.test",null,"Coffee",DateTimeOffset.UtcNow.AddHours(2),"Europe/Paris")),TimeSpan.FromHours(1));
+        (await Post(first,"outings/update",new {kind="venue",venueToken=token})).EnsureSuccessStatusCode();
+        string pastRevision;
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<Overlap.Api.Auth.AuthDbContext>();
+            var past = db.Set<OutingUpdate>().Single();
+            pastRevision = past.Revision;
+            past.VenueJson = JsonSerializer.Serialize(new SharedVenue("Cafe","Public address","https://example.test",null,"Coffee",DateTimeOffset.UtcNow.AddMinutes(-1),"Europe/Paris"));
+            await db.SaveChangesAsync();
+        }
+        Assert.Equal(HttpStatusCode.Conflict,(await Post(first,"outings/cancel",new {proposalRevision=pastRevision})).StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict,(await Post(second,"outings/cancel",new {proposalRevision=pastRevision})).StatusCode);
         foreach(var ownerCancels in new[]{true,false})
         {
             (await Post(first,"outings/update",new {kind="venue",venueToken=token})).EnsureSuccessStatusCode();

@@ -1,15 +1,16 @@
 @use 'page-banner';
 .dock {
   position: fixed;
-  bottom: max(.6rem, env(safe-area-inset-bottom));
+  bottom:0;
   left: 50%;
   transform: translateX(-50%);
-  width: min(calc(100% - 1.5rem), 29rem);
-  padding: .4rem;
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow);
-  border-radius: 1.6rem;
-  background: var(--surface);
+  width:min(100%,30rem);
+  padding:.75rem 1rem max(.75rem,env(safe-area-inset-bottom));
+  border:0;
+  border-top:1px solid var(--line);
+  box-shadow:none;
+  border-radius:0;
+  background:var(--canvas);
 
   z-index: 10;
 }
@@ -35,8 +36,8 @@ svg {
   stroke-width: 1.7;
 }
 button[aria-current] {
-  color: var(--text);
-  background: var(--accent-soft);
+  color:var(--detail);
+  background:transparent;
   font-weight: 600;
 }
 button:focus-visible {
@@ -59,3 +60,5 @@ h2 {font-size:1.8rem;font-weight:700;letter-spacing:-.04em;margin:0 0 1.5rem;}
 .page-banner { @include page-banner.banner; }
 
 .quiz-invitation{padding:1.25rem;margin:1rem 0;border:1px solid var(--line);border-radius:1.5rem;background:var(--surface);box-shadow:var(--shadow)}.quiz-invitation h3{font-size:1.05rem;font-weight:650;margin:0 0 .75rem}.quiz-invitation p{font-size:.9rem;color:var(--muted);line-height:1.6}.quiz-invitation button{width:100%;border:1px solid var(--line);background:var(--accent);color:var(--on-accent);font:600 .9rem "Segoe UI",Arial,sans-serif;padding:.75rem 1rem}
+
+.page-banner h2::after { content:"";display:block;width:54px;height:1px;margin-top:12px;background:linear-gradient(90deg,color-mix(in srgb,var(--detail-line) 38%,transparent),transparent); }
