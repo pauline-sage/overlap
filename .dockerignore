@@ -53,3 +53,6 @@ services/api/**
 
 !services/api/Schedule/
 !services/api/Schedule/**
+
+!services/api/Drawing/
+!services/api/Drawing/**
