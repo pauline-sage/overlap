@@ -22,8 +22,9 @@ public sealed record SaveDishPhoto(string Revision, string? Pixels);
 public static class CookingMemoriesEndpoints
 {
     public const int PhotoSize = 512;
-    private static IQueryable<CookingContest> Authorized(AuthDbContext db, string account) => db.Set<CookingContest>().Where(x=>db.PairMembers.Any(m=>m.AccountId==account && m.PairId==x.PairId));
-    private static object Entry(CookingContest contest, CookingMemory? memory, CookingDishPhoto[] photos, string account) => new {
+    private static IQueryable<CookingContest> Readable(AuthDbContext db,string account)=>db.Set<CookingContest>().Where(x=>db.PairMembers.Any(m=>m.AccountId==account && m.PairId==x.PairId));
+    private static object Entry(CookingContest contest, CookingMemory? memory, CookingDishPhoto[] photos, string account,bool currentConnection) => new {
+        currentConnection,
         contestId=contest.Id, revision=contest.Revision,
         startUtc=DateTime.SpecifyKind(contest.StartUtc,DateTimeKind.Utc),
         completed=photos.Length==2, archived=memory is not null,
@@ -35,25 +36,28 @@ public static class CookingMemoriesEndpoints
         var group=app.MapGroup("/api/auth/cooking/memories").RequireAuthorization().RequireRateLimiting("picks");
         group.MapGet("",async(ClaimsPrincipal user,AuthDbContext db,CancellationToken ct)=>{
             var account=user.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var contests=await Authorized(db,account).AsNoTracking().Where(x=>db.Set<CookingMemory>().Any(m=>m.ContestId==x.Id)).OrderByDescending(x=>x.StartUtc).Take(100).ToArrayAsync(ct);
+            var currentPair=await db.PairMembers.Where(x=>x.AccountId==account).Select(x=>x.PairId).SingleOrDefaultAsync(ct);
+            var contests=await Readable(db,account).AsNoTracking().Where(x=>db.Set<CookingMemory>().Any(m=>m.ContestId==x.Id)).OrderByDescending(x=>x.StartUtc).ToArrayAsync(ct);
             var ids=contests.Select(x=>x.Id).ToArray();
             var memories=await db.Set<CookingMemory>().AsNoTracking().Where(x=>ids.Contains(x.ContestId)).ToArrayAsync(ct);
             // Album responses contain photo metadata only, never pixel bytes.
             var photos=await db.Set<CookingDishPhoto>().AsNoTracking().Where(x=>ids.Contains(x.ContestId)).Select(x=>new CookingDishPhoto{ContestId=x.ContestId,AccountId=x.AccountId,Png=Array.Empty<byte>(),UploadedUtc=x.UploadedUtc,Revision=x.Revision}).ToArrayAsync(ct);
-            return Results.Ok(contests.Select(x=>Entry(x,memories.Single(m=>m.ContestId==x.Id),photos.Where(p=>p.ContestId==x.Id).ToArray(),account)));
+            return Results.Ok(contests.Select(x=>Entry(x,memories.Single(m=>m.ContestId==x.Id),photos.Where(p=>p.ContestId==x.Id).ToArray(),account,x.PairId==currentPair)));
         });
         group.MapGet("/{id:long}",async(long id,ClaimsPrincipal user,AuthDbContext db,CancellationToken ct)=>{
             var account=user.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var contest=await Authorized(db,account).AsNoTracking().SingleOrDefaultAsync(x=>x.Id==id,ct);
+            var currentPair=await db.PairMembers.Where(x=>x.AccountId==account).Select(x=>x.PairId).SingleOrDefaultAsync(ct);
+            var contest=await Readable(db,account).AsNoTracking().SingleOrDefaultAsync(x=>x.Id==id,ct);
             if(contest is null)return Results.NotFound();
             if(contest.Status!="accepted" || contest.RevealedUtc is null || contest.RecipeContent is null)return Results.Problem(statusCode:409,title:"Finish cooking after your shared recipe is revealed.");
             var memory=await db.Set<CookingMemory>().AsNoTracking().SingleOrDefaultAsync(x=>x.ContestId==id,ct);
             var photos=await db.Set<CookingDishPhoto>().AsNoTracking().Where(x=>x.ContestId==id).Select(x=>new CookingDishPhoto{ContestId=x.ContestId,AccountId=x.AccountId,Png=Array.Empty<byte>(),UploadedUtc=x.UploadedUtc,Revision=x.Revision}).ToArrayAsync(ct);
-            return Results.Ok(Entry(contest,memory,photos,account));
+            return Results.Ok(Entry(contest,memory,photos,account,contest.PairId==currentPair));
         });
         group.MapGet("/{id:long}/photos/{photoAccount}",async(long id,string photoAccount,ClaimsPrincipal user,AuthDbContext db,CancellationToken ct)=>{
             var account=user.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            if(!await Authorized(db,account).AnyAsync(x=>x.Id==id,ct))return Results.NotFound();
+            var currentPair=await db.PairMembers.Where(x=>x.AccountId==account).Select(x=>x.PairId).SingleOrDefaultAsync(ct);
+            if(!await Readable(db,account).AnyAsync(x=>x.Id==id,ct))return Results.NotFound();
             var png=await db.Set<CookingDishPhoto>().Where(x=>x.ContestId==id && x.AccountId==photoAccount).Select(x=>x.Png).SingleOrDefaultAsync(ct);
             return png is null ? Results.NotFound() : Results.File(png,"image/png");
         });
@@ -65,7 +69,7 @@ public static class CookingMemoriesEndpoints
                 try{png=AvatarImage.EncodeSquare(Convert.FromBase64String(request.Pixels),PhotoSize);}catch(ArgumentException){return Results.BadRequest();}catch(FormatException){return Results.BadRequest();}
             }
             var account=user.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var contest=await Authorized(db,account).AsNoTracking().SingleOrDefaultAsync(x=>x.Id==id,ct);
+            var contest=await Readable(db,account).AsNoTracking().SingleOrDefaultAsync(x=>x.Id==id,ct);
             if(contest is null)return Results.NotFound();
             if(contest.Status!="accepted" || contest.RevealedUtc is null || contest.RecipeContent is null)return Results.Problem(statusCode:409,title:"Reveal your recipe before adding a finished-dish photo.");
             await using var transaction=await db.Database.BeginTransactionAsync(ct);

@@ -19,5 +19,6 @@ export async function drawingPixels(file: File): Promise<string> {
 }
 
 export interface DrawingPhoto {accountId:string;revision:string;uploadedUtc:string;mine:boolean;myRating:number|null;partnerRating:number|null;}
-export interface DrawingRound {id:number;prompt:string;seconds:number;revision:string;mine:boolean;status:'waiting'|'drawing'|'finished'|'cancelled';createdUtc:string;startUtc:string|null;endUtc:string|null;photos:DrawingPhoto[];}
-export interface DrawingList {connected:boolean;serverUtc:string;rounds:DrawingRound[];}
+export interface DrawingCategory {id:string;title:string;count:number;}
+export interface DrawingRound {currentConnection?:boolean;categories?:string[];sessionId?:string|null;drawingCount?:number;drawingNumber?:number;nextCreated?:boolean;id:number;prompt:string;seconds:number;revision:string;mine:boolean;status:'waiting'|'drawing'|'paused'|'finished'|'cancelled';pausedSeconds?:number|null;createdUtc:string;startUtc:string|null;endUtc:string|null;photos:DrawingPhoto[];}
+export interface DrawingList {categories?:DrawingCategory[];connected:boolean;serverUtc:string;rounds:DrawingRound[];}

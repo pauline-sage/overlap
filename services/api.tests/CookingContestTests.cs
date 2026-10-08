@@ -66,7 +66,7 @@ public sealed partial class TogetherTests
         Assert.Equal(new[]{"spinach","olives"},(await second.GetFromJsonAsync<JsonElement>("/api/auth/cooking/preferences")).GetProperty("partnerPreferences").GetProperty("excludedIngredients").EnumerateArray().Select(x=>x.GetString()).ToArray());
         (await Post(first,"cooking/preferences",new{avoidRedMeat=true,excludedIngredients=Array.Empty<string>(),shareWithPartner=false})).EnsureSuccessStatusCode();
         Assert.Empty((await first.GetFromJsonAsync<JsonElement>("/api/auth/cooking/preferences")).GetProperty("ownPreferences").GetProperty("excludedIngredients").EnumerateArray());
-        (await Post(first,"together/leave",new{})).EnsureSuccessStatusCode();
+        (await Post(first,"together/leave",new {acceptTerms=true})).EnsureSuccessStatusCode();
         Assert.True((await first.GetFromJsonAsync<JsonElement>("/api/auth/cooking/preferences")).GetProperty("ownPreferences").GetProperty("avoidRedMeat").GetBoolean());
         (await Post(stranger,"together/accept",new{token=await Invite(first)})).EnsureSuccessStatusCode();
         state=await stranger.GetFromJsonAsync<JsonElement>("/api/auth/cooking/preferences");Assert.True(state.GetProperty("partnerConfirmed").GetBoolean());Assert.False(state.GetProperty("partnerShared").GetBoolean());Assert.Equal(JsonValueKind.Null,state.GetProperty("partnerPreferences").ValueKind);
@@ -145,8 +145,8 @@ public sealed partial class TogetherTests
         (await Post(second,$"cooking/contests/{id}/respond",new{revision,action="cancel"})).EnsureSuccessStatusCode();
         news=await first.GetFromJsonAsync<JsonElement>("/api/auth/privacy");Assert.False(news.GetProperty("cookingContests")[0].GetProperty("dismissed").GetBoolean());Assert.Equal(1,news.GetProperty("unreadContests").GetInt32());
         Assert.Equal("cancelled",news.GetProperty("cookingContests")[0].GetProperty("status").GetString());
-        (await Post(first,"together/leave",new{})).EnsureSuccessStatusCode();
-        using var scope=factory.Services.CreateScope();Assert.Empty(await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Set<CookingContest>().ToListAsync());
+        (await Post(first,"together/leave",new {acceptTerms=true})).EnsureSuccessStatusCode();
+        using var scope=factory.Services.CreateScope();Assert.Single(await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Set<CookingContest>().ToListAsync());
     }
     [Fact]
     public async Task DeclinedAndElapsedContestsCannotBeAccepted()

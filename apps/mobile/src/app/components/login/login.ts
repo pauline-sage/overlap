@@ -1,3 +1,4 @@
+import { NavigationStateService, oneOf, navigationId, navigationBoolean } from '../../navigation-state.service';
 import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator';
 import { PrivacyNoticeComponent } from '../privacy-notice/privacy-notice';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -27,10 +28,11 @@ type Screen =
   styleUrl: './login.scss',
 })
 export class LoginComponent {
+  private readonly navigation=inject(NavigationStateService);
   private readonly auth = inject(AuthService);
   private readonly dashboard = viewChild(DashboardComponent);
   private readonly idle = inject(IdleSessionService);
-  protected readonly screen = signal<Screen>('login');
+  protected readonly screen = signal<Screen>(this.navigation.read('login.screen',oneOf(['login','register','forgot-password','resend-confirmation']),'login'));
   protected readonly account = signal<Account | null>(null);
   protected readonly busy = signal(false);
   protected readonly loading = signal(true);
@@ -114,10 +116,10 @@ export class LoginComponent {
   private async loadSession(): Promise<void> {
     try {
       this.account.set(await this.auth.me());
-      this.screen.set(this.account()?.displayName ? 'account' : 'profile');
+      this.navigate(this.account()?.displayName ? this.navigation.read('login.screen',oneOf(['account','profile','change-password','change-email']),'account') : 'profile');
       this.idle.start(() => this.sessionEnded());
     } catch (error) {
-      if (!(error instanceof HttpErrorResponse && error.status === 401)) this.showError(error);
+      if(error instanceof HttpErrorResponse && error.status===401){this.navigation.clear();this.navigation.write('login.screen',this.screen());}else this.showError(error);
     } finally {
       this.loading.set(false);
     }
@@ -127,6 +129,7 @@ export class LoginComponent {
     if (screen === 'account' && !this.account()?.displayName) screen = 'profile';
     if (screen === 'profile') this.displayName = this.account()?.displayName ?? '';
     this.screen.set(screen);
+    if(!['confirm-email','reset-password','confirm-email-change'].includes(screen))this.navigation.write('login.screen',screen);
     this.emailSent.set(false);
     this.showConfirmationHelp.set(false);
     this.revealPassword.set(false);
@@ -200,6 +203,7 @@ export class LoginComponent {
       if (accountAtStart && !this.account()) return;
       this.busy.set(false);
       if (screen === 'login' || screen === 'profile') {
+        if(screen==='login')this.navigation.clear();
         this.account.set(result as Account);
         this.navigate('account');
         if (screen === 'login') this.idle.start(() => this.sessionEnded(), true);
@@ -213,7 +217,7 @@ export class LoginComponent {
           this.idle.broadcastLogout();
         }
         this.token = '';
-        this.account.set(null);
+        this.navigation.clear();this.account.set(null);
         this.idle.stop();
         this.navigate('login');
         this.message.set((result as AuthMessage).message);
@@ -239,7 +243,7 @@ export class LoginComponent {
     this.busy.set(true);
     try {
       await this.auth.submit<void>('logout', {});
-      this.account.set(null);
+      this.navigation.clear();this.account.set(null);
       this.idle.broadcastLogout();
       this.idle.stop();
       this.busy.set(false);
@@ -264,7 +268,7 @@ export class LoginComponent {
       }
       if (error.status === 401 && this.account()) {
         this.idle.stop();
-        this.account.set(null);
+        this.navigation.clear();this.account.set(null);
         this.busy.set(false);
         this.navigate('login');
         this.error.set('Your session has ended. Please sign in again.');
@@ -277,7 +281,7 @@ export class LoginComponent {
   }
   protected sessionEnded(): void {
     this.idle.stop();
-    this.account.set(null);
+    this.navigation.clear();this.account.set(null);
     this.busy.set(false);
     this.navigate('login');
     this.message.set('Your session ended. Sign in again to continue.');

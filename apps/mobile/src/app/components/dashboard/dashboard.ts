@@ -1,3 +1,4 @@
+import { NavigationStateService, oneOf, navigationId, navigationBoolean } from '../../navigation-state.service';
 import { StayInTogetherComponent } from '../stay-in-together/stay-in-together';
 import { ScheduleComponent } from '../schedule/schedule';
 import { StayInRequest } from '../stay-in-together/stay-in.types';
@@ -6,7 +7,7 @@ import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicato
 import { OutingUpdate, SharingService } from '../nav-bar/sharing/sharing.service';
 import { StepOutTogetherComponent } from '../step-out-together/step-out-together';
 import { ProfileComponent, ProfileAction } from '../profile/profile';
-import { Component, inject, input, output, signal, OnInit, OnDestroy, NgZone } from '@angular/core';
+import { Component, effect, inject, input, output, signal, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService, TogetherStatus } from '../../auth.service';
 import { DashboardPage, NavBarComponent } from '../nav-bar/nav-bar';
@@ -19,7 +20,8 @@ import { DashboardPage, NavBarComponent } from '../nav-bar/nav-bar';
   styleUrl: './dashboard.scss',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  readonly scheduleOpened=signal(false);
+  private readonly navigation=inject(NavigationStateService);
+  readonly scheduleOpened=signal(this.navigation.read('dashboard.section',oneOf(['none','schedule','stayin','outings']),'none')==='schedule');
   openSchedule():void {this.navigate('home');this.scheduleOpened.set(true);queueMicrotask(()=>document.getElementById('dashboard-heading')?.focus());}
   readonly sharing = inject(SharingService);
   openPartnerPicks():void {this.openActivity({activity:'watch',partnerPicks:true});}
@@ -33,12 +35,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     void this.sharing.load(true);
     queueMicrotask(()=>document.getElementById('first-steps-heading')?.focus());
   }
-  readonly coffee=signal(false);
-  readonly stayingIn=signal(false);
-  readonly stayInRequest=signal<StayInRequest>({activity:'menu'});
+  readonly coffee=signal(this.navigation.read('dashboard.section',oneOf(['none','schedule','stayin','outings']),'none')==='outings');
+  readonly stayingIn=signal(this.navigation.read('dashboard.section',oneOf(['none','schedule','stayin','outings']),'none')==='stayin');
+  readonly stayInRequest=signal<StayInRequest>({activity:this.navigation.read('stay.activity',oneOf(['menu','watch','read','quiz','cooking','drawing']),'menu')});
+  constructor(){effect(()=>this.navigation.write('dashboard.section',this.scheduleOpened() ? 'schedule' : this.stayingIn() ? 'stayin' : this.coffee() ? 'outings' : 'none'));}
   private openActivity(request:StayInRequest):void{this.navigate('home');this.stayInRequest.set(request);this.stayingIn.set(true);queueMicrotask(()=>document.getElementById('dashboard-heading')?.focus());}
   openStayIn():void{this.openActivity({activity:'menu'});}
   openQuiz(id=0):void{this.openActivity({activity:'quiz',entryId:id});}
+  openDrawing(id:number):void{this.openActivity({activity:'drawing',entryId:id});}
   openCooking(entryId=0):void{this.openActivity({activity:'cooking',entryId});}
   openContest(id:number):void{this.openActivity({activity:'cooking',contestId:id});}
   openReading():void{this.openActivity({activity:'read'});}
@@ -51,7 +55,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly outingProposal=signal<OutingUpdate|null>(null);
   pickYours(proposal:OutingUpdate):void{this.navigate('home');this.outingProposal.set(proposal);this.coffee.set(true);}
   openCoffee():void{this.navigate('home');this.outingProposal.set(null);this.coffee.set(true);}
-  readonly page=signal<DashboardPage>('home');
+  readonly page=this.navigation.remember<DashboardPage>('dashboard.page',oneOf(['home','dates','profile','settings','notifications']),'home');
   readonly sessionExpired=output<void>();
   navigate(page:DashboardPage):void{this.scheduleOpened.set(false);this.stayingIn.set(false);this.coffee.set(false);this.page.set(page);queueMicrotask(()=>document.getElementById('dashboard-heading')?.focus());}
   private readonly auth = inject(AuthService);
@@ -87,6 +91,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const status = await this.auth.together();
       if (!this.destroyed) {
         const justConnected=!!this.together() && !this.together()?.partner && !!status.partner;
+        if(this.together()?.partner && this.together()?.partner?.id!==status.partner?.id)this.clearConnectionViews();
         this.together.set(status);
         if(justConnected) this.welcomeConnection();
         this.photoVersion.update((version) => version + 1);
@@ -223,10 +228,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.notice.set('You’re connected!');
     });
   }
+  private clearConnectionViews():void {
+    this.navigation.clear();this.stayingIn.set(false);this.coffee.set(false);this.scheduleOpened.set(false);
+    this.stayInRequest.set({activity:'menu'});this.firstSteps.set(false);
+    this.sharing.state.set(null);void this.sharing.load(true);this.navigate('profile');
+  }
   async leave(): Promise<void> {
     await this.run(async () => {
-      await this.auth.submit('together/leave', {});
-      this.showLeave.set(false);
+      await this.auth.submit('together/leave', {acceptTerms:true});
+      this.showLeave.set(false);this.clearConnectionViews();
       this.together.set(await this.auth.together());
       this.notice.set('Connection ended for both of you.');
     });

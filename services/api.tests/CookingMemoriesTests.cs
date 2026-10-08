@@ -10,10 +10,10 @@ namespace Overlap.Api.Tests;
 public sealed partial class TogetherTests
 {
     [Fact]
-    public async Task CookingAlbumKeepsRecipeAndIndependentPrivatePhotosAndCleansUpOnDisconnect()
+    public async Task CookingAlbumKeepsRecipeButRevokesLiveAccessOnDisconnect()
     {
         using var factory=new AuthFactory(unlimitedAuthRequests:true);using var first=factory.Client();using var second=factory.Client();using var outsider=factory.Client();
-        var owner=await SignIn(factory,first,"memory-first");await SignIn(factory,second,"memory-second");await SignIn(factory,outsider,"memory-outsider");
+        var owner=await SignIn(factory,first,"memory-first");var partner=await SignIn(factory,second,"memory-second");await SignIn(factory,outsider,"memory-outsider");
         (await Post(second,"together/accept",new{token=await Invite(first)})).EnsureSuccessStatusCode();
         using var scope=factory.Services.CreateScope();var db=scope.ServiceProvider.GetRequiredService<AuthDbContext>();
         var pair=(await db.PairMembers.SingleAsync(x=>x.AccountId==owner)).PairId;
@@ -40,8 +40,12 @@ public sealed partial class TogetherTests
         (await Post(first,$"cooking/memories/{id}/photo",new{revision=state.GetProperty("revision").GetString(),pixels=(string?)null})).EnsureSuccessStatusCode();
         state=await Detail(second);Assert.False(state.GetProperty("completed").GetBoolean());Assert.True(Assert.Single(state.GetProperty("photos").EnumerateArray()).GetProperty("mine").GetBoolean());
         var album=await first.GetFromJsonAsync<JsonElement>("/api/auth/cooking/memories");Assert.Single(album.EnumerateArray());Assert.Equal(0,(await outsider.GetFromJsonAsync<JsonElement>("/api/auth/cooking/memories")).GetArrayLength());
-        (await Post(first,"together/leave",new{})).EnsureSuccessStatusCode();
-        Assert.Empty(await db.Set<CookingMemory>().AsNoTracking().ToArrayAsync());Assert.Empty(await db.Set<CookingDishPhoto>().AsNoTracking().ToArrayAsync());
-        Assert.Equal(HttpStatusCode.NotFound,(await second.GetAsync($"/api/auth/cooking/memories/{id}/photos/{owner}")).StatusCode);
+        (await Post(first,"together/leave",new {acceptTerms=true})).EnsureSuccessStatusCode();
+        Assert.Single(await db.Set<CookingMemory>().AsNoTracking().ToArrayAsync());Assert.Single(await db.Set<CookingDishPhoto>().AsNoTracking().ToArrayAsync());
+        Assert.Equal(HttpStatusCode.NotFound,(await second.GetAsync($"/api/auth/cooking/memories/{id}/photos/{partner}")).StatusCode);
+        (await Post(outsider,"together/accept",new{token=await Invite(first)})).EnsureSuccessStatusCode();
+        Assert.Empty((await first.GetFromJsonAsync<JsonElement>("/api/auth/cooking/memories")).EnumerateArray());
+        Assert.Empty((await second.GetFromJsonAsync<JsonElement>("/api/auth/cooking/memories")).EnumerateArray());
+
     }
 }

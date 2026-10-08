@@ -1,3 +1,4 @@
+import { NavigationStateService, oneOf, navigationId, navigationBoolean } from '../../navigation-state.service';
 import { CollectionBrowser, CollectionBrowserComponent } from '../collection-browser/collection-browser';
 import { Component, inject, OnInit, OnDestroy, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -14,6 +15,7 @@ interface Recipe extends RecipeHit { revision: number; ingredients: string[]; in
 interface Entry { ownMadeUtc?:string|null; partnerMadeUtc?:string|null; ownMade?: boolean; partnerMade?: boolean; ownRating?: number | null; partnerRating?: number | null; id: number; addedUtc: string; recipe: Recipe; }
 @Component({ selector: 'app-cooking', imports: [CollectionBrowserComponent, DatePipe, FormsModule, LoadingIndicatorComponent, BookRatingComponent, CookingContestsComponent, FoodPreferencesComponent], templateUrl: './cooking.html', styleUrl: './cooking.scss' })
 export class CookingComponent implements OnInit, OnDestroy {
+  private readonly navigation=inject(NavigationStateService);
   readonly searchPages=new CollectionBrowser();
   private readonly auth = inject(AuthService);
   private readonly http = inject(HttpClient);
@@ -24,16 +26,16 @@ export class CookingComponent implements OnInit, OnDestroy {
   readonly ownName=input('Me');
   readonly partnerCookingShared=signal(false);
   private initialOpened=false;
-  readonly preferencesOpened=signal(false);
+  readonly preferencesOpened=this.navigation.remember('cooking.preferences',navigationBoolean,false);
   readonly contestsView=viewChild(CookingContestsComponent);
   refreshFoodPreferences():void {const view=this.contestsView();if(view?.selectedId())void view.loadRecipe(view.selectedId());}
   closeFoodPreferences():void {this.preferencesOpened.set(false);this.refreshFoodPreferences();}
 
-  readonly contestsOpened=signal(false);
+  readonly contestsOpened=this.navigation.remember('cooking.contests',navigationBoolean,false);
   readonly busy = signal(false);
   readonly error = signal('');
   readonly collectionError = signal('');
-  readonly tab = signal<'discover' | 'collection' | 'made' | 'partner'>('discover');
+  readonly tab = this.navigation.remember<'discover'|'collection'|'made'|'partner'>('cooking.tab',oneOf(['discover','collection','made','partner']),'discover');
   readonly hits = signal<RecipeHit[] | null>(null);
   readonly entries = signal<Entry[]>([]);
   readonly connected = signal(false);
@@ -48,7 +50,7 @@ export class CookingComponent implements OnInit, OnDestroy {
   private disposed = false;
   private loading = false;
   private collectionVersion=0;
-  ngOnInit(): void { this.contestsOpened.set(this.initialContestId()>0);void this.load(); this.poll=setInterval(() => { if(document.visibilityState==='visible') void this.load(); },10000); }
+  ngOnInit(): void { if(this.initialContestId()>0)this.contestsOpened.set(true);void this.load(); this.poll=setInterval(() => { if(document.visibilityState==='visible') void this.load(); },10000); }
   ngOnDestroy(): void { this.disposed=true; clearInterval(this.poll); }
   view(tab: 'discover' | 'collection' | 'made' | 'partner'): void { this.tab.set(tab); this.selected.set(null); this.error.set(''); void this.load(); }
   tabKey(event:KeyboardEvent):void {

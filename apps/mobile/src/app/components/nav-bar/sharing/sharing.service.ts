@@ -7,13 +7,13 @@ interface Grant { category: Category; status: 'pending' | 'accepted' | 'declined
 export interface OutingUpdate { dismissed?:boolean; cancelled?:boolean; cancelledByMe?:boolean; cancellationReason?:string; replyKind?: 'picked'|'surprise'; replyRevision?: string; replyVenue?: OutingUpdate['venue']; mine: boolean; onMyWay: boolean; updatedUtc: string; revision: string; unread: boolean; venue: { name: string; address: string; mapUrl: string; website?: string; activity?: string; startUtc?: string; timeZone?: string } | null; }
 export interface MoviePick { dismissed?:boolean; id:number;revision:string;mine:boolean;status:string;unread:boolean;shared:boolean;title:{title:string;format:string;poster?:string;ownLink:string;partnerLink:string}; }
 export interface CookingContest {redrawPending?:boolean;redrawMine?:boolean;recipeTitle?:string;id:number;revision:string;status:'pending'|'accepted'|'declined'|'cancelled';mine:boolean;startUtc:string;timeZone:string;availableMinutes:number;unread:boolean;dismissed:boolean;}
-interface SharingState { quizInvitations?:{id:number}[]; unreadContests?:number;cookingContests?:CookingContest[]; unreadRecipes?:number;recipeShares?:{id:number;revision:string;title:string;unread:boolean;dismissed:boolean}[]; partnerName?:string;unreadOutings?:number;unreadPicks?:number;moviePicks?:MoviePick[]; connected: boolean; incoming: Grant[]; outgoing: Grant[]; receivedPicks: number; outingUpdates?: OutingUpdate[]; }
+interface SharingState { drawingInvitations?:{id:number;prompt:string;seconds:number;drawingCount?:number;drawingNumber?:number}[]; quizInvitations?:{id:number}[]; unreadContests?:number;cookingContests?:CookingContest[]; unreadRecipes?:number;recipeShares?:{id:number;revision:string;title:string;unread:boolean;dismissed:boolean}[]; partnerName?:string;unreadOutings?:number;unreadPicks?:number;moviePicks?:MoviePick[]; connected: boolean; incoming: Grant[]; outgoing: Grant[]; receivedPicks: number; outingUpdates?: OutingUpdate[]; }
 @Injectable()
 export class SharingService implements OnDestroy {
   private readonly http = inject(HttpClient); private readonly auth = inject(AuthService);
   readonly state = signal<SharingState | null>(null); readonly busy = signal(false); readonly error = signal('');
   readonly count = computed(() => {
-    const state = this.state(); return (state?.quizInvitations?.length ?? 0) + (state?.unreadContests ?? 0) + (state?.unreadRecipes ?? 0) + (state?.unreadOutings ?? 0) + (state?.unreadPicks ?? state?.receivedPicks ?? 0);
+    const state = this.state(); return (state?.drawingInvitations?.length ?? 0) + (state?.quizInvitations?.length ?? 0) + (state?.unreadContests ?? 0) + (state?.unreadRecipes ?? 0) + (state?.unreadOutings ?? 0) + (state?.unreadPicks ?? state?.receivedPicks ?? 0);
   });
   private loading = false; private disposed = false; private version = 0;
   private readonly timer = setInterval(()=>{ if(document.visibilityState==='visible') void this.load(); },15000);

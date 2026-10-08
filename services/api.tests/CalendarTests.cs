@@ -78,7 +78,7 @@ public sealed partial class TogetherTests
         Assert.Equal("America/Sao_Paulo",preference.GetProperty("timeZone").GetString());Assert.True(preference.GetProperty("dailyEnabled").GetBoolean());Assert.Equal(540,preference.GetProperty("notifyMinutes").GetInt32());
         Assert.Equal(HttpStatusCode.BadRequest,(await Post(first,"calendar/timezone",new{timeZone="invalid"})).StatusCode);
         Assert.False((await second.GetFromJsonAsync<JsonElement>("/api/auth/calendar/preferences")).GetProperty("dailyEnabled").GetBoolean());
-        (await Post(second,"together/leave",new{})).EnsureSuccessStatusCode();
-        using var scope=factory.Services.CreateScope();Assert.Empty(await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Set<CalendarEntry>().ToArrayAsync());
+        (await Post(second,"together/leave",new {acceptTerms=true})).EnsureSuccessStatusCode();
+        using var scope=factory.Services.CreateScope();Assert.Single(await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Set<CalendarEntry>().ToArrayAsync());
     }
 }

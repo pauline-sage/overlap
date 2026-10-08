@@ -4,6 +4,10 @@ import { of } from 'rxjs';
 import { AuthService } from '../../../auth.service';
 import { SharingService } from './sharing.service';
 import { SharingComponent } from './sharing';
+import { NavBarComponent } from '../nav-bar';
+
+beforeEach(()=>sessionStorage.removeItem('overlap-navigation'));
+afterEach(()=>sessionStorage.removeItem('overlap-navigation'));
 
 describe('Owner sharing preferences', () => {
   const auth = { submit: vi.fn().mockResolvedValue({}) };
@@ -13,9 +17,19 @@ describe('Owner sharing preferences', () => {
     vi.clearAllMocks();
     auth.submit.mockResolvedValue({});
     http.get.mockReturnValue(of(state));
-    TestBed.configureTestingModule({ imports: [SharingComponent], providers: [SharingService,
+    TestBed.configureTestingModule({ imports: [SharingComponent,NavBarComponent], providers: [SharingService,
       { provide: AuthService, useValue: auth }, { provide: HttpClient, useValue: http }
     ] });
+  });
+  it('counts drawing invitations and opens the invited round from Notifications',async()=>{
+    http.get.mockReturnValue(of({...state,drawingInvitations:[{id:17,prompt:'A cat',seconds:60}]}));
+    const f=TestBed.createComponent(NavBarComponent);f.componentRef.setInput('current','notifications');
+    f.detectChanges();await f.whenStable();f.detectChanges();
+    expect(f.componentInstance.sharing.count()).toBe(3);
+    const open=vi.fn();f.componentInstance.openDrawing.subscribe(open);
+    const buttons=[...f.nativeElement.querySelectorAll('button')] as HTMLButtonElement[];
+    buttons.find(x=>x.textContent?.trim()==='View invitation')!.click();
+    expect(open).toHaveBeenCalledWith(17);expect(f.nativeElement.textContent).toContain('A cat');f.destroy();
   });
   it('enables sharing directly, with old pending requests off', async () => {
     const f = TestBed.createComponent(SharingComponent); await f.whenStable(); f.detectChanges();

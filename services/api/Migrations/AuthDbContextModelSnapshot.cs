@@ -267,6 +267,46 @@ namespace Overlap.Api.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Overlap.Api.Auth.AlbumAccess", b =>
+                {
+                    b.Property<string>("PairId")
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("AccountId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("PairId", "AccountId");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("AlbumAccess");
+                });
+
+            modelBuilder.Entity("Overlap.Api.Auth.ConnectionHistory", b =>
+                {
+                    b.Property<string>("PairId")
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<bool>("Closed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("DisconnectedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("ExportExpiresUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("StartedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("PairId");
+
+                    b.ToTable("ConnectionHistory");
+                });
+
             modelBuilder.Entity("Overlap.Api.Auth.PairMember", b =>
                 {
                     b.Property<string>("AccountId")
@@ -709,6 +749,10 @@ namespace Overlap.Api.Migrations
                     b.Property<bool>("Cancelled")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<string>("CategoriesJson")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -717,13 +761,29 @@ namespace Overlap.Api.Migrations
                     b.Property<DateTime>("CreatedUtc")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<int>("DrawingCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<int>("DrawingNumber")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
                     b.Property<DateTime?>("EndUtc")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("NextCreated")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("PairId")
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("varchar(32)");
+
+                    b.Property<int?>("PausedSeconds")
+                        .HasColumnType("int");
 
                     b.Property<string>("Prompt")
                         .IsRequired()
@@ -737,6 +797,10 @@ namespace Overlap.Api.Migrations
 
                     b.Property<int>("Seconds")
                         .HasColumnType("int");
+
+                    b.Property<string>("SessionId")
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
 
                     b.Property<DateTime?>("StartUtc")
                         .HasColumnType("datetime(6)");
@@ -1174,6 +1238,11 @@ namespace Overlap.Api.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("CollectionKey")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasMaxLength(16000)
@@ -1223,7 +1292,7 @@ namespace Overlap.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProposedBy", "TitleId")
+                    b.HasIndex("ProposedBy", "TitleId", "CollectionKey")
                         .IsUnique();
 
                     b.ToTable("SharedPick");
@@ -1317,6 +1386,15 @@ namespace Overlap.Api.Migrations
                     b.HasOne("Overlap.Api.Auth.Account", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Overlap.Api.Auth.AlbumAccess", b =>
+                {
+                    b.HasOne("Overlap.Api.Auth.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

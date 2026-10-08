@@ -32,7 +32,7 @@ public sealed partial class TogetherTests
         var updated=(await first.GetFromJsonAsync<JsonElement>("/api/auth/saved-places")).GetProperty("items")[0];Assert.Equal("Natural history museum",updated.GetProperty("name").GetString());Assert.Equal("Natural History Museum",updated.GetProperty("identity").GetProperty("name").GetString());
         (await Post(second,$"saved-places/{id}/remove",new{revision=updated.GetProperty("revision").GetString()})).EnsureSuccessStatusCode();
         (await Post(first,"saved-places",new{name="Jazz club",location="Paris, France",link=(string?)null,note=""})).EnsureSuccessStatusCode();
-        (await Post(second,"together/leave",new{})).EnsureSuccessStatusCode();
-        using var scope=factory.Services.CreateScope();Assert.Empty(await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Set<SavedPlace>().ToArrayAsync());
+        (await Post(second,"together/leave",new {acceptTerms=true})).EnsureSuccessStatusCode();
+        using var scope=factory.Services.CreateScope();Assert.Single(await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Set<SavedPlace>().ToArrayAsync());
     }
 }

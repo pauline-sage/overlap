@@ -141,3 +141,7 @@ p {
 
 .profile-intro > .edit-name { display:inline-flex;align-items:center;gap:.5rem;border:1px solid var(--line);border-radius:999px;padding:.4rem .85rem;color:var(--detail); }
 .edit-name svg { width:16px;height:16px; }
+
+.connection-terms p{line-height:1.65;color:var(--muted)}
+.connection-terms label{display:flex;align-items:center;gap:.75rem;min-height:48px;margin:1.5rem 0}
+.connection-terms input{width:1.2rem;height:1.2rem;flex-shrink:0}

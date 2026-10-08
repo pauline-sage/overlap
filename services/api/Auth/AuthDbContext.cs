@@ -85,7 +85,8 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
             pick.Property(x => x.Revision).HasMaxLength(32);
             pick.Property(x => x.Status).HasMaxLength(16);
             pick.Property(x => x.Content).HasMaxLength(16000).HasColumnType("longtext");
-            pick.HasIndex(x => new { x.ProposedBy, x.TitleId }).IsUnique();
+            pick.Property(x=>x.CollectionKey).HasMaxLength(32);
+            pick.HasIndex(x => new { x.ProposedBy, x.TitleId, x.CollectionKey }).IsUnique();
             pick.HasOne<Account>().WithMany().HasForeignKey(x => x.ProposedBy).OnDelete(DeleteBehavior.Cascade);
         });
         builder.Entity<Overlap.Api.Watch.WatchedTitle>(watched => {
@@ -163,12 +164,26 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
         });
         builder.Entity<Overlap.Api.Drawing.DrawingRound>(round => {
             round.HasKey(x => x.Id);
+            round.Property(x => x.SessionId).HasMaxLength(32);
+            round.Property(x => x.CategoriesJson).HasMaxLength(256);
+            round.Property(x => x.DrawingCount).HasDefaultValue(1);
+            round.Property(x => x.DrawingNumber).HasDefaultValue(1);
             round.Property(x => x.PairId).HasMaxLength(32);
             round.Property(x => x.CreatedBy).HasMaxLength(255);
             round.Property(x => x.Prompt).HasMaxLength(160);
             round.Property(x => x.Revision).HasMaxLength(32);
             round.HasIndex(x => new { x.PairId, x.CreatedUtc });
             round.HasOne<Account>().WithMany().HasForeignKey(x => x.CreatedBy).OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<ConnectionHistory>(history=>{
+            history.HasKey(x=>x.PairId);
+            history.Property(x=>x.PairId).HasMaxLength(32);
+        });
+        builder.Entity<AlbumAccess>(access=>{
+            access.HasKey(x=>new{x.PairId,x.AccountId});
+            access.Property(x=>x.PairId).HasMaxLength(32);
+            access.Property(x=>x.AccountId).HasMaxLength(255);
+            access.HasOne<Account>().WithMany().HasForeignKey(x=>x.AccountId).OnDelete(DeleteBehavior.Cascade);
         });
         builder.Entity<Overlap.Api.Drawing.DrawingPhoto>(photo => {
             photo.HasKey(x => new { x.RoundId, x.AccountId });

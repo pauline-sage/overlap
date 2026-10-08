@@ -161,7 +161,7 @@
   [current]="page()"
   [disabled]="busy()"
   (navigate)="navigate($event)"
-  (openQuiz)="openQuiz($event)" (openContest)="navigate('home'); openContest($event)" (openCooking)="navigate('home'); openCooking($event)" (openPicks)="openPartnerPicks()" (pickYours)="pickYours($event)"
+  (openDrawing)="openDrawing($event)" (openQuiz)="openQuiz($event)" (openContest)="navigate('home'); openContest($event)" (openCooking)="navigate('home'); openCooking($event)" (openPicks)="openPartnerPicks()" (pickYours)="pickYours($event)"
   (changeEmail)="changeEmail.emit()"
   (changePassword)="changePassword.emit()"
   (signOut)="signOut.emit()"

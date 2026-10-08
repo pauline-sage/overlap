@@ -37,32 +37,11 @@ public static class TogetherEndpoints
             return Results.Ok(new { displayName = "Your person", expiresUtc = owner.InvitationExpiresUtc });
         });
         group.MapPost("/accept", Accept);
-        group.MapPost("/leave", async (ClaimsPrincipal principal, AuthDbContext db) =>
-        {
-            var pair = await db.PairMembers.Where(x => x.AccountId == UserId(principal)).Select(x => x.PairId).SingleOrDefaultAsync();
-            if (pair is not null) {
-                await using var transaction = await db.Database.BeginTransactionAsync();
-                await db.Set<Overlap.Api.Watch.SharedPick>().Where(x => x.PairId == pair).ExecuteUpdateAsync(s => s.SetProperty(x => x.PairId, (string?)null).SetProperty(x => x.IsShared, false).SetProperty(x => x.Status, "pending"));
-                await db.Set<Overlap.Api.Outings.OutingUpdate>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
-                await db.Set<Overlap.Api.Watch.WatchedTitle>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
-                await db.Set<Overlap.Api.Books.ReadingEntry>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
-                await db.Set<Overlap.Api.Cooking.SavedRecipe>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
-                await db.Set<Overlap.Api.Cooking.CookingContest>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
-                await db.Set<Overlap.Api.Quiz.QuizRound>().Where(x=>x.PairId==pair).ExecuteDeleteAsync();
-                await db.Set<Overlap.Api.Quiz.CustomQuiz>().Where(x=>x.PairId==pair).ExecuteDeleteAsync();
-                await db.Set<Overlap.Api.Outings.SavedPlace>().Where(x=>x.PairId==pair).ExecuteDeleteAsync();
-                await db.Set<Overlap.Api.Schedule.CalendarEntry>().Where(x=>x.PairId==pair).ExecuteDeleteAsync();
-                await db.Set<Overlap.Api.Drawing.DrawingRound>().Where(x=>x.PairId==pair).ExecuteDeleteAsync();
-                await db.Set<SharingGrant>().Where(x => x.PairId == pair).ExecuteDeleteAsync();
-                await db.PairMembers.Where(x => x.PairId == pair).ExecuteDeleteAsync();
-                await transaction.CommitAsync();
-
-            }
-            return Results.NoContent();
-        });
+        group.MapPost("/leave", ConnectionHistoryEndpoints.Leave);
+        app.MapConnectionHistory();
     }
 
-    private static async Task<IResult> Status(ClaimsPrincipal principal, AuthDbContext db, OnlinePresence presence)
+    private static async Task<IResult> Status(ClaimsPrincipal principal, AuthDbContext db, OnlinePresence presence, IConfiguration config)
     {
         var id = UserId(principal);
         var own = await db.Users.Where(x => x.Id == id).Select(x => new { x.DisplayName, HasPhoto = x.Photo != null, x.InvitationExpiresUtc, x.SharePresence }).SingleAsync();
@@ -72,7 +51,7 @@ public static class TogetherEndpoints
         var profileAllowed = partnerId is not null && await PrivacyEndpoints.Allowed(db,pair,partnerId,"profile");
         var presenceAllowed = partnerId is not null && await PrivacyEndpoints.Allowed(db,pair,partnerId,"presence");
         var partner = await db.Users.Where(x => x.Id == partnerId).Select(x => new { x.Id, DisplayName = profileAllowed && x.ShareDisplayName ? x.DisplayName : null, HasPhoto = profileAllowed && x.SharePhoto && x.Photo != null, x.SharePresence }).SingleOrDefaultAsync();
-        return Results.Ok(new { id, own.HasPhoto, online = true, invitationExpiresUtc = own.InvitationExpiresUtc > DateTime.UtcNow ? own.InvitationExpiresUtc : null,
+        return Results.Ok(new { creator = await ConnectionHistoryEndpoints.Creator(db,config,id), id, own.HasPhoto, online = true, invitationExpiresUtc = own.InvitationExpiresUtc > DateTime.UtcNow ? own.InvitationExpiresUtc : null,
             partner = partner is null ? null : new { partner.Id, partner.DisplayName, partner.HasPhoto, online = presenceAllowed && partner.SharePresence ? (bool?)presence.IsOnline(partner.Id) : null } });
     }
 
@@ -139,6 +118,8 @@ public static class TogetherEndpoints
         if (await db.PairMembers.AnyAsync(x => x.AccountId == id || x.AccountId == owner.Id)) return Invalid("One of you is already connected.");
         var pair = Guid.NewGuid().ToString("N");
         db.PairMembers.AddRange(new PairMember { AccountId = owner.Id, PairId = pair }, new PairMember { AccountId = id, PairId = pair });
+        db.Add(new ConnectionHistory { PairId=pair, StartedUtc=DateTime.UtcNow });
+        db.AddRange(new AlbumAccess{PairId=pair,AccountId=owner.Id},new AlbumAccess{PairId=pair,AccountId=id});
         try
         {
             await db.SaveChangesAsync();

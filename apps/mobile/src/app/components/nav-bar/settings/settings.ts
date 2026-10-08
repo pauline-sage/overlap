@@ -1,3 +1,4 @@
+import { ConnectionDataComponent } from './connection-data';
 import { CalendarNotificationsComponent } from './calendar-notifications/calendar-notifications';
 import { SharingComponent } from '../sharing/sharing';
 import { PhoneRemindersComponent } from './phone-reminders/phone-reminders';
@@ -11,13 +12,14 @@ import { LoadingIndicatorComponent } from '../../loading-indicator/loading-indic
 import { Component, inject, signal, input, output } from '@angular/core';
 @Component({
   selector: 'app-settings',
-  imports: [CalendarNotificationsComponent,FormsModule, LoadingIndicatorComponent,PrivacyNoticeComponent, SharingComponent,PhoneRemindersComponent],
+  imports: [ConnectionDataComponent,CalendarNotificationsComponent,FormsModule, LoadingIndicatorComponent,PrivacyNoticeComponent, SharingComponent,PhoneRemindersComponent],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
 })
 export class SettingsComponent {
   private readonly auth=inject(AuthService);
   private readonly idle=inject(IdleSessionService);
+  readonly archiveOpen=signal(false);
   readonly confirming=signal(false);
   readonly deleting=signal(false);
   readonly error=signal('');

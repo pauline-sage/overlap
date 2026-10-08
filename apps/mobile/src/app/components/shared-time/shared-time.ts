@@ -1,3 +1,4 @@
+import { NavigationStateService, oneOf, navigationId, navigationBoolean } from '../../navigation-state.service';
 import { LoadingIndicatorComponent } from '../loading-indicator/loading-indicator';
 import { Component, effect, inject, input, output, signal, untracked, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -55,6 +56,7 @@ interface WatchResults {
   styleUrl: './shared-time.scss',
 })
 export class SharedTimeComponent implements OnDestroy {
+  private readonly navigation=inject(NavigationStateService);
   readonly collection = new CollectionBrowser(6);
   readonly searchPages = new CollectionBrowser(6);
   async nextSearchPage():Promise<void> {
@@ -126,7 +128,7 @@ export class SharedTimeComponent implements OnDestroy {
   private loadingPicks = false;
   private pickVersion = 0;
   private disposed = false;
-  readonly tab = signal<'discover' | 'picks' | 'partner' | 'watched'>('discover');
+  readonly tab = this.navigation.remember<'discover'|'picks'|'partner'|'watched'>('watch.tab',oneOf(['discover','picks','partner','watched']),'discover');
   private readonly resetDetail = effect(() => {
     clearInterval(this.poll);
     if (!this.active()) this.selected.set(null);

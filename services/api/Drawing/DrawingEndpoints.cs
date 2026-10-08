@@ -1,10 +1,11 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Overlap.Api.Auth;
 
 namespace Overlap.Api.Drawing;
 
-public sealed record NewDrawing(int Seconds);
+public sealed record NewDrawing(int Seconds, string[]? Categories = null, int DrawingCount = 1);
 public sealed record DrawingAction(string? Revision);
 public sealed record DrawingUpload(string? Revision, string? Pixels);
 public sealed record DrawingScore(string? Revision, string? PhotoAccount, string? PhotoRevision, int? Score);
@@ -14,6 +15,7 @@ public static class DrawingEndpoints
     private static string Account(ClaimsPrincipal user) => user.FindFirstValue(ClaimTypes.NameIdentifier)!;
     private static IQueryable<DrawingRound> Visible(AuthDbContext db, string account) => db.Set<DrawingRound>()
         .Where(x => db.PairMembers.Any(m => m.AccountId == account && m.PairId == x.PairId));
+    private static IQueryable<DrawingRound> Readable(AuthDbContext db,string account)=>Visible(db,account);
     private static IResult Conflict(string message) => Results.Problem(statusCode: 409, title: message);
     private static DateTime? Utc(DateTime? date) => date is null ? null : DateTime.SpecifyKind(date.Value, DateTimeKind.Utc);
     public static void MapDrawing(this WebApplication app)
@@ -21,14 +23,17 @@ public static class DrawingEndpoints
         var group = app.MapGroup("/api/auth/drawing").RequireAuthorization().RequireRateLimiting("picks");
         group.MapGet("", async (ClaimsPrincipal user, AuthDbContext db, TimeProvider clock, CancellationToken ct) => {
             var account = Account(user);
-            var rounds = await Visible(db, account).AsNoTracking().OrderByDescending(x => x.Id).Take(100).ToArrayAsync(ct);
+            var rounds = await Readable(db, account).AsNoTracking().OrderByDescending(x => x.Id).ToArrayAsync(ct);
+            var currentPair=await db.PairMembers.Where(x=>x.AccountId==account).Select(x=>x.PairId).SingleOrDefaultAsync(ct);
             var ids = rounds.Select(x => x.Id).ToArray();
             var photos = await db.Set<DrawingPhoto>().AsNoTracking().Where(x => ids.Contains(x.RoundId))
                 .Select(x => new { x.RoundId, x.AccountId, x.Revision, x.UploadedUtc, x.OwnerRating, x.PartnerRating }).ToArrayAsync(ct);
             return Results.Ok(new {
                 connected = await db.PairMembers.AnyAsync(x => x.AccountId == account, ct),
                 serverUtc = clock.GetUtcNow(),
-                rounds = rounds.Select(x => new { x.Id, x.Prompt, x.Seconds, x.Revision, mine = x.CreatedBy == account,
+                categories = DrawingCatalog.Categories.Select(x=>new{x.Id,x.Title,count=x.Prompts.Length}),
+                rounds = rounds.Select(x => new { x.Id, x.Prompt, x.Seconds, x.PausedSeconds, x.Revision, mine = x.CreatedBy == account,
+                    currentConnection=x.PairId==currentPair,categories=DrawingCatalog.Selection(x),x.SessionId,x.DrawingCount,x.DrawingNumber,x.NextCreated,
                     status = DrawingRules.Status(x, clock.GetUtcNow().UtcDateTime), createdUtc = Utc(x.CreatedUtc), startUtc = Utc(x.StartUtc), endUtc = Utc(x.EndUtc),
                     photos = photos.Where(p => p.RoundId == x.Id).Select(p => new { p.AccountId, p.Revision, uploadedUtc = Utc(p.UploadedUtc), mine = p.AccountId == account,
                         myRating = p.AccountId == account ? p.OwnerRating : p.PartnerRating,
@@ -36,41 +41,91 @@ public static class DrawingEndpoints
         });
         group.MapPost("", async (NewDrawing request, ClaimsPrincipal user, AuthDbContext db, TimeProvider clock, CancellationToken ct) => {
             if (!DrawingRules.ValidSeconds(request.Seconds)) return Results.Problem(statusCode: 400, title: "Choose a timer between 1 second and 60 minutes.");
+            var categories=request.Categories ?? DrawingCatalog.DefaultCategories;
+            if(!DrawingCatalog.Valid(categories))return Results.Problem(statusCode:400,title:"Choose at least one valid drawing category.");
+            if(request.DrawingCount is < 1 or > 10)return Results.Problem(statusCode:400,title:"Choose between 1 and 10 drawings.");
             var account = Account(user);
             var pair = await db.PairMembers.Where(x => x.AccountId == account).Select(x => x.PairId).SingleOrDefaultAsync(ct);
             if (pair is null) return Conflict("Connect with your person to draw together.");
             // Serializable prevents two concurrent creations from producing two active rounds.
             await using var transaction = await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct);
             var now = clock.GetUtcNow().UtcDateTime;
-            if (await db.Set<DrawingRound>().AnyAsync(x => x.PairId == pair && !x.Cancelled && (x.EndUtc == null || x.EndUtc > now), ct))
-                return Conflict("You already have a drawing round. Join it or cancel it first.");
+            if (await db.Set<DrawingRound>().AnyAsync(x => x.PairId == pair && !x.Cancelled && x.PausedSeconds == null && (x.EndUtc == null || x.EndUtc > now), ct))
+                return Conflict("Continue your current round, or pause it before starting another.");
             if (await db.Set<DrawingRound>().CountAsync(x => x.PairId == pair, ct) >= 100)
                 return Conflict("Your drawing album has 100 rounds. Remove an old round first.");
-            var round = new DrawingRound { PairId = pair, CreatedBy = account, Prompt = DrawingRules.Shuffle(), Seconds = request.Seconds, CreatedUtc = now };
+            var round = new DrawingRound { PairId = pair, CreatedBy = account, Prompt = DrawingCatalog.Shuffle(categories),
+                CategoriesJson=JsonSerializer.Serialize(categories),SessionId=Guid.NewGuid().ToString("N"),DrawingCount=request.DrawingCount,
+                Seconds = request.Seconds, CreatedUtc = now };
             db.Add(round); await db.SaveChangesAsync(ct); await transaction.CommitAsync(ct);
             return Results.Ok(new { round.Id });
         });
         group.MapPost("/{id:long}/{action}", async (long id, string action, DrawingAction request, ClaimsPrincipal user, AuthDbContext db, TimeProvider clock, CancellationToken ct) => {
-            if (action is not ("shuffle" or "join" or "cancel" or "remove")) return Results.NotFound();
+            if (action is not ("shuffle" or "next" or "join" or "decline" or "pause" or "resume" or "cancel" or "remove")) return Results.NotFound();
             var account = Account(user);
-            var round = await Visible(db, account).AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct);
+            var allowed=action=="remove" ? Readable(db,account) : Visible(db,account);
+            var round = await allowed.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct);
             if (round is null) return Results.NotFound();
             var status = DrawingRules.Status(round, clock.GetUtcNow().UtcDateTime);
-            var current = Visible(db, account).Where(x => x.Id == id && x.Revision == request.Revision);
+            var current = allowed.Where(x => x.Id == id && x.Revision == request.Revision);
+            if(action=="next"){
+                if(status!="finished" || round.NextCreated || round.DrawingNumber>=round.DrawingCount || round.SessionId==null)
+                    return Conflict("There is no next drawing available from this round.");
+                await using var transaction=await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable,ct);
+                var now=clock.GetUtcNow().UtcDateTime;
+                if(await db.Set<DrawingRound>().AnyAsync(x=>x.PairId==round.PairId && !x.Cancelled && x.PausedSeconds==null && (x.EndUtc==null || x.EndUtc>now),ct))
+                    return Conflict("Pause or finish your active drawing before continuing this session.");
+                if(await db.Set<DrawingRound>().CountAsync(x=>x.PairId==round.PairId,ct)>=100)
+                    return Conflict("Your drawing album has 100 rounds. Remove an old round first.");
+                var revision=Guid.NewGuid().ToString("N");
+                if(await current.Where(x=>!x.NextCreated).ExecuteUpdateAsync(s=>s.SetProperty(x=>x.NextCreated,true).SetProperty(x=>x.Revision,revision),ct)!=1)
+                    return Conflict("This round changed. Refresh and try again.");
+                var following=new DrawingRound{PairId=round.PairId,CreatedBy=round.CreatedBy,Seconds=round.Seconds,CreatedUtc=now,
+                    SessionId=round.SessionId,DrawingCount=round.DrawingCount,DrawingNumber=round.DrawingNumber+1,
+                    CategoriesJson=round.CategoriesJson,Prompt=DrawingCatalog.Shuffle(DrawingCatalog.Selection(round),round.Prompt)};
+                db.Add(following);await db.SaveChangesAsync(ct);await transaction.CommitAsync(ct);
+                return Results.Ok(new{following.Id});
+            }
             if (action == "remove") {
-                if (status is "waiting" or "drawing") return Conflict("Cancel this round before removing it.");
+                if (status is "waiting" or "drawing" or "paused") return Conflict("Cancel this round before removing it.");
                 return await current.ExecuteDeleteAsync(ct) == 1 ? Results.NoContent() : Conflict("This round changed. Refresh and try again.");
             }
-            if (action == "cancel") {
-                if (status is "finished" or "cancelled") return Conflict("This round has already ended.");
+            if (action == "decline" && (status != "waiting" || round.CreatedBy == account))
+                return Conflict("Only the invited person can decline a pending invitation.");
+            if (action is "cancel" or "decline") {
+                if (status=="cancelled" || (status=="finished" && (round.NextCreated || round.DrawingNumber>=round.DrawingCount)))
+                    return Conflict("This round has already ended.");
                 var cancelledRevision = Guid.NewGuid().ToString("N");
                 return await current.ExecuteUpdateAsync(s => s.SetProperty(x => x.Cancelled, true).SetProperty(x => x.Revision, cancelledRevision), ct) == 1
                     ? Results.NoContent() : Conflict("This round changed. Refresh and try again.");
             }
+            if (action == "pause") {
+                if (status is not ("waiting" or "drawing")) return Conflict("Only an unfinished round can be paused.");
+                var remaining = round.EndUtc is null ? round.Seconds
+                    : Math.Max(1, (int)Math.Ceiling((round.EndUtc.Value - clock.GetUtcNow().UtcDateTime).TotalSeconds));
+                var revision = Guid.NewGuid().ToString("N");
+                return await current.ExecuteUpdateAsync(s => s.SetProperty(x => x.PausedSeconds, remaining).SetProperty(x => x.Revision, revision), ct) == 1
+                    ? Results.NoContent() : Conflict("This round changed. Refresh and try again.");
+            }
+            if (action == "resume") {
+                if (status != "paused") return Conflict("This round is not paused.");
+                await using var transaction = await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct);
+                var now = clock.GetUtcNow().UtcDateTime;
+                if (await db.Set<DrawingRound>().AnyAsync(x => x.PairId == round.PairId && x.Id != id && !x.Cancelled
+                    && x.PausedSeconds == null && (x.EndUtc == null || x.EndUtc > now), ct))
+                    return Conflict("Pause your other active round before resuming this one.");
+                DateTime? resumedEnd = round.StartUtc is null ? null : now.AddSeconds(round.PausedSeconds!.Value);
+                var revision = Guid.NewGuid().ToString("N");
+                if (await current.ExecuteUpdateAsync(s => s.SetProperty(x => x.PausedSeconds, (int?)null)
+                    .SetProperty(x => x.EndUtc, resumedEnd).SetProperty(x => x.Revision, revision), ct) != 1)
+                    return Conflict("This round changed. Refresh and try again.");
+                await transaction.CommitAsync(ct);
+                return Results.NoContent();
+            }
             if (status != "waiting") return Conflict("This round has already started.");
             if (action == "shuffle") {
                 if (round.CreatedBy != account) return Results.Problem(statusCode: 403, title: "Only the person who proposed this round can shuffle before it starts.");
-                var prompt = DrawingRules.Shuffle(round.Prompt); var revision = Guid.NewGuid().ToString("N");
+                var prompt = DrawingCatalog.Shuffle(DrawingCatalog.Selection(round),round.Prompt); var revision = Guid.NewGuid().ToString("N");
                 return await current.ExecuteUpdateAsync(s => s.SetProperty(x => x.Prompt, prompt).SetProperty(x => x.Revision, revision), ct) == 1
                     ? Results.NoContent() : Conflict("This round changed. Refresh and try again.");
             }
@@ -80,13 +135,13 @@ public static class DrawingEndpoints
                 ? Results.NoContent() : Conflict("This round changed. Refresh and try again.");
         });
         group.MapGet("/{id:long}/photos/{photoAccount}", async (long id, string photoAccount, ClaimsPrincipal user, AuthDbContext db, CancellationToken ct) => {
-            if (!await Visible(db, Account(user)).AnyAsync(x => x.Id == id, ct)) return Results.NotFound();
+            if (!await Readable(db, Account(user)).AnyAsync(x => x.Id == id, ct)) return Results.NotFound();
             var png = await db.Set<DrawingPhoto>().Where(x => x.RoundId == id && x.AccountId == photoAccount).Select(x => x.Png).SingleOrDefaultAsync(ct);
             return png is null ? Results.NotFound() : Results.File(png, "image/png");
         });
         group.MapPost("/{id:long}/photo", async (long id, DrawingUpload request, ClaimsPrincipal user, AuthDbContext db, TimeProvider clock, CancellationToken ct) => {
             var account = Account(user);
-            var round = await Visible(db, account).AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct);
+            var round = await Readable(db, account).AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct);
             if (round is null) return Results.NotFound();
             if (DrawingRules.Status(round, clock.GetUtcNow().UtcDateTime) != "finished") return Conflict("Wait for the timer to finish before sharing your drawing.");
             byte[]? png = null;
@@ -97,7 +152,7 @@ public static class DrawingEndpoints
             }
             await using var transaction = await db.Database.BeginTransactionAsync(ct);
             var revision = Guid.NewGuid().ToString("N");
-            if (await Visible(db, account).Where(x => x.Id == id && x.Revision == request.Revision).ExecuteUpdateAsync(s => s.SetProperty(x => x.Revision, revision), ct) != 1)
+            if (await Readable(db, account).Where(x => x.Id == id && x.Revision == request.Revision).ExecuteUpdateAsync(s => s.SetProperty(x => x.Revision, revision), ct) != 1)
                 return Conflict("This round changed. Refresh and try again.");
             var photo = await db.Set<DrawingPhoto>().SingleOrDefaultAsync(x => x.RoundId == id && x.AccountId == account, ct);
             if (photo is not null) db.Remove(photo);
@@ -109,10 +164,10 @@ public static class DrawingEndpoints
         group.MapPost("/{id:long}/rating", async (long id, DrawingScore request, ClaimsPrincipal user, AuthDbContext db, CancellationToken ct) => {
             if (request.Score is < 1 or > 5) return Results.BadRequest();
             var account = Account(user);
-            if (!await Visible(db, account).AnyAsync(x => x.Id == id, ct)) return Results.NotFound();
+            if (!await Readable(db, account).AnyAsync(x => x.Id == id, ct)) return Results.NotFound();
             await using var transaction = await db.Database.BeginTransactionAsync(ct);
             var revision = Guid.NewGuid().ToString("N");
-            if (await Visible(db, account).Where(x => x.Id == id && x.Revision == request.Revision).ExecuteUpdateAsync(s => s.SetProperty(x => x.Revision, revision), ct) != 1)
+            if (await Readable(db, account).Where(x => x.Id == id && x.Revision == request.Revision).ExecuteUpdateAsync(s => s.SetProperty(x => x.Revision, revision), ct) != 1)
                 return Conflict("This round changed. Refresh and try again.");
             var photo = db.Set<DrawingPhoto>().Where(x => x.RoundId == id && x.AccountId == request.PhotoAccount && x.Revision == request.PhotoRevision);
             var changed = request.PhotoAccount == account

@@ -10,6 +10,7 @@ export interface AuthMessage {
   message: string;
 }
 export interface TogetherStatus {
+  creator?: boolean;
   id: string;
   hasPhoto: boolean;
   online?: boolean | null;

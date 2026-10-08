@@ -125,7 +125,7 @@ public sealed partial class TogetherTests
         Assert.Empty(await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Set<BookRating>().ToListAsync());
     }
     [Fact]
-    public async Task BookShelfIsSharedWithOnlyTheCurrentConnectionAndCleanedOnDisconnect()
+    public async Task BookShelfIsSharedWithOnlyTheCurrentConnectionAndRevokedOnDisconnect()
     {
         using var factory = new AuthFactory(); using var first = factory.Client(); using var second = factory.Client(); using var stranger = factory.Client();
         await SignIn(factory,first,"first"); await SignIn(factory,second,"second"); await SignIn(factory,stranger,"stranger");
@@ -146,8 +146,8 @@ public sealed partial class TogetherTests
         Assert.Equal(HttpStatusCode.Conflict,(await Post(stranger,"books/search",new BookSearch(null,BasedOn:id))).StatusCode);
         (await Post(second,$"books/shelf/{id}/remove",new {})).EnsureSuccessStatusCode();
         (await Post(first,"books/shelf",new {book,status="read"})).EnsureSuccessStatusCode();
-        (await Post(second,"together/leave",new {})).EnsureSuccessStatusCode();
+        (await Post(second,"together/leave",new {acceptTerms=true})).EnsureSuccessStatusCode();
         using var scope=factory.Services.CreateScope();
-        Assert.Empty(await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Set<ReadingEntry>().ToListAsync());
+        Assert.Single(await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Set<ReadingEntry>().ToListAsync());
     }
 }

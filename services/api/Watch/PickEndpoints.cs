@@ -7,6 +7,7 @@ namespace Overlap.Api.Watch;
 
 public sealed class SharedPick
 {
+    public string CollectionKey { get; set; } = "personal";
     public long Id { get; set; }
     public string? PairId { get; set; }
     public bool IsShared { get; set; }
@@ -35,11 +36,11 @@ public static class PickEndpoints
         {
             var id = UserId(user);
             var pair = await Pair(db, id);
-            var picks = await db.Set<SharedPick>().AsNoTracking().Where(x => x.ProposedBy == id || (pair != null && x.PairId == pair && x.IsShared && db.Set<SharingGrant>().Any(g => g.PairId == pair && g.SenderId == x.ProposedBy && g.Category == "picks" && g.Status == "accepted"))).OrderByDescending(x => x.Id).ToListAsync();
+            var picks = await db.Set<SharedPick>().AsNoTracking().Where(x => x.ProposedBy == id && x.CollectionKey == "personal" || (pair != null && x.PairId == pair && x.IsShared && db.Set<SharingGrant>().Any(g => g.PairId == pair && g.SenderId == x.ProposedBy && g.Category == "picks" && g.Status == "accepted"))).OrderByDescending(x => x.Id).ToListAsync();
             var watched = await db.Set<WatchedTitle>().AsNoTracking().Where(x => pair != null && x.PairId == pair).OrderByDescending(x => x.Id).ToListAsync();
             return Results.Ok(new { connected = pair is not null,
                 watched = watched.Select(x => new { x.Id, mine = x.AddedBy == id, x.AddedUtc, title = JsonSerializer.Deserialize<JsonElement>(x.Content) }),
-                picks = picks.Select(x => new { x.Id, x.Status, shared = x.IsShared, mine = x.ProposedBy == id, x.CreatedUtc, title = JsonSerializer.Deserialize<JsonElement>(x.Content) }) });
+                picks = picks.Select(x => new { x.Id, x.Status, shared = x.IsShared, mine = x.ProposedBy == id && x.CollectionKey == "personal", x.CreatedUtc, title = JsonSerializer.Deserialize<JsonElement>(x.Content) }) });
         });
         group.MapPost("", async (JsonElement title, ClaimsPrincipal user, AuthDbContext db) =>
         {
@@ -48,11 +49,11 @@ public static class PickEndpoints
             var pair = await Pair(db, id);
 
             var titleId = title.GetProperty("id").GetString()!;
-            if (await db.Set<SharedPick>().AnyAsync(x => x.ProposedBy == id && x.TitleId == titleId)) return Results.NoContent();
-            if (await db.Set<SharedPick>().CountAsync(x => x.ProposedBy == id) >= 200) return Results.Problem(statusCode: 409, title: "Your list is full. Remove some of your picks first.");
+            if (await db.Set<SharedPick>().AnyAsync(x => x.ProposedBy == id && x.CollectionKey == "personal" && x.TitleId == titleId)) return Results.NoContent();
+            if (await db.Set<SharedPick>().CountAsync(x => x.ProposedBy == id && x.CollectionKey == "personal") >= 200) return Results.Problem(statusCode: 409, title: "Your list is full. Remove some of your picks first.");
             db.Add(new SharedPick { PairId = null, ProposedBy = id, TitleId = titleId, Content = title.GetRawText(), CreatedUtc = DateTime.UtcNow });
             try { await db.SaveChangesAsync(); }
-            catch (DbUpdateException) { if (await db.Set<SharedPick>().AsNoTracking().AnyAsync(x => x.ProposedBy == id && x.TitleId == titleId)) return Results.NoContent(); throw; }
+            catch (DbUpdateException) { if (await db.Set<SharedPick>().AsNoTracking().AnyAsync(x => x.ProposedBy == id && x.CollectionKey == "personal" && x.TitleId == titleId)) return Results.NoContent(); throw; }
             return Results.NoContent();
         });
         group.MapPost("/{pickId:long}/share", async (long pickId, PickSharing request, ClaimsPrincipal user, AuthDbContext db) =>
@@ -63,7 +64,7 @@ public static class PickEndpoints
             if (request.Shared && !await PrivacyEndpoints.Allowed(db,pair,id,"picks"))
                 return Results.Problem(statusCode:409,title:"Enable picks sharing in Settings first.");
             var revision = Guid.NewGuid().ToString("N");
-            var count = await db.Set<SharedPick>().Where(x => x.Id == pickId && x.ProposedBy == id)
+            var count = await db.Set<SharedPick>().Where(x => x.Id == pickId && x.ProposedBy == id && x.CollectionKey == "personal")
                 .ExecuteUpdateAsync(s => s.SetProperty(x => x.IsShared, request.Shared)
                     .SetProperty(x => x.PairId, request.Shared ? pair : null).SetProperty(x => x.Status, "pending")
                     .SetProperty(x => x.Revision, revision)
@@ -86,7 +87,7 @@ public static class PickEndpoints
         {
             var id = UserId(user);
             var pair = await Pair(db, id);
-            var count = await db.Set<SharedPick>().Where(x => x.Id == pickId && x.ProposedBy == id).ExecuteDeleteAsync();
+            var count = await db.Set<SharedPick>().Where(x => x.Id == pickId && x.ProposedBy == id && x.CollectionKey == "personal").ExecuteDeleteAsync();
             return count == 1 ? Results.NoContent() : Results.NotFound();
         });
     }

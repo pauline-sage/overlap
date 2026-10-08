@@ -1,3 +1,4 @@
+import { NavigationStateService, oneOf, navigationId } from '../../../navigation-state.service';
 import { CookingMemoriesComponent } from '../memories/cooking-memories';
 import { Component, inject, input, output, signal, computed, effect, OnInit, DestroyRef } from '@angular/core';
 import { OutingChoiceComponent } from '../../coffee-date/outing-choice/outing-choice';
@@ -15,8 +16,9 @@ interface FoodPreferences {avoidRedMeat:boolean;excludedIngredients:string[];}
 interface ContestRecipe {title:string;ingredients:string[];instructions:string[];sourceUrl:string;photo?:{url:string;author:string;license:string;sourceUrl:string};}
 @Component({selector:'app-cooking-contests',imports:[CookingMemoriesComponent,DatePipe,FormsModule,DateCardsComponent,LoadingIndicatorComponent,OutingChoiceComponent,OutingCalendarComponent],templateUrl:'./cooking-contests.html',styleUrls:['../cooking.scss','./cooking-contests.scss']})
 export class CookingContestsComponent implements OnInit {
+  private readonly navigation=inject(NavigationStateService);
   readonly contestId=input(0);
-  readonly selectedId=signal(0);
+  readonly selectedId=this.navigation.remember('cooking.contestId',navigationId,0);
   readonly contest=computed(()=>this.sharing.state()?.cookingContests?.find(x=>x.id===this.selectedId()));
   readonly memoryArchived=signal(false);
   readonly recipe=signal<ContestRecipe|null>(null);
@@ -44,7 +46,7 @@ export class CookingContestsComponent implements OnInit {
     let tick=0;const timer=setInterval(()=>{this.now.set(Date.now()+this.clockOffset);if(++tick%(this.redrawPending()?20:this.recipe()?60:this.unlocked()?12:60)===0 && document.visibilityState==='visible' && this.selectedId() && !this.busy())void this.loadRecipe(this.selectedId());},250);
     inject(DestroyRef).onDestroy(()=>{clearInterval(timer);++this.detailVersion;});
   }
-  ngOnInit():void {this.selectedId.set(this.contestId());}
+  ngOnInit():void {if(this.contestId())this.selectedId.set(this.contestId());}
   select(id:number):void {this.memoryArchived.set(false);++this.detailVersion;this.recipe.set(null);this.revealedUtc.set(null);this.selectedId.set(id);this.error.set('');}
   async loadRecipe(id:number):Promise<void> {
     const version=++this.detailVersion;

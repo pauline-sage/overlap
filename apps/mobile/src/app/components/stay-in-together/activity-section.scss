@@ -1,2 +1,4 @@
 @use 'activity-cards';
 @include activity-cards.cards;
+
+.idea.story-choice{position:relative}.ongoing-badge{position:absolute;top:.6rem;right:.6rem;min-width:1.5rem;height:1.5rem;padding:0 .3rem;display:grid;place-items:center;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:.75rem;font-weight:600}

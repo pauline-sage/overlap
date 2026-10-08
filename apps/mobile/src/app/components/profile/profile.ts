@@ -30,10 +30,11 @@ export class ProfileComponent {
   readonly action = output<ProfileAction>();
   readonly upload = output<Event>();
   readonly showLeave = signal(false);
+  readonly acceptTerms = signal(false);
   readonly viewingPartner = signal(false);
   private readonly resetPartner = effect(() => {
     const id = this.together()?.partner?.id;
-    if (id !== this.partnerId) { this.partnerId = id; this.viewingPartner.set(false); }
+    if (id !== this.partnerId) { this.partnerId = id; this.viewingPartner.set(false); this.showLeave.set(false); this.acceptTerms.set(false); }
   });
   private partnerId: string | undefined;
   viewPartner(show: boolean): void {

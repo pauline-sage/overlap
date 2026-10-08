@@ -36,7 +36,7 @@ public sealed partial class TogetherTests
         Assert.Equal(JsonValueKind.Null, (await Partner()).GetProperty("online").ValueKind);
         Assert.Equal(HttpStatusCode.BadRequest, (await Post(first, "privacy/request", new { category = "places" })).StatusCode);
         (await Post(first, "privacy/request", new { category = "profile" })).EnsureSuccessStatusCode();
-        (await Post(second, "together/leave", new { })).EnsureSuccessStatusCode();
+        (await Post(second, "together/leave", new {acceptTerms=true})).EnsureSuccessStatusCode();
         (await Post(second, "together/accept", new { token = await Invite(first) })).EnsureSuccessStatusCode();
         Assert.Equal(JsonValueKind.Null, (await Partner()).GetProperty("displayName").ValueKind);
     }

@@ -40,12 +40,15 @@ public static class PrivacyEndpoints
             var partnerId = await db.PairMembers.Where(x => pair != null && x.PairId == pair && x.AccountId != id).Select(x => x.AccountId).SingleOrDefaultAsync();
             var partnerName = partnerId != null && await Allowed(db,pair,partnerId,"profile")
                 ? await db.Users.Where(x => x.Id == partnerId && x.ShareDisplayName).Select(x => x.DisplayName).SingleOrDefaultAsync() : null;
-            var picks = await db.Set<Overlap.Api.Watch.SharedPick>().AsNoTracking().Where(x => x.ProposedBy == id ||
+            var picks = await db.Set<Overlap.Api.Watch.SharedPick>().AsNoTracking().Where(x => (x.ProposedBy == id && x.CollectionKey == "personal") ||
                 (pair != null && x.PairId == pair && x.IsShared && db.Set<SharingGrant>().Any(g => g.PairId == pair && g.SenderId == x.ProposedBy && g.Category == "picks" && g.Status == "accepted"))).OrderByDescending(x => x.Id).ToListAsync();
             var recipes=await db.Set<Overlap.Api.Cooking.SavedRecipe>().AsNoTracking().Where(x=>pair!=null && x.PairId==pair && x.SharedBy!=id && x.ShareRevision!="").OrderByDescending(x=>x.Id).ToListAsync();
             var contests=await db.Set<Overlap.Api.Cooking.CookingContest>().AsNoTracking().Where(x=>pair!=null && x.PairId==pair).OrderBy(x=>x.StartUtc).ToListAsync();
             var quizInvitations=await db.Set<Overlap.Api.Quiz.QuizRound>().AsNoTracking().Where(x=>pair!=null && x.PairId==pair && x.ProposedBy!=id && x.Status=="pending").Select(x=>new{x.Id}).ToArrayAsync();
-            return Results.Ok(new { quizInvitations, connected = pair != null, receivedPicks, partnerName,
+            var drawingInvitations=await db.Set<Overlap.Api.Drawing.DrawingRound>().AsNoTracking()
+                .Where(x=>pair!=null && x.PairId==pair && x.CreatedBy!=id && !x.Cancelled && x.StartUtc==null && x.EndUtc==null && x.PausedSeconds==null)
+                .Select(x=>new{x.Id,x.Prompt,x.Seconds,x.DrawingCount,x.DrawingNumber}).ToArrayAsync();
+            return Results.Ok(new { quizInvitations, drawingInvitations, connected = pair != null, receivedPicks, partnerName,
                 unreadContests=contests.Count(x=>x.ProposedBy==id ? x.SenderUnread : x.RecipientUnread),
                 cookingContests=contests.Select(x=>new{x.Id,x.Status,x.Revision,redrawPending=x.RedrawRequestedBy!=null,redrawMine=x.RedrawRequestedBy==id,availableMinutes=x.Minutes,x.TimeZone,recipeTitle=x.RevealedUtc is null || x.RecipeContent is null ? null : System.Text.Json.JsonSerializer.Deserialize<Overlap.Api.Cooking.Recipe>(x.RecipeContent)!.Title,startUtc=DateTime.SpecifyKind(x.StartUtc,DateTimeKind.Utc),mine=x.ProposedBy==id,
                     unread=x.ProposedBy==id ? x.SenderUnread : x.RecipientUnread,
@@ -90,7 +93,7 @@ public static class PrivacyEndpoints
                 .ExecuteUpdateAsync(s=>s.SetProperty(x=>x.Status,"withdrawn"));
             if (request.Category=="profile") await db.Users.Where(x=>x.Id==id).ExecuteUpdateAsync(s=>s.SetProperty(x=>x.SharePhoto,false).SetProperty(x=>x.ShareDisplayName,false));
             if (request.Category=="presence") await db.Users.Where(x=>x.Id==id).ExecuteUpdateAsync(s=>s.SetProperty(x=>x.SharePresence,false));
-            if (request.Category=="picks") await db.Set<Overlap.Api.Watch.SharedPick>().Where(x=>x.ProposedBy==id).ExecuteUpdateAsync(s=>s.SetProperty(x=>x.IsShared,false).SetProperty(x=>x.PairId,(string?)null).SetProperty(x=>x.Status,"pending"));
+            if (request.Category=="picks") await db.Set<Overlap.Api.Watch.SharedPick>().Where(x=>x.ProposedBy==id && x.CollectionKey=="personal").ExecuteUpdateAsync(s=>s.SetProperty(x=>x.IsShared,false).SetProperty(x=>x.PairId,(string?)null).SetProperty(x=>x.Status,"pending"));
             await transaction.CommitAsync(); return Results.NoContent();
         });
     }

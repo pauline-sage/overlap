@@ -41,8 +41,8 @@ public sealed partial class TogetherTests
         Assert.Equal("My question 0",(await second.GetFromJsonAsync<JsonElement>($"/api/auth/quiz/rounds/{roundId}")).GetProperty("questions")[0].GetProperty("prompt").GetString());
         revision=(await first.GetFromJsonAsync<JsonElement>("/api/auth/quiz/templates"))[0].GetProperty("revision").GetString();(await Post(first,$"quiz/templates/{id}/remove",new{revision})).EnsureSuccessStatusCode();
         Assert.Equal("Our habits",(await first.GetFromJsonAsync<JsonElement>($"/api/auth/quiz/rounds/{roundId}")).GetProperty("title").GetString());
-        (await Post(first,"quiz/templates",new{title="Another",questions,revision=(string?)null})).EnsureSuccessStatusCode();(await Post(first,"together/leave",new{})).EnsureSuccessStatusCode();
-        using var scope=factory.Services.CreateScope();Assert.Empty(await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Set<CustomQuiz>().AsNoTracking().ToArrayAsync());
+        (await Post(first,"quiz/templates",new{title="Another",questions,revision=(string?)null})).EnsureSuccessStatusCode();(await Post(first,"together/leave",new {acceptTerms=true})).EnsureSuccessStatusCode();
+        using var scope=factory.Services.CreateScope();Assert.Single(await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Set<CustomQuiz>().AsNoTracking().ToArrayAsync());
     }
     [Fact]
     public async Task QuizPersistsPrivateAnswersRevealsBothAndKeepsLiveProgressAndHistory(){
@@ -73,7 +73,7 @@ public sealed partial class TogetherTests
         var completed=await Read(second);Assert.Equal("completed",completed.GetProperty("status").GetString());Assert.All(completed.GetProperty("questions").EnumerateArray(),q=>Assert.NotEqual(JsonValueKind.Null,q.GetProperty("reveal").ValueKind));
         using var scope=factory.Services.CreateScope();var db=scope.ServiceProvider.GetRequiredService<AuthDbContext>();Assert.Equal(10,await db.Set<QuizAnswer>().CountAsync());
         Assert.Single((await second.GetFromJsonAsync<JsonElement>("/api/auth/quiz/rounds")).GetProperty("rounds").EnumerateArray());
-        (await Post(first,"together/leave",new{})).EnsureSuccessStatusCode();Assert.Empty(await db.Set<QuizRound>().AsNoTracking().ToArrayAsync());Assert.Empty(await db.Set<QuizAnswer>().AsNoTracking().ToArrayAsync());
+        (await Post(first,"together/leave",new {acceptTerms=true})).EnsureSuccessStatusCode();Assert.NotEmpty(await db.Set<QuizRound>().AsNoTracking().ToArrayAsync());Assert.NotEmpty(await db.Set<QuizAnswer>().AsNoTracking().ToArrayAsync());
         Assert.Equal(HttpStatusCode.NotFound,(await second.GetAsync($"/api/auth/quiz/rounds/{id}")).StatusCode);
     }
     [Fact]

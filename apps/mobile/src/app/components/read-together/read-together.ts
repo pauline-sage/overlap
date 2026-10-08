@@ -1,3 +1,4 @@
+import { NavigationStateService, oneOf, navigationId, navigationBoolean } from '../../navigation-state.service';
 import { Component, inject, OnDestroy, OnInit, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -19,6 +20,7 @@ interface BookResults { books: BookTitle[]; hasMore: boolean; explanation: strin
   templateUrl: './read-together.html', styleUrl: './read-together.scss',
 })
 export class ReadTogetherComponent implements OnInit, OnDestroy {
+  private readonly navigation=inject(NavigationStateService);
   readonly collection = new CollectionBrowser(6);
   readonly searchPages = new CollectionBrowser(6);
   async nextSearchPage():Promise<void> {
@@ -29,7 +31,7 @@ export class ReadTogetherComponent implements OnInit, OnDestroy {
   }
   private readonly auth = inject(AuthService);
   readonly back = output<void>();
-  readonly tab = signal<'discover' | 'planned' | 'read' | 'recommended'>('discover');
+  readonly tab = this.navigation.remember<'discover'|'planned'|'read'|'recommended'>('read.tab',oneOf(['discover','planned','read','recommended']),'discover');
   readonly recommendations = signal<BookTitle[]>([]);
   readonly recommendationReasons = signal<Record<string,string>>({});
   readonly recommendationExplanation = signal('');
@@ -59,7 +61,7 @@ export class ReadTogetherComponent implements OnInit, OnDestroy {
   private disposed = false;
   private poll?: ReturnType<typeof setInterval>;
   ngOnInit(): void {
-    void this.loadShelf();
+    void this.loadShelf();if(this.tab()==='recommended')void this.recommend();
     this.poll = setInterval(() => { if(document.visibilityState === 'visible') void this.loadShelf(); },10000);
   }
   ngOnDestroy(): void { this.disposed = true; clearInterval(this.poll); }

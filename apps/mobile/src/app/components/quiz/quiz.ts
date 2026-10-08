@@ -1,3 +1,4 @@
+import { NavigationStateService, oneOf, navigationId, navigationBoolean } from '../../navigation-state.service';
 import { QuizHomeComponent, QuizArea } from './home/quiz-home';
 import { QuizGuessSetupComponent, QuizCategory } from './guess-setup/quiz-guess-setup';
 import { QuizLibraryComponent } from './library/quiz-library';
@@ -14,7 +15,8 @@ interface Question {id:string;categoryId:string;prompt:string;choices:string[];o
 interface Round extends QuizRoundSummary {questions:Question[];}
 @Component({selector:'app-quiz',imports:[QuizHomeComponent,QuizGuessSetupComponent,QuizLibraryComponent,QuizHistoryComponent,QuizEditorComponent,LoadingIndicatorComponent],templateUrl:'./quiz.html',styleUrl:'./quiz.scss'})
 export class QuizComponent implements OnInit {
-  readonly area=signal<QuizArea>('home');
+  private readonly navigation=inject(NavigationStateService);
+  readonly area=this.navigation.remember<QuizArea>('quiz.area',oneOf(['home','guess','custom','history']),'home');
   readonly pendingRounds=computed(()=>this.rounds().filter(round=>round.status==='pending' && !round.mine).length);
   goBack():void{if(this.selectedId())this.close();else if(this.area()!=='home'){this.area.set('home');this.notice.set('');}else this.back.emit();}
 
@@ -36,7 +38,7 @@ export class QuizComponent implements OnInit {
   private readonly http=inject(HttpClient);private readonly auth=inject(AuthService);
   readonly categories=signal<QuizCategory[]>([]);readonly categoryIds=signal<string[]>([]);
   readonly rounds=signal<QuizRoundSummary[]>([]);readonly connected=signal(false);
-  readonly selectedId=signal(0);readonly round=signal<Round|null>(null);
+  readonly selectedId=this.navigation.remember('quiz.id',navigationId,0);readonly round=signal<Round|null>(null);
   readonly question=computed(()=>this.round()?.questions[this.round()!.currentIndex] ?? null);
   readonly reviewOpened=signal(false);readonly reviewIndex=signal(0);
   readonly reviewQuestion=computed(()=>this.round()?.questions[this.reviewIndex()] ?? null);
@@ -61,7 +63,7 @@ export class QuizComponent implements OnInit {
     this.busy.set(true);
     try{const categories=await firstValueFrom(this.http.get<QuizCategory[]>('/api/auth/quiz/catalog'));if(!this.destroyed){this.categories.set(categories);this.categoryIds.set(categories.filter(x=>!x.personal).map(x=>x.id));}}
     catch{this.error.set('Quiz categories could not be loaded. Try again.');}
-    finally{this.busy.set(false);if(this.initialRoundId()){this.area.set('history');await this.open(this.initialRoundId());}else await this.load();}
+    finally{this.busy.set(false);if(this.initialRoundId()){this.area.set('history');await this.open(this.initialRoundId());}else if(this.selectedId())await this.open(this.selectedId());else await this.load();}
   }
   categoryTitle(id:string):string{return id==='custom' ? 'Your own questions' : this.categories().find(x=>x.id===id)?.title ?? id;}
   roundCategories():string[]{return [...new Set(this.round()?.questions.map(x=>x.categoryId) ?? [])];}

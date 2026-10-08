@@ -3,7 +3,22 @@ import { TestBed } from '@angular/core/testing';
 import { LoginComponent } from './login';
 import { AuthService } from '../../auth.service';
 
+beforeEach(()=>sessionStorage.removeItem('overlap-navigation'));
+afterEach(()=>sessionStorage.removeItem('overlap-navigation'));
+
 describe('Account screens', () => {
+  it('keeps the registration page across repeated refreshes without storing form fields',async()=>{
+    sessionStorage.setItem('overlap-navigation',JSON.stringify({'login.screen':'register'}));
+    const first=await render();expect(first.nativeElement.textContent).toContain('Make time together.');first.destroy();
+    const second=await render();expect(second.nativeElement.textContent).toContain('Make time together.');
+    expect(JSON.parse(sessionStorage.getItem('overlap-navigation')!)).toEqual({'login.screen':'register'});second.destroy();
+  });
+  it('restores an authenticated password-change page after checking the session',async()=>{
+    sessionStorage.setItem('overlap-navigation',JSON.stringify({'login.screen':'change-password'}));
+    auth.me.mockResolvedValue({email:'me@example.test',displayName:'Me'});
+    const f=await render();expect(f.nativeElement.textContent).toContain('Keep it yours.');
+    expect(sessionStorage.getItem('overlap-navigation')).not.toContain('me@example.test');f.destroy();
+  });
   const auth = { me: vi.fn(), submit: vi.fn(), together: vi.fn() };
   beforeEach(async () => {
     vi.resetAllMocks();

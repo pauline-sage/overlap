@@ -2,7 +2,19 @@ import { TestBed } from '@angular/core/testing';
 import { DashboardComponent } from './dashboard';
 import { AuthService } from '../../auth.service';
 
+beforeEach(()=>sessionStorage.removeItem('overlap-navigation'));
+afterEach(()=>sessionStorage.removeItem('overlap-navigation'));
+
 describe('Dashboard photos and invitations', () => {
+  it('restores Notifications after dashboard recreation',async()=>{
+    const first=await render();first.componentInstance.navigate('notifications');first.detectChanges();await first.whenStable();first.destroy();
+    const restored=await render();expect(restored.componentInstance.page()).toBe('notifications');restored.destroy();
+  });
+  it('restores the open drawing activity after dashboard recreation',async()=>{
+    const first=await render();first.componentInstance.openDrawing(0);first.detectChanges();await first.whenStable();first.destroy();
+    const restored=await render();expect(restored.componentInstance.stayingIn()).toBe(true);
+    expect(restored.componentInstance.stayInRequest().activity).toBe('drawing');restored.destroy();
+  });
   it('opens the shared schedule from Home and returns to activity cards',async()=>{
     const f=await render();
     f.nativeElement.querySelector('.schedule-entry').click();f.detectChanges();
@@ -31,6 +43,19 @@ describe('Dashboard photos and invitations', () => {
     fixture.detectChanges();
     return fixture;
   }
+  it('clears the open shared activity and navigation when the partner disconnects',async()=>{
+    const connected={...status,partner:{id:'partner',displayName:null,hasPhoto:false}};
+    auth.together.mockResolvedValue(connected);
+    const fixture=await render();fixture.componentInstance.openDrawing(0);fixture.detectChanges();
+    expect(fixture.componentInstance.stayingIn()).toBe(true);
+    auth.together.mockResolvedValue(status);
+    await fixture.componentInstance.checkPresence();fixture.detectChanges();
+    expect(fixture.componentInstance.stayingIn()).toBe(false);
+    expect(fixture.componentInstance.stayInRequest().activity).toBe('menu');
+    expect(fixture.componentInstance.page()).toBe('profile');
+    expect(fixture.nativeElement.querySelector('app-draw-together')).toBeNull();
+    fixture.destroy();
+  });
   it('opens a cooking reminder link after authentication and removes the query parameter',async()=>{
     history.replaceState(null,'','/?cookingContest=23');
     const fixture=await render();

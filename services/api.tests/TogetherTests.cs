@@ -50,7 +50,7 @@ public sealed partial class TogetherTests
         var after = await first.GetFromJsonAsync<JsonElement>("/api/auth/together/");
         Assert.Equal(JsonValueKind.Null, after.GetProperty("partner").GetProperty("displayName").ValueKind);
         Assert.Equal(HttpStatusCode.BadRequest, (await Post(second, "together/accept", new { token })).StatusCode);
-        (await Post(second, "together/leave", new { })).EnsureSuccessStatusCode();
+        (await Post(second, "together/leave", new {acceptTerms=true})).EnsureSuccessStatusCode();
         using var scope = factory.Services.CreateScope();
         Assert.Empty(await scope.ServiceProvider.GetRequiredService<AuthDbContext>().PairMembers.ToListAsync());
     }

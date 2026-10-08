@@ -38,6 +38,6 @@ public sealed partial class TogetherTests
         await Dispatcher().Dispatch(default);Assert.Single(push.Sent);
         clock.Now=new(2026,10,25,13,0,0,TimeSpan.Zero);push.Result=PushResult.Retry;await Dispatcher().Dispatch(default);Assert.Equal(2,push.Sent.Count);Assert.Equal(3,push.Sent[1].Count);await Dispatcher().Dispatch(default);Assert.Equal(2,push.Sent.Count);
         clock.Now=clock.Now.AddDays(1);await Dispatcher().Dispatch(default);Assert.Equal(2,push.Sent.Count);
-        (await Post(second,"together/leave",new{})).EnsureSuccessStatusCode();clock.Now=clock.Now.AddYears(1).AddDays(-1);await Dispatcher().Dispatch(default);Assert.Equal(2,push.Sent.Count);
+        (await Post(second,"together/leave",new {acceptTerms=true})).EnsureSuccessStatusCode();clock.Now=clock.Now.AddYears(1).AddDays(-1);await Dispatcher().Dispatch(default);Assert.Equal(2,push.Sent.Count);
     }
 }

@@ -1,3 +1,16 @@
+@if (showLeave()) {
+  <section class="connection-terms" aria-labelledby="end-connection-heading">
+    <button class="back" type="button" (click)="showLeave.set(false)" [disabled]="working()">Back</button>
+    <h2 id="end-connection-heading">End your connection</h2>
+    <p>This ends the connection for both people. Invitations, dates and ongoing activities stop.</p>
+    <p>Shared pictures, books, films, recipes, places and other connection records leave the app. A new connection starts fresh. This cannot be undone.</p>
+    <p>Both people can download their connection data from Settings for 30 days. After that, the download is unavailable. Ending a connection does not delete the stored records.</p>
+    @if(together()?.creator){<p>Your creator account keeps a separate archive of your own connections, with no download deadline. Your partner follows the standard conditions.</p>}
+    <label><input type="checkbox" [checked]="acceptTerms()" (change)="acceptTerms.set($any($event.target).checked)" /> I understand and accept these conditions.</label>
+    @if(error()){<p role="alert">{{error()}}</p>}
+    <button type="button" (click)="action.emit('leave')" [disabled]="working() || !acceptTerms()">End connection</button>
+  </section>
+} @else {
 @if (viewingPartner() && together()?.partner) {
   @let partner = together()!.partner!;
   <section class="partner-profile" aria-labelledby="partner-heading">
@@ -63,7 +76,6 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 16 12-12 4 4L8 20H4zM14 6l4 4"/></svg><span>Edit display name</span>
   </button>
   </div>
-  <app-profile-timezone />
   <div class="connection-card">
   <div class="connection-heading">
     <h3>Your connection</h3>
@@ -96,6 +108,7 @@
     </button>
   }
   </div>
+  <app-profile-timezone />
 </section>
 
 <section class="sharing" aria-label="Your connection">
@@ -134,16 +147,10 @@
     </button>
   }
   @if (together()?.partner) {
-    @if (showLeave()) {
-      <p>End this connection and stop all sharing? Each person keeps their own private picks and profile.</p>
-      <button type="button" (click)="action.emit('leave')" [disabled]="working()">
-        Yes, leave connection
-      </button>
-      <button type="button" (click)="showLeave.set(false)" [disabled]="working()">Cancel</button>
-    } @else {
-      <button type="button" (click)="showLeave.set(true)">Leave connection</button>
-    }
+    <button type="button" (click)="acceptTerms.set(false); showLeave.set(true)">Leave connection</button>
   }
 </section>
+
+}
 
 }

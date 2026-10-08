@@ -12,7 +12,7 @@ namespace Overlap.Api.Tests;
 public sealed partial class TogetherTests
 {
     [Fact]
-    public async Task WatchedHistoryIsSharedIndependentOfPicksAndRemovedOnDisconnect()
+    public async Task WatchedHistoryIsSharedIndependentOfPicksAndRevokedOnDisconnect()
     {
         using var factory = new AuthFactory();
         using var first = factory.Client(); using var second = factory.Client(); using var stranger = factory.Client();
@@ -37,8 +37,8 @@ public sealed partial class TogetherTests
         Assert.Equal(HttpStatusCode.NotFound,(await Post(stranger,$"watch/watched/{entryId}/remove",new {})).StatusCode);
         (await Post(second,$"watch/watched/{entryId}/remove",new {})).EnsureSuccessStatusCode();
         (await Post(second,"watch/watched",PickTitle())).EnsureSuccessStatusCode();
-        (await Post(first,"together/leave",new {})).EnsureSuccessStatusCode();
+        (await Post(first,"together/leave",new {acceptTerms=true})).EnsureSuccessStatusCode();
         using var scope = factory.Services.CreateScope();
-        Assert.Empty(await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Set<WatchedTitle>().ToListAsync());
+        Assert.Single(await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Set<WatchedTitle>().ToListAsync());
     }
 }

@@ -1,13 +1,15 @@
 @if(active() && activity()==='menu'){    <section class="stay-in-section" aria-labelledby="make-heading">
       <h3 id="make-heading">Make something together</h3>
+      @if(loading()){<app-loading-indicator [inline]="true" label="Loading drawing progress..." />}
+      @if(error()){<p role="status">{{error()}} <button type="button" [disabled]="loading()" (click)="refresh(true)">Retry</button></p>}
       <div class="idea-grid">
         <button class="idea coffee-idea story-choice" type="button" (click)="choose.emit('cooking')">
           <span class="idea-icon story-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10a4 4 0 0 1-1-8 4 4 0 0 1 6 1 4 4 0 0 1 6-1 4 4 0 0 1-1 8v10H7zM7 16h10"/></svg></span>
           <strong>Cook</strong>
         </button>
-        <button class="idea story-choice" type="button" (click)="choose.emit('drawing')"><span class="idea-icon story-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4 16 12-12 4 4L8 20H4zM14 6l4 4M4 16l4 4"/></svg></span><strong>Draw</strong></button>
+        <button class="idea story-choice" type="button" (click)="choose.emit('drawing')"><span class="idea-icon story-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4 16 12-12 4 4L8 20H4zM14 6l4 4M4 16l4 4"/></svg></span><strong>Draw</strong>@if(drawingCount()){<span class="ongoing-badge" [attr.aria-label]="drawingCount()+' unfinished drawing rounds'">{{drawingCount()}}</span>}</button>
       </div>
     </section>}
 @if(active() && activity()==='cooking'){<app-cooking [initialContestId]="contestId()" [initialRecipeId]="recipeId()" [ownName]="ownName()" [partnerName]="partnerName()" (back)="back.emit()" />}
 
-@if(active() && activity()==='drawing'){<app-draw-together [ownName]="ownName()" [partnerName]="partnerName()" (back)="back.emit()" />}
+@if(active() && activity()==='drawing'){<app-draw-together [roundId]="drawingRoundId()" [ownName]="ownName()" [partnerName]="partnerName()" (back)="back.emit()" />}

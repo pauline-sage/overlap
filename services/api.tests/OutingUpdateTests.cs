@@ -123,7 +123,7 @@ public sealed partial class TogetherTests
         (await Post(first,"outings/update",new {kind="clear"})).EnsureSuccessStatusCode();
         Assert.Empty((await second.GetFromJsonAsync<JsonElement>("/api/auth/privacy")).GetProperty("outingUpdates").EnumerateArray());
         (await Post(first,"outings/update",new {kind="on-my-way"})).EnsureSuccessStatusCode();
-        (await Post(second,"together/leave",new {})).EnsureSuccessStatusCode();
+        (await Post(second,"together/leave",new {acceptTerms=true})).EnsureSuccessStatusCode();
         Assert.Empty((await second.GetFromJsonAsync<JsonElement>("/api/auth/privacy")).GetProperty("outingUpdates").EnumerateArray());
     }
 }

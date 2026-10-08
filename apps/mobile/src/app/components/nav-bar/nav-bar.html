@@ -12,6 +12,7 @@
     <div><h2 id="dashboard-heading" tabindex="-1">Notifications</h2><p>Little updates that bring you closer.</p></div>
     @if(sharing.count()) { <span class="unread-count">{{ sharing.count() }} updates</span> }
   </header>
+  @for(invitation of sharing.state()?.drawingInvitations ?? [];track invitation.id){<section class="quiz-invitation"><h3>Draw together?</h3><p>{{sharing.state()?.partnerName || 'Your person'}} invites you to draw {{invitation.prompt}}.</p><p>{{invitation.drawingCount ?? 1}} drawings &middot; {{invitation.seconds<60 ? invitation.seconds+' seconds' : invitation.seconds/60+' minutes'}} each</p><button type="button" [disabled]="disabled()" (click)="openDrawing.emit(invitation.id)">View invitation</button></section>}
   @for(invitation of sharing.state()?.quizInvitations ?? [];track invitation.id){<section class="quiz-invitation"><h3>A quiz with your person</h3><p>Five questions to answer and guess together. Review the categories before accepting.</p><button type="button" [disabled]="disabled()" (click)="openQuiz.emit(invitation.id)">View quiz invitation</button></section>}
   <app-sharing [notifications]="true" (openContest)="openContest.emit($event)" (openCooking)="openCooking.emit($event)" (openPicks)="openPicks.emit()" (pickYours)="pickYours.emit($event)" />
 }

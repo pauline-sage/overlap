@@ -12,6 +12,16 @@ namespace Overlap.Api.Tests;
 public sealed class DrawingRulesTests
 {
     [Fact]
+    public void CategoriesAreExplicitAndShuffleStaysInsideSelection()
+    {
+        Assert.False(DrawingCatalog.Valid([]));Assert.False(DrawingCatalog.Valid(["unknown"]));
+        Assert.False(DrawingCatalog.Valid(["animals","animals"]));
+        var animals=DrawingCatalog.Categories.Single(x=>x.Id=="animals").Prompts;
+        for(var i=0;i<20;i++)Assert.Contains(DrawingCatalog.Shuffle(["animals"],"A cat"),animals.Where(x=>x!="A cat"));
+        Assert.DoesNotContain("snk",DrawingCatalog.DefaultCategories);Assert.DoesNotContain("anime",DrawingCatalog.DefaultCategories);
+        Assert.All(DrawingCatalog.Categories.Single(x=>x.Id=="snk").Prompts,p=>Assert.EndsWith("(SNK)",p));
+    }
+    [Fact]
     public void TimerUsesActualExpiryAndShuffleChangesPrompt()
     {
         var now = DateTime.UtcNow;
@@ -28,6 +38,125 @@ public sealed class DrawingRulesTests
 
 public sealed partial class TogetherTests
 {
+    [Fact]
+    public async Task DrawingSessionsRetainSelectedCategoriesAndEnforceCountAndSingleAdvancement()
+    {
+        using var factory=new AuthFactory(unlimitedAuthRequests:true);using var first=factory.Client();using var second=factory.Client();
+        await SignIn(factory,first,"draw-session-owner");await SignIn(factory,second,"draw-session-partner");
+        (await Post(second,"together/accept",new{token=await Invite(first)})).EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.BadRequest,(await Post(first,"drawing",new{seconds=60,categories=Array.Empty<string>(),drawingCount=2})).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest,(await Post(first,"drawing",new{seconds=60,categories=new[]{"animals"},drawingCount=11})).StatusCode);
+        var created=await Post(first,"drawing",new{seconds=60,categories=new[]{"animals"},drawingCount=2});created.EnsureSuccessStatusCode();
+        var id=(await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt64();
+        async Task<JsonElement> State(long roundId)=>(await first.GetFromJsonAsync<JsonElement>("/api/auth/drawing")).GetProperty("rounds").EnumerateArray().Single(x=>x.GetProperty("id").GetInt64()==roundId);
+        var round=await State(id);var revision=round.GetProperty("revision").GetString();var session=round.GetProperty("sessionId").GetString();
+        Assert.Equal(2,round.GetProperty("drawingCount").GetInt32());Assert.Equal(1,round.GetProperty("drawingNumber").GetInt32());
+        Assert.Contains(round.GetProperty("prompt").GetString()!,DrawingCatalog.Categories.Single(x=>x.Id=="animals").Prompts);
+        (await Post(first,$"drawing/{id}/shuffle",new{revision})).EnsureSuccessStatusCode();round=await State(id);revision=round.GetProperty("revision").GetString();
+        Assert.Equal(HttpStatusCode.Conflict,(await Post(first,$"drawing/{id}/next",new{revision})).StatusCode);
+        (await Post(second,$"drawing/{id}/join",new{revision})).EnsureSuccessStatusCode();round=await State(id);revision=round.GetProperty("revision").GetString();
+        using var scope=factory.Services.CreateScope();var db=scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+        await db.Set<DrawingRound>().Where(x=>x.Id==id).ExecuteUpdateAsync(s=>s.SetProperty(x=>x.EndUtc,DateTime.UtcNow.AddMinutes(-1)));
+        var pixels=Convert.ToBase64String(new byte[512*512*3]);(await Post(first,$"drawing/{id}/photo",new{revision,pixels})).EnsureSuccessStatusCode();
+        round=await State(id);revision=round.GetProperty("revision").GetString();
+        var next=await Post(first,$"drawing/{id}/next",new{revision});next.EnsureSuccessStatusCode();
+        var nextId=(await next.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt64();
+        Assert.Equal(HttpStatusCode.Conflict,(await Post(second,$"drawing/{id}/next",new{revision})).StatusCode);
+        round=await State(id);Assert.True(round.GetProperty("nextCreated").GetBoolean());Assert.Single(round.GetProperty("photos").EnumerateArray());
+        // Even refreshed revisions cannot create a duplicate next round.
+        Assert.Equal(HttpStatusCode.Conflict,(await Post(second,$"drawing/{id}/next",new{revision=round.GetProperty("revision").GetString()})).StatusCode);
+        round=await State(nextId);Assert.Equal(session,round.GetProperty("sessionId").GetString());Assert.Equal(2,round.GetProperty("drawingNumber").GetInt32());
+        Assert.Equal("animals",Assert.Single(round.GetProperty("categories").EnumerateArray()).GetString());Assert.Equal("waiting",round.GetProperty("status").GetString());
+        revision=round.GetProperty("revision").GetString();(await Post(second,$"drawing/{nextId}/join",new{revision})).EnsureSuccessStatusCode();
+        await db.Set<DrawingRound>().Where(x=>x.Id==nextId).ExecuteUpdateAsync(s=>s.SetProperty(x=>x.EndUtc,DateTime.UtcNow.AddMinutes(-1)));
+        round=await State(nextId);revision=round.GetProperty("revision").GetString();
+        Assert.Equal(HttpStatusCode.Conflict,(await Post(first,$"drawing/{nextId}/next",new{revision})).StatusCode);
+        // Stopping between drawings keeps uploaded photos and prevents continuation.
+        created=await Post(first,"drawing",new{seconds=60,categories=new[]{"snk"},drawingCount=2});created.EnsureSuccessStatusCode();
+        id=(await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt64();round=await State(id);revision=round.GetProperty("revision").GetString();
+        (await Post(second,$"drawing/{id}/join",new{revision})).EnsureSuccessStatusCode();
+        await db.Set<DrawingRound>().Where(x=>x.Id==id).ExecuteUpdateAsync(s=>s.SetProperty(x=>x.EndUtc,DateTime.UtcNow.AddMinutes(-1)));
+        round=await State(id);revision=round.GetProperty("revision").GetString();
+        (await Post(first,$"drawing/{id}/photo",new{revision,pixels})).EnsureSuccessStatusCode();
+        round=await State(id);revision=round.GetProperty("revision").GetString();
+        (await Post(second,$"drawing/{id}/cancel",new{revision})).EnsureSuccessStatusCode();
+        round=await State(id);Assert.Single(round.GetProperty("photos").EnumerateArray());
+        Assert.Equal(HttpStatusCode.Conflict,(await Post(first,$"drawing/{id}/next",new{revision=round.GetProperty("revision").GetString()})).StatusCode);
+    }
+    [Fact]
+    public async Task DrawingInvitationsNotifyOnlyPartnerAndRequireTheirDecision()
+    {
+        using var factory=new AuthFactory(unlimitedAuthRequests:true);
+        using var first=factory.Client();using var second=factory.Client();using var outsider=factory.Client();
+        await SignIn(factory,first,"draw-invite-owner");await SignIn(factory,second,"draw-invite-partner");await SignIn(factory,outsider,"draw-invite-outsider");
+        (await Post(second,"together/accept",new{token=await Invite(first)})).EnsureSuccessStatusCode();
+        (await Post(first,"drawing",new{seconds=60})).EnsureSuccessStatusCode();
+        async Task<JsonElement> State()=>Assert.Single((await first.GetFromJsonAsync<JsonElement>("/api/auth/drawing")).GetProperty("rounds").EnumerateArray());
+        async Task<int> Invites(HttpClient client)=>(await client.GetFromJsonAsync<JsonElement>("/api/auth/privacy")).GetProperty("drawingInvitations").GetArrayLength();
+        var round=await State();var id=round.GetProperty("id").GetInt64();var revision=round.GetProperty("revision").GetString();
+        Assert.Equal(JsonValueKind.Null,round.GetProperty("startUtc").ValueKind);
+        Assert.Equal(0,await Invites(first));Assert.Equal(1,await Invites(second));Assert.Equal(0,await Invites(outsider));
+        Assert.Equal(HttpStatusCode.Conflict,(await Post(first,$"drawing/{id}/decline",new{revision})).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound,(await Post(outsider,$"drawing/{id}/decline",new{revision})).StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict,(await Post(second,$"drawing/{id}/decline",new{revision="stale"})).StatusCode);
+        (await Post(second,$"drawing/{id}/decline",new{revision})).EnsureSuccessStatusCode();
+        Assert.Equal(0,await Invites(second));Assert.Equal("cancelled",(await State()).GetProperty("status").GetString());
+        Assert.Equal(HttpStatusCode.Conflict,(await Post(second,$"drawing/{id}/join",new{revision})).StatusCode);
+        // A declined invitation frees setup; accepting the next one starts its timer.
+        var created=await Post(first,"drawing",new{seconds=30});created.EnsureSuccessStatusCode();
+        var nextId=(await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt64();
+        round=(await second.GetFromJsonAsync<JsonElement>("/api/auth/drawing")).GetProperty("rounds").EnumerateArray().Single(x=>x.GetProperty("id").GetInt64()==nextId);
+        revision=round.GetProperty("revision").GetString();Assert.Equal(1,await Invites(second));
+        (await Post(second,$"drawing/{nextId}/join",new{revision})).EnsureSuccessStatusCode();
+        Assert.Equal(0,await Invites(second));
+    }
+
+    [Fact]
+    public async Task PausedRoundsPreserveTimeAndResumeWithoutOverlappingAnotherRound()
+    {
+        using var factory = new AuthFactory(unlimitedAuthRequests: true);
+        using var first = factory.Client(); using var second = factory.Client(); using var outsider = factory.Client();
+        await SignIn(factory, first, "draw-pause-owner"); await SignIn(factory, second, "draw-pause-partner");
+        await SignIn(factory, outsider, "draw-pause-outsider");
+        (await Post(second, "together/accept", new { token = await Invite(first) })).EnsureSuccessStatusCode();
+        var created = await Post(first, "drawing", new { seconds = 600 }); created.EnsureSuccessStatusCode();
+        var id = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt64();
+        async Task<JsonElement> State() => (await first.GetFromJsonAsync<JsonElement>("/api/auth/drawing"))
+            .GetProperty("rounds").EnumerateArray().Single(x => x.GetProperty("id").GetInt64() == id);
+        string Revision(JsonElement value) => value.GetProperty("revision").GetString()!;
+        var round = await State(); var revision = Revision(round);
+        Assert.Equal(HttpStatusCode.NotFound, (await Post(outsider, $"drawing/{id}/pause", new { revision })).StatusCode);
+        (await Post(first, $"drawing/{id}/pause", new { revision })).EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.Conflict, (await Post(second, $"drawing/{id}/resume", new { revision })).StatusCode);
+        round = await State(); Assert.Equal("paused", round.GetProperty("status").GetString());
+        Assert.Equal(600, round.GetProperty("pausedSeconds").GetInt32());
+        revision = Revision(round);
+        (await Post(second, $"drawing/{id}/resume", new { revision })).EnsureSuccessStatusCode();
+        round = await State(); Assert.Equal("waiting", round.GetProperty("status").GetString());
+        revision = Revision(round);
+        (await Post(second, $"drawing/{id}/join", new { revision })).EnsureSuccessStatusCode();
+        round = await State(); revision = Revision(round);
+        (await Post(second, $"drawing/{id}/pause", new { revision })).EnsureSuccessStatusCode();
+        round = await State(); var savedSeconds = round.GetProperty("pausedSeconds").GetInt32();
+        Assert.InRange(savedSeconds, 590, 600); revision = Revision(round);
+        // Simulate returning after the original deadline; the persisted pause overrides it.
+        using var scope = factory.Services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+        await db.Set<DrawingRound>().Where(x => x.Id == id).ExecuteUpdateAsync(s => s.SetProperty(x => x.EndUtc, DateTime.UtcNow.AddDays(-1)));
+        Assert.Equal("paused", (await State()).GetProperty("status").GetString());
+        Assert.Equal(HttpStatusCode.Conflict, (await Post(first, $"drawing/{id}/photo", new { revision, pixels = "bad" })).StatusCode);
+        var another = await Post(first, "drawing", new { seconds = 30 }); another.EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.Conflict, (await Post(first, $"drawing/{id}/resume", new { revision })).StatusCode);
+        var other = (await first.GetFromJsonAsync<JsonElement>("/api/auth/drawing")).GetProperty("rounds").EnumerateArray()
+            .Single(x => x.GetProperty("id").GetInt64() != id);
+        (await Post(first, $"drawing/{other.GetProperty("id").GetInt64()}/cancel", new { revision = Revision(other) })).EnsureSuccessStatusCode();
+        var before = DateTimeOffset.UtcNow;
+        (await Post(first, $"drawing/{id}/resume", new { revision })).EnsureSuccessStatusCode();
+        round = await State(); Assert.Equal("drawing", round.GetProperty("status").GetString());
+        Assert.Equal(JsonValueKind.Null, round.GetProperty("pausedSeconds").ValueKind);
+        Assert.InRange((round.GetProperty("endUtc").GetDateTimeOffset() - before).TotalSeconds, savedSeconds - 1, savedSeconds + 5);
+        Assert.Equal(HttpStatusCode.Conflict, (await Post(second, $"drawing/{id}/pause", new { revision })).StatusCode);
+    }
+
     [Fact]
     public async Task EitherMemberCanCancelButStaleRemovalsAreRejected()
     {
@@ -50,7 +179,7 @@ public sealed partial class TogetherTests
         Assert.Empty((await first.GetFromJsonAsync<JsonElement>("/api/auth/drawing")).GetProperty("rounds").EnumerateArray());
     }
     [Fact]
-    public async Task DrawingRoundsProtectTimerPhotosRatingsAndClearOnDisconnect()
+    public async Task DrawingRoundsProtectTimerPhotosRatingsAndRevokeLiveAccessOnDisconnect()
     {
         using var factory=new AuthFactory(unlimitedAuthRequests:true);
         using var first=factory.Client();using var second=factory.Client();using var outsider=factory.Client();
@@ -95,8 +224,14 @@ public sealed partial class TogetherTests
         revision=Revision(round);(await Post(second,$"drawing/{id}/photo",new{revision,pixels})).EnsureSuccessStatusCode();
         Assert.Equal(2,(await State(first)).GetProperty("photos").GetArrayLength());
         Assert.Equal(0,(await outsider.GetFromJsonAsync<JsonElement>("/api/auth/drawing")).GetProperty("rounds").GetArrayLength());
-        (await Post(first,"together/leave",new{})).EnsureSuccessStatusCode();
-        Assert.Empty(await db.Set<DrawingRound>().AsNoTracking().ToArrayAsync());Assert.Empty(await db.Set<DrawingPhoto>().AsNoTracking().ToArrayAsync());
+        (await Post(first,"together/leave",new {acceptTerms=true})).EnsureSuccessStatusCode();
+        Assert.Single(await db.Set<DrawingRound>().AsNoTracking().ToArrayAsync());Assert.Equal(2,await db.Set<DrawingPhoto>().CountAsync());
         Assert.Equal(HttpStatusCode.NotFound,(await second.GetAsync($"/api/auth/drawing/{id}/photos/{owner}")).StatusCode);
+        Assert.Empty((await second.GetFromJsonAsync<JsonElement>("/api/auth/drawing")).GetProperty("rounds").EnumerateArray());
+        (await Post(outsider,"together/accept",new{token=await Invite(first)})).EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.NotFound,(await outsider.GetAsync($"/api/auth/drawing/{id}/photos/{owner}")).StatusCode);
+        Assert.Empty((await first.GetFromJsonAsync<JsonElement>("/api/auth/drawing")).GetProperty("rounds").EnumerateArray());
+        Assert.Equal(HttpStatusCode.NotFound,(await Post(second,$"drawing/{id}/join",new{revision})).StatusCode);
+
     }
 }

@@ -90,7 +90,7 @@ public class CookingCatalogTests
 public sealed partial class TogetherTests
 {
     [Fact]
-    public async Task CookingSnapshotsAreAccountBoundSharedAndRemovedOnDisconnect()
+    public async Task CookingSnapshotsAreAccountBoundSharedAndRevokedOnDisconnect()
     {
         using var factory=new AuthFactory(unlimitedAuthRequests:true); using var first=factory.Client(); using var second=factory.Client(); using var stranger=factory.Client();
         var owner=await SignIn(factory,first,"cook-first"); await SignIn(factory,second,"cook-second"); await SignIn(factory,stranger,"cook-stranger");
@@ -143,8 +143,8 @@ public sealed partial class TogetherTests
         Assert.Equal(HttpStatusCode.NotFound,(await Post(stranger,$"cooking/collection/{id}/remove",new {})).StatusCode);
         (await Post(second,$"cooking/collection/{id}/remove",new {})).EnsureSuccessStatusCode();
         (await Post(first,"cooking/collection",new {token})).EnsureSuccessStatusCode();
-        (await Post(second,"together/leave",new {})).EnsureSuccessStatusCode();
-        Assert.Empty(await db.Set<SavedRecipe>().AsNoTracking().ToListAsync());
+        (await Post(second,"together/leave",new {acceptTerms=true})).EnsureSuccessStatusCode();
+        Assert.Single(await db.Set<SavedRecipe>().AsNoTracking().ToListAsync());
         Assert.Empty(await db.Set<RecipeExperience>().AsNoTracking().ToListAsync());
     }
 }

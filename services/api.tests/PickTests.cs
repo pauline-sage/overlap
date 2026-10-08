@@ -49,9 +49,9 @@ public sealed partial class TogetherTests
         await EnableSharing(first,"picks");
         Assert.Equal(0,(await Picks(second)).GetArrayLength());
         (await Post(first,$"watch/picks/{id}/share",new {shared=true})).EnsureSuccessStatusCode();
-        (await Post(first,"together/leave",new {})).EnsureSuccessStatusCode();
-        Assert.Equal(1,(await Picks(first)).GetArrayLength());Assert.Equal(0,(await Picks(second)).GetArrayLength());
-        Assert.False((await Picks(first))[0].GetProperty("shared").GetBoolean());
+        (await Post(first,"together/leave",new {acceptTerms=true})).EnsureSuccessStatusCode();
+        Assert.Equal(0,(await Picks(first)).GetArrayLength());Assert.Equal(0,(await Picks(second)).GetArrayLength());
+
     }
     [Fact]
     public async Task PicksRequireAuthenticationAndCsrf()

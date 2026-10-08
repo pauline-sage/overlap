@@ -4,6 +4,23 @@ import { ProfileComponent } from './profile';
 import { HttpClient } from '@angular/common/http';
 
 describe('Partner profile', () => {
+  it('requires acknowledging separate ending conditions before emitting leave', async () => {
+    await TestBed.configureTestingModule({imports:[ProfileComponent],providers:[{provide:SharingService,useValue:{state:()=>null,error:()=>''}},{provide:HttpClient,useValue:{get:vi.fn()}}]}).compileComponents();
+    const fixture=TestBed.createComponent(ProfileComponent);
+    fixture.componentRef.setInput('greetingName','Person');
+    fixture.componentRef.setInput('together',{id:'self',hasPhoto:false,invitationExpiresUtc:null,partner:{id:'other',displayName:null,hasPhoto:false}});
+    fixture.detectChanges();
+    const leave=Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(button=>button.textContent?.trim()==='Leave connection')!;
+    leave.click();fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#end-connection-heading')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('#partner-link')).toBeNull();
+    const confirm=Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(button=>button.textContent?.trim()==='End connection')!;
+    expect(confirm.disabled).toBe(true);
+    const checkbox=fixture.nativeElement.querySelector('input[type=checkbox]') as HTMLInputElement;
+    checkbox.click();fixture.detectChanges();expect(confirm.disabled).toBe(false);
+    const actions:string[]=[];fixture.componentInstance.action.subscribe(action=>actions.push(action));
+    confirm.click();expect(actions).toEqual(['leave']);
+  });
   it('opens the connected partner read-only, returns back, and clears the view on disconnect', async () => {
     await TestBed.configureTestingModule({imports:[ProfileComponent], providers:[{provide:SharingService,useValue:{state:()=>null,error:()=>""}},{provide:HttpClient,useValue:{get:vi.fn()}}]}).compileComponents();
     const f=TestBed.createComponent(ProfileComponent);
