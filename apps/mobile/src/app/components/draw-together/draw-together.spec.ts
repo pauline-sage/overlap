@@ -40,7 +40,10 @@ describe('Draw together',()=>{
     http.get.mockImplementation(()=>of({connected:true,serverUtc:new Date().toISOString(),rounds:[],categories:[{id:'animals',title:'Animals',count:21},{id:'snk',title:'Attack on Titan / SNK',count:36}]}));
     const f=TestBed.createComponent(DrawTogetherComponent);f.detectChanges();await f.whenStable();f.detectChanges();
     f.componentInstance.categoryIds.set(['animals']);
-    const snk=f.nativeElement.querySelectorAll('.drawing-categories button')[1];snk.click();f.detectChanges();
+    const rail=f.nativeElement.querySelector('.category-carousel');const scrollTo=vi.fn();rail.scrollTo=scrollTo;vi.stubGlobal('matchMedia',vi.fn().mockReturnValue({matches:true}));
+    f.nativeElement.querySelector('[aria-label="Next category"]').click();f.detectChanges();expect(f.componentInstance.categoryIndex()).toBe(1);expect(scrollTo).toHaveBeenCalled();
+    rail.dispatchEvent(new KeyboardEvent('keydown',{key:'Home',bubbles:true}));f.detectChanges();expect(f.componentInstance.categoryIndex()).toBe(0);
+    const snk=f.nativeElement.querySelectorAll('.category-toggle')[1];snk.click();f.detectChanges();
     expect(snk.getAttribute('aria-pressed')).toBe('true');
     const choices=f.debugElement.queryAll(By.directive(OutingChoiceComponent));
     choices[0].componentInstance.valueChange.emit('3');choices[1].componentInstance.valueChange.emit('120');

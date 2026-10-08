@@ -14,7 +14,7 @@
       @if(saved()) { <p class="saved-note" role="status">In your shared collection</p> }
       @else if(connected()) { <button class="primary" type="button" (click)="save()" [disabled]="busy()">Save together</button> }
       @if(connected()) { <button class="share-button" type="button" (click)="share()" [disabled]="busy()">Share with your person <span aria-hidden="true">&#8599;</span></button> }
-      @else { <p class="hint">Connect with your person to save and share recipes.</p> }
+      @else { <p class="collection-note">Connect with your person to save and share recipes.</p> }
       @if(notice()) { <p class="hint" role="status">{{notice()}}</p> }
     </div>
     <section class="checklist-card" aria-labelledby="ingredient-heading">
@@ -35,7 +35,7 @@
           <app-book-rating [title]="recipe.title" [rating]="entry()?.ownRating ?? null" [partnerRating]="entry()?.partnerRating ?? null" [disabled]="busy()" (rate)="experience(true,$event)" />
           <button class="remove" type="button" [disabled]="busy()" (click)="experience(false)">Undo made it</button>
         } @else { <button class="primary" type="button" [disabled]="busy()" (click)="experience(true)">I've made it</button> }
-        @if(entry()?.partnerMade) { <p class="hint">Your person has made it too.@if(!entry()?.ownMade && entry()?.partnerRating) { Rated {{entry()?.partnerRating}}/5. }</p> }
+        @if(entry()?.partnerMade) { <p class="collection-note">Your person has made it too.@if(!entry()?.ownMade && entry()?.partnerRating) { Rated {{entry()?.partnerRating}}/5. }</p> }
       </section>
     }
     <p class="credit">Recipe by <a [href]="recipe.sourceUrl" target="_blank" rel="noopener noreferrer">Wikibooks contributors</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>. Formatting adapted for Overlap.</p>
@@ -53,13 +53,13 @@
   <section id="cooking-panel" role="tabpanel" [attr.aria-labelledby]="'cooking-tab-'+tab()" tabindex="0">
   @if(tab()==='discover') {
     <form (ngSubmit)="search()"><label for="recipe-query">Find a recipe</label><input id="recipe-query" name="query" type="search" enterkeyhint="search" maxlength="120" placeholder="Try crepes, flan, Alfredo..." [(ngModel)]="query" (keydown.enter)="$event.preventDefault(); search()" /><button class="primary" type="submit" (pointerdown)="dismissSearchKeyboard()" [disabled]="busy() || !query.trim()">Find something to cook</button></form>
-    <p class="hint">English recipes from Wikibooks. Searches use both saved food lists and look for vegetarian or vegan alternatives when exclusions apply. Review ingredients before cooking.</p>
-    @if(hits(); as results) { @if(!results.length) { <p class="hint" role="status">No matching recipes found. A suitable alternative may be missing from this catalogue. Try another dish name.</p> } <app-collection-browser [browser]="searchPages" [total]="results.length" [count]="results.length" [searchable]="false" searchId="recipe-result-pages" /> @for(hit of searchPages.slice(results); track hit.id) { <button class="recipe-row" type="button" (click)="open(hit)">{{hit.title}} <span aria-hidden="true">&#8250;</span></button> } }
+    <p class="collection-note">English recipes from Wikibooks. Searches use both saved food lists and look for vegetarian or vegan alternatives when exclusions apply. Review ingredients before cooking.</p>
+    @if(hits(); as results) { @if(!results.length) { <div class="collection-empty"><span class="collection-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10a4 4 0 0 1-1-8 4 4 0 0 1 6 1 4 4 0 0 1 6-1 4 4 0 0 1-1 8v10H7zM7 16h10"/></svg></span><h3>Try another dish</h3><p>No matching recipes found. A suitable alternative may be missing from this catalogue. Try another dish name.</p></div> } <app-collection-browser [browser]="searchPages" [total]="results.length" [count]="results.length" [searchable]="false" searchId="recipe-result-pages" /> @for(hit of searchPages.slice(results); track hit.id) { <button class="recipe-row" type="button" (click)="open(hit)">{{hit.title}} <span aria-hidden="true">&#8250;</span></button> } }
   } @else {
     @if(!connected()) { <p class="hint">Connect with your person to keep a shared recipe collection.</p> }
     @else if(tab()==='partner' && !partnerCookingShared()) { <p class="hint">Your person's Made it history is private. They can choose to share it in Settings.</p> }
     @else if(!visibleEntries().length && !collectionError()) {
-      <p class="hint">{{tab()==='made' ? 'No recipes marked as made yet. Open a recipe and choose I’ve made it.' : tab()==='partner' ? 'Your person hasn’t marked any recipes as made yet.' : 'Your shared collection is empty. Find a recipe and save it together.'}}</p>
+      <div class="collection-empty"><span class="collection-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10a4 4 0 0 1-1-8 4 4 0 0 1 6 1 4 4 0 0 1 6-1 4 4 0 0 1-1 8v10H7zM7 16h10"/></svg></span><h3>{{tab()==='partner' ? 'Their kitchen story starts here' : tab()==='made' ? 'Make your first dish' : 'Find your first recipe'}}</h3><p>{{tab()==='made' ? 'No recipes marked as made yet. Open a recipe and choose I’ve made it.' : tab()==='partner' ? 'Your person hasn’t marked any recipes as made yet.' : 'Your shared collection is empty. Find a recipe and save it together.'}}</p><button class="primary" type="button" (click)="view('discover')">Discover recipes</button></div>
     }
     @for(entry of visibleEntries(); track entry.id) { <div class="collection-row"><button class="recipe-row" type="button" (click)="openSaved(entry)"><span><strong>{{entry.recipe.title}}</strong>@if(entry.ownMadeUtc){<small class="made-date">{{ownName()}} made it · {{entry.ownMadeUtc | date:'d MMM yyyy'}}</small>}@if(entry.partnerMadeUtc){<small class="made-date">{{partnerName()}} made it · {{entry.partnerMadeUtc | date:'d MMM yyyy'}}</small>}@if(tab()==='made' || tab()==='partner') {<small class="history-rating">{{(tab()==='made' ? entry.ownRating : entry.partnerRating) ? (tab()==='made' ? entry.ownRating : entry.partnerRating) + '/5' : 'Made · Not rated'}}</small>}</span> <span aria-hidden="true">&#8250;</span></button><button class="remove" [hidden]="tab()!=='collection'" type="button" (click)="remove(entry)" [disabled]="busy()" [attr.aria-label]="'Remove ' + entry.recipe.title + ' from our recipes'">Remove</button></div> }
   }

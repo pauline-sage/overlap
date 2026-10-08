@@ -36,6 +36,19 @@ describe('Read together',() => {
     c.view('read');await f.whenStable();f.detectChanges();expect(c.collection.page()).toBe(1);expect(c.collection.query()).toBe('');expect(c.displayed().map(x=>x.title)).toEqual(['Finished book']);
     f.destroy();
   });
+  it('shows styled empty shelves with a Discover action',async()=>{
+    auth.books.mockResolvedValue({connected:true,entries:[]});
+    const f=await render();const c=f.componentInstance;
+    for(const tab of ['planned','read'] as const){
+      c.view(tab);await f.whenStable();f.detectChanges();const empty=f.nativeElement.querySelector('.collection-empty');
+      expect(empty).not.toBeNull();expect(empty.querySelector('svg')).not.toBeNull();expect(empty.textContent).toContain(tab==='planned' ? 'Find your first book' : 'Your reading story starts here');
+      empty.querySelector('button').click();f.detectChanges();expect(c.tab()).toBe('discover');await f.whenStable();
+    }
+    auth.submit.mockResolvedValue({books:[],reasons:{},explanation:'Rate a favourite to get recommendations.'});c.view('recommended');await f.whenStable();f.detectChanges();
+    const recommended=f.nativeElement.querySelector('.collection-empty');expect(recommended.textContent).toContain('Find your next chapter');expect(recommended.textContent).toContain('Rate a favourite');
+    recommended.querySelector('button').click();f.detectChanges();expect(c.tab()).toBe('discover');
+    f.destroy();
+  });
   const auth={books:vi.fn(),submit:vi.fn()};
   beforeEach(() => {
     vi.resetAllMocks(); auth.books.mockResolvedValue({connected:true,entries:[]});

@@ -28,7 +28,7 @@
           @if(removing()===place.id){<p>Remove this place for both of you?</p><div class="actions"><button type="button" (click)="remove(place)" [disabled]="busy()">Yes, remove</button><button type="button" (click)="removing.set(null)">Keep it</button></div>}
         </details></div>
       </article>
-    } @empty {<p>{{places().length?'No places match your search.':'Seen somewhere you would love to go? Add your first place.'}}</p>}
+    } @empty {<div class="collection-empty"><span class="collection-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0ZM9 10h6"/></svg></span><h3>{{places().length ? 'Try another search' : 'Find your first place'}}</h3><p>{{places().length?'No places match your search.':'Seen somewhere you would love to go? Add your first place.'}}</p></div>}
     @if(pages()>1){<nav class="place-pagination" aria-label="Saved places pages"><button type="button" aria-label="Previous page" [disabled]="page()===0" (click)="page.set(page()-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></button><span aria-live="polite">{{page()+1}} <span class="page-total">/ {{pages()}}</span></span><button type="button" aria-label="Next page" [disabled]="page()+1>=pages()" (click)="page.set(page()+1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button></nav>}
   }
 }

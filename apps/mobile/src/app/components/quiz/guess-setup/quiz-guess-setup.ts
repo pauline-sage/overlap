@@ -12,11 +12,11 @@ export class QuizGuessSetupComponent {
     const next=Math.max(0,Math.min(this.categories().length-1,index));
     const card=rail.children[next] as HTMLElement|undefined;if(!card)return;
     this.categoryIndex.set(next);
-    rail.scrollTo({left:card.offsetLeft,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'});
+    rail.scrollTo({left:card.offsetLeft-(rail.clientWidth-card.offsetWidth)/2,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'});
   }
   categoryScrolled(event:Event):void{
     const rail=event.target as HTMLElement;let nearest=0,distance=Infinity;
-    Array.from(rail.children).forEach((card,index)=>{const delta=Math.abs((card as HTMLElement).offsetLeft-rail.scrollLeft);if(delta<distance){nearest=index;distance=delta;}});
+    Array.from(rail.children).forEach((card,index)=>{const delta=Math.abs((card as HTMLElement).offsetLeft-rail.scrollLeft-(rail.clientWidth-(card as HTMLElement).offsetWidth)/2);if(delta<distance){nearest=index;distance=delta;}});
     this.categoryIndex.set(nearest);
   }
   categoryKey(event:KeyboardEvent):void{

@@ -34,12 +34,12 @@ public static class CalendarEndpoints
             var account=user.FindFirstValue(ClaimTypes.NameIdentifier)!;
             var preference=await db.Set<CalendarPreference>().AsNoTracking().SingleOrDefaultAsync(x=>x.AccountId==account,ct);
             var zones=TimeZoneInfo.GetSystemTimeZones().Select(x=>TimeZoneInfo.TryConvertWindowsIdToIanaId(x.Id,out var iana) ? iana! : x.Id).Where(x=>x=="UTC" || x.Contains('/')).Append("UTC").Distinct().Order().ToArray();
-            return Results.Ok(new{dailyEnabled=preference?.DailyEnabled ?? false,timeZone=preference?.TimeZone,notifyMinutes=preference?.NotifyMinutes ?? 540,available=PhoneReminderEndpoints.Configured(config),devices=await db.Set<PhoneSubscription>().CountAsync(x=>x.AccountId==account,ct),zones});
+            return Results.Ok(new{dailyEnabled=preference?.DailyEnabled ?? false,timeZone=preference?.TimeZone,notificationTimeZone=preference?.NotificationTimeZone,notifyMinutes=preference?.NotifyMinutes ?? 540,available=PhoneReminderEndpoints.Configured(config),devices=await db.Set<PhoneSubscription>().CountAsync(x=>x.AccountId==account,ct),zones});
         });
         group.MapPost("/preferences",async(SaveCalendarPreference request,ClaimsPrincipal user,AuthDbContext db,CancellationToken ct)=>{
             try{CalendarTime.Zone(request.TimeZone);if(request.NotifyMinutes is <0 or >1439)throw new ArgumentException("Choose a valid notification time.");}catch(ArgumentException e){return Results.Problem(statusCode:400,title:e.Message);}
             var account=user.FindFirstValue(ClaimTypes.NameIdentifier)!;var row=await db.Set<CalendarPreference>().FindAsync([account],ct);
-            if(row is null){row=new(){AccountId=account};db.Add(row);}row.TimeZone=request.TimeZone!;row.NotifyMinutes=request.NotifyMinutes;row.DailyEnabled=request.DailyEnabled;await db.SaveChangesAsync(ct);return Results.NoContent();
+            if(row is null){row=new(){AccountId=account};db.Add(row);}row.NotificationTimeZone=request.TimeZone!;row.NotifyMinutes=request.NotifyMinutes;row.DailyEnabled=request.DailyEnabled;await db.SaveChangesAsync(ct);return Results.NoContent();
         });
         async Task<IResult> Save(long? id,SaveCalendarEntry request,ClaimsPrincipal user,AuthDbContext db,TimeProvider clock,CancellationToken ct){
             var account=user.FindFirstValue(ClaimTypes.NameIdentifier)!;var pair=await db.PairMembers.Where(x=>x.AccountId==account).Select(x=>x.PairId).SingleOrDefaultAsync(ct);

@@ -13,8 +13,8 @@
   }
   @for(group of displayedGroups();track group.label) {
     @if(contestsOnly() && group.label && (group.updates.length || group.contests.length)) { <h2>{{group.label}}</h2> }
-    @if(group.label==='Upcoming dates' && !dateCount()) { <p class="when">No upcoming dates yet. Plan a little time together.</p> }
-    @if(group.label==='Past dates' && !dateCount()){<p class="when">No passed dates yet.</p>}
+    @if(group.label==='Upcoming dates' && !dateCount()) { <div class="collection-empty"><span class="collection-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5h14v16H5zM8 3v4M16 3v4M5 11h14"/></svg></span><h3>Make time for each other</h3><p>No upcoming dates yet. Plan a little time together.</p></div> }
+    @if(group.label==='Past dates' && !dateCount()){<div class="collection-empty"><span class="collection-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5h14v16H5zM8 3v4M16 3v4M5 11h14"/></svg></span><h3>Your shared moments belong here</h3><p>Past dates will appear here.</p></div>}
     @for(update of group.updates;track update.mine) {
     <article class="date-card" [class.new]="update.unread" [class.compact]="!notifications() && !contestsOnly()">
       @if(!notifications() && !contestsOnly()) {

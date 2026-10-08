@@ -285,16 +285,14 @@
             <span>{{ titles.length }} found</span>
           </div>
           @if (!titles.length) {
-            <p class="empty">
-              No shared matches in this batch. Try more titles or adjust your filters.
-            </p>
+            <div class="collection-empty"><h3>Try a different mood</h3><p>No shared matches in this batch. Try more titles or adjust your filters.</p></div>
           }
         }
       </div>
     } @else if (tab() === 'watched') {
-      <p class="fine">Movies and series you've watched together. Open a title to remove it from this shared history.</p>
+      <p class="collection-note">Movies and series you've watched together. Open a title to remove it from this shared history.</p>
     } @else {
-      <p class="fine">
+      <p class="collection-note">
         {{
           connected()
             ? tab() === 'picks' ? 'Only you, unless you choose to share.' : 'Picks your partner chose to share with you.'
@@ -353,11 +351,13 @@
       }
     </div>
 
-    @if (tab() === 'watched' && !watched().length) {
-      <p class="empty">No shared watches yet. Open a movie or series and mark it as watched together.</p>
-    }
-    @if ((tab() === 'picks' || tab() === 'partner') && !pickTitles(tab() === 'picks').length) {
-      <p class="empty">No picks yet. Open a title to save it privately.</p>
+    @if (picksReady() && tab() !== 'discover' && !collectionTitles().length) {
+      <section class="watch-empty" aria-labelledby="watch-empty-title">
+        <span class="empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 8h4M3 16h4M17 8h4M17 16h4"/></svg></span>
+        <h3 id="watch-empty-title">{{tab() === 'watched' ? 'Your shared watch story starts here' : tab() === 'picks' ? 'Find your first pick' : 'No shared picks yet'}}</h3>
+        <p>{{tab() === 'watched' ? 'Seen something together? Open its details and mark it as watched.' : tab() === 'picks' ? 'Explore a film or series to save. Share it when you like.' : 'Titles your partner shares will appear here. Find something to suggest in the meantime.'}}</p>
+        <button class="primary" type="button" (click)="view('discover')">{{tab() === 'picks' ? 'Find your first pick' : 'Discover films & series'}}</button>
+      </section>
     }
     </section>
   }

@@ -1217,6 +1217,11 @@ namespace Overlap.Api.Migrations
                     b.Property<bool>("DailyEnabled")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<string>("NotificationTimeZone")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
                     b.Property<int>("NotifyMinutes")
                         .HasColumnType("int");
 

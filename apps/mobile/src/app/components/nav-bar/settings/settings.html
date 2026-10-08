@@ -8,8 +8,9 @@
   <app-sharing />
   <section class="notification-section" aria-labelledby="notifications-heading">
     <h3 id="notifications-heading">Phone notifications</h3>
-    <div class="notification-preferences"><app-phone-reminders /><app-calendar-notifications /></div>
-    <p class="notification-help">Notifications can arrive while Overlap is closed. Delivery may be delayed when your phone is offline.</p>
+    <div class="notification-preferences"><app-phone-reminders /><app-calendar-notifications #calendarNotifications /></div>
+    <p class="reminder-help">@if(calendarNotifications.enabled()){Turn on notifications for this device above to receive your daily reminder. }<br><br>Notifications can arrive while Overlap is closed. Delivery may be delayed when your phone is offline.</p>
+
   </section>
   <h3>Account</h3>
   <div class="account-actions">

@@ -1,6 +1,6 @@
 import { BookRatingComponent } from '../read-together/book-rating/book-rating';
 import { NavigationStateService, oneOf, navigationId, navigationBoolean } from '../../navigation-state.service';
-import { Component, DestroyRef, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { Component, ElementRef, viewChild, DestroyRef, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
@@ -23,6 +23,25 @@ export class DrawTogetherComponent {
   readonly historyOpen=this.navigation.remember('draw.history',navigationBoolean,false);
   readonly tick=signal(0);seconds='600';drawingCount='1';
   readonly categories=signal<DrawingCategory[]>([]);readonly categoryIds=signal<string[]>(['animals','nature','food','everyday']);
+  readonly categoryRail=viewChild<ElementRef<HTMLElement>>('categoryRail');
+  readonly categoryIndex=signal(0);
+  moveCategory(direction:number):void{this.goToCategory(this.categoryIndex()+direction);}
+  goToCategory(index:number):void{
+    const rail=this.categoryRail()?.nativeElement;if(!rail)return;
+    const next=Math.max(0,Math.min(this.categories().length-1,index));
+    const card=rail.children[next] as HTMLElement|undefined;if(!card)return;
+    this.categoryIndex.set(next);
+    rail.scrollTo({left:card.offsetLeft-(rail.clientWidth-card.offsetWidth)/2,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'});
+  }
+  categoryScrolled(event:Event):void{
+    const rail=event.target as HTMLElement;let nearest=0,distance=Infinity;
+    Array.from(rail.children).forEach((card,index)=>{const delta=Math.abs((card as HTMLElement).offsetLeft-rail.scrollLeft-(rail.clientWidth-(card as HTMLElement).offsetWidth)/2);if(delta<distance){nearest=index;distance=delta;}});
+    this.categoryIndex.set(nearest);
+  }
+  categoryKey(event:KeyboardEvent):void{
+    if(event.key==='ArrowRight')this.moveCategory(1);else if(event.key==='ArrowLeft')this.moveCategory(-1);else if(event.key==='Home')this.goToCategory(0);else if(event.key==='End')this.goToCategory(this.categories().length-1);else return;
+    event.preventDefault();
+  }
   readonly counts=Array.from({length:10},(_,i)=>({value:String(i+1),label:String(i+1)}));
   readonly timers=[15,30,60,120,300,600,900,1200,1800,2700,3600].map(x=>({value:String(x),label:this.duration(x)}));
   duration(seconds:number):string{return seconds<60 ? seconds+' seconds' : seconds/60+(seconds===60 ? ' minute' : ' minutes');}

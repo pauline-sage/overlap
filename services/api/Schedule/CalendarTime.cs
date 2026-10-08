@@ -24,6 +24,7 @@ public sealed class CalendarPreference
     public required string AccountId { get; set; }
     public bool DailyEnabled { get; set; }
     public string TimeZone { get; set; } = "UTC";
+    public string NotificationTimeZone { get; set; } = "UTC";
     public int NotifyMinutes { get; set; } = 540;
 }
 public sealed class CalendarDailyDelivery

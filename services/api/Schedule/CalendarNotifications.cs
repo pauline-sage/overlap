@@ -39,7 +39,7 @@ public sealed class CalendarReminderDispatcher(IServiceScopeFactory scopes,IConf
             using var scope=scopes.CreateScope();var db=scope.ServiceProvider.GetRequiredService<AuthDbContext>();
             var preferences=await db.Set<CalendarPreference>().AsNoTracking().Where(x=>x.DailyEnabled && db.Set<PhoneSubscription>().Any(s=>s.AccountId==x.AccountId)).ToArrayAsync(ct);
             foreach(var preference in preferences){
-                TimeZoneInfo zone;try{zone=CalendarTime.Zone(preference.TimeZone);}catch(ArgumentException){continue;}
+                TimeZoneInfo zone;try{zone=CalendarTime.Zone(preference.NotificationTimeZone);}catch(ArgumentException){continue;}
                 var now=clock.GetUtcNow();var local=TimeZoneInfo.ConvertTime(now,zone);
                 if(local.Hour*60+local.Minute<preference.NotifyMinutes)continue;
                 var pair=await db.PairMembers.Where(x=>x.AccountId==preference.AccountId).Select(x=>x.PairId).SingleOrDefaultAsync(ct);
@@ -47,10 +47,10 @@ public sealed class CalendarReminderDispatcher(IServiceScopeFactory scopes,IConf
                 var date=local.Date;var key=date.ToString("yyyy-MM-dd");
                 var subscriptions=await db.Set<PhoneSubscription>().AsNoTracking().Where(x=>x.AccountId==preference.AccountId && !db.Set<CalendarDailyDelivery>().Any(d=>d.SubscriptionId==x.Id && d.LocalDate==key)).ToArrayAsync(ct);
                 if(subscriptions.Length==0)continue;
-                var eventCount=await CountPlans(db,pair,preference.AccountId,date,preference.TimeZone,ct);
+                var eventCount=await CountPlans(db,pair,preference.AccountId,date,preference.NotificationTimeZone,ct);
                 if(eventCount==0)continue;
                 foreach(var device in subscriptions){
-                    if(!await db.PairMembers.AnyAsync(x=>x.PairId==pair && x.AccountId==preference.AccountId,ct) || !await db.Set<PhoneSubscription>().AnyAsync(x=>x.Id==device.Id,ct) || !await db.Set<CalendarPreference>().AnyAsync(x=>x.AccountId==preference.AccountId && x.DailyEnabled && x.TimeZone==preference.TimeZone && x.NotifyMinutes==preference.NotifyMinutes,ct))continue;
+                    if(!await db.PairMembers.AnyAsync(x=>x.PairId==pair && x.AccountId==preference.AccountId,ct) || !await db.Set<PhoneSubscription>().AnyAsync(x=>x.Id==device.Id,ct) || !await db.Set<CalendarPreference>().AnyAsync(x=>x.AccountId==preference.AccountId && x.DailyEnabled && x.NotificationTimeZone==preference.NotificationTimeZone && x.NotifyMinutes==preference.NotifyMinutes,ct))continue;
                     BrowserPushSubscription subscription;
                     try{subscription=JsonSerializer.Deserialize<BrowserPushSubscription>(protection.CreateProtector("Overlap.PhonePush.v1").Unprotect(device.ProtectedSubscription))!;}catch(Exception e) when(e is CryptographicException or JsonException){log.LogWarning("A calendar phone subscription could not be read.");continue;}
                     // Persist the unique device/day claim before calling the provider. An uncertain send is not retried.

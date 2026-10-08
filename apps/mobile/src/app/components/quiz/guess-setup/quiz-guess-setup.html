@@ -4,7 +4,7 @@
     <p class="hint carousel-hint" id="quiz-carousel-help">Swipe to explore. Add the categories you want to play.</p>
     <div #categoryRail class="category-carousel" role="region" aria-roledescription="carousel" aria-labelledby="quiz-categories-heading" aria-describedby="quiz-carousel-help" tabindex="0" (scroll)="categoryScrolled($event)" (keydown)="categoryKey($event)">
       @for(category of categories();track category.id){<article class="category-slide" role="group" aria-roledescription="slide" [attr.aria-label]="($index+1)+' of '+categories().length+': '+category.title" [class.category-selected]="categoryIds().includes(category.id)">
-        <span class="eyebrow">{{category.personal ? 'Personal, opt in' : 'Get to know each other'}}</span><h4>{{category.title}}</h4><p class="hint">{{category.count}} questions</p>
+        <h4>{{category.title}}</h4><p class="hint">{{category.count}} questions</p>
         <button type="button" class="category-toggle" [attr.aria-pressed]="categoryIds().includes(category.id)" [attr.aria-label]="(categoryIds().includes(category.id) ? 'Remove ' : 'Add ')+category.title" [disabled]="busy()" (click)="toggle.emit(category.id)"><span aria-hidden="true">{{categoryIds().includes(category.id) ? '✓' : '+'}}</span> {{categoryIds().includes(category.id) ? 'Selected' : 'Add category'}}</button>
       </article>}
     </div>

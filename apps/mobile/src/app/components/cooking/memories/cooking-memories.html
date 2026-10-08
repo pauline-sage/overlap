@@ -6,7 +6,7 @@
   @if(!selected()){
     <p class="hint">Your latest 100 cooking memories. Each keeps the recipe and your own finished-dish photos.</p>
     @for(entry of entries();track entry.contestId){<button class="recipe-row" type="button" (click)="open(entry)"><span><strong>{{entry.recipe.title}}</strong><small class="made-date">{{entry.startUtc | date:'d MMM yyyy'}} &middot; {{entry.completed ? 'Both dishes saved' : 'Waiting for a dish photo'}}</small></span><span aria-hidden="true">&#8250;</span></button>}
-    @if(!entries().length && !error()){<p class="hint">Your album is empty. Finish a contest and add a photo of your dish to start a memory.</p>}
+    @if(!entries().length && !error()){<div class="collection-empty"><span class="collection-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10a4 4 0 0 1-1-8 4 4 0 0 1 6 1 4 4 0 0 1 6-1 4 4 0 0 1-1 8v10H7zM7 16h10"/></svg></span><h3>Your first dish belongs here</h3><p>Your album is empty. Finish a contest and add a photo of your dish to start a memory.</p></div>}
   }
 }
 @if(selected();as entry){

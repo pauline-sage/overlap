@@ -25,6 +25,8 @@ ENV ASPNETCORE_HTTP_PORTS=10000
 EXPOSE 10000
 COPY --from=api /out/ ./
 COPY --from=mobile /src/apps/mobile/dist/mobile/browser/ ./wwwroot/
+# Fail the image build if the compiled client was not packaged.
+RUN test -s /app/wwwroot/index.html
 USER app
 ENTRYPOINT ["dotnet", "Overlap.Api.dll"]
 

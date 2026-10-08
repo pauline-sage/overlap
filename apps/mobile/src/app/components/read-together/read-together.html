@@ -70,14 +70,14 @@
       </form>
       @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
       @if (explanation()) { <p class="fine" role="status">{{ explanation() }}</p> }
-      <p class="fine">Catalogue suggestions. Already-read books are excluded when browsing; search by title or author to find them again.</p>
+      <p class="collection-note">Catalogue suggestions. Already-read books are excluded when browsing; search by title or author to find them again.</p>
     } @else if (tab() === 'recommended') {
-      <p class="fine" role="status">{{ recommendationExplanation() }}</p>
+      @if(recommendations().length && recommendationExplanation()){<p class="collection-note" role="status">{{ recommendationExplanation() }}</p>}
       @if (recommendationError()) { <p class="error" role="alert">{{ recommendationError() }}</p> }
-      <button class="secondary" type="button" (click)="recommend()" [disabled]="recommending()">Refresh recommendations</button>
+      @if(recommendations().length || recommendationError()){<button class="secondary" type="button" (click)="recommend()" [disabled]="recommending()">Refresh recommendations</button>}
     } @else if (tab() === 'planned') {
-      <p class="fine">{{ sharingBooks() ? 'Your bookshelf is shared with your person.' : 'Your bookshelf is private. You can share it in Settings.' }} Books your person shares appear here too.</p>
-    } @else { <p class="fine">Books you've read together. Each of you can give your own rating.</p> }
+      <p class="collection-note">{{ sharingBooks() ? 'Your bookshelf is shared with your person.' : 'Your bookshelf is private. You can share it in Settings.' }} Books your person shares appear here too.</p>
+    } @else { <p class="collection-note">Books you've read together. Each of you can give your own rating.</p> }
     @if (tab() === 'planned' || tab() === 'read') {
       <app-collection-browser [browser]="collection" [total]="savedBooks().length" [count]="filteredBooks().length" searchId="shelf-search" searchLabel="Search by title or author" />
     }
@@ -102,8 +102,8 @@
         </div>
       }
     </div>
-    @if (!displayed().length && tab() !== 'recommended' && (tab() === 'discover' ? results() : !savedBooks().length)) { <p class="empty">{{ tab() === 'discover' ? 'No books in this batch. Try another title, genre or language.' : tab() === 'read' ? 'No shared reads yet. Find a book and choose Already read.' : 'Your bookshelf is empty. Discover a book to add.' }}</p> }
-    @if (tab() === 'recommended' && !recommending() && !recommendationError() && !displayed().length && entries('read').length) { <p class="empty">No new matches in this catalogue batch. Try Discover or rate another book you enjoyed.</p> }
+    @if (!displayed().length && tab() !== 'recommended' && (tab() === 'discover' ? results() : !savedBooks().length)) { <div class="collection-empty"><span class="collection-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h6a3 3 0 0 1 3 3v14a3 3 0 0 0-3-3H3zM21 4h-6a3 3 0 0 0-3 3v14a3 3 0 0 1 3-3h6z"/></svg></span><h3>{{tab() === 'discover' || tab() === 'recommended' ? 'Try another chapter' : tab() === 'read' ? 'Your reading story starts here' : 'Find your first book'}}</h3><p>{{ tab() === 'discover' ? 'No books in this batch. Try another title, genre or language.' : tab() === 'read' ? 'No shared reads yet. Find a book and choose Already read.' : 'Your bookshelf is empty. Discover a book to add.' }}</p>@if(tab() !== 'discover'){<button class="primary" type="button" (click)="view('discover')">Discover books</button>}</div> }
+    @if(tab() === 'recommended' && !recommending() && !recommendationError() && !recommendations().length){<div class="collection-empty"><span class="collection-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h6a3 3 0 0 1 3 3v14a3 3 0 0 0-3-3H3zM21 4h-6a3 3 0 0 0-3 3v14a3 3 0 0 1 3-3h6z"/></svg></span><h3>Find your next chapter</h3><p>{{recommendationExplanation() || 'Mark a book as read or rate a favourite to inspire recommendations.'}}</p><button type="button" (click)="view('discover')">Discover books</button><button type="button" (click)="recommend()">Refresh recommendations</button></div>}
 
   </section>
 }

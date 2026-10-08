@@ -25,7 +25,7 @@ type ArchiveItem = Record<string, unknown> & { photos?:ArchivePhoto[] };
             @for(line of details(item);track $index){<p>{{line}}</p>}
             <div class="photos">@for(photo of item.photos || [];track photo.accountId){<figure><img [src]="photoUrl(item,photo)" alt="Saved activity photo" /><figcaption>{{photo.mine?'You':'Your partner'}}</figcaption></figure>}</div>
           </article>
-        } @empty {<p>No saved records here.</p>}
+        } @empty {<div class="collection-empty"><span class="collection-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4zM4 13h5l2 3h2l2-3h5"/></svg></span><h3>No saved records here</h3><p>Saved items from this connection will appear here.</p></div>}
         @if(page()>0){<button type="button" (click)="page.update(previous)">Previous</button>}
         @if((page()+1)*5 < items().length){<button type="button" (click)="page.update(next)">Next</button>}
       </section>
@@ -54,7 +54,7 @@ type ArchiveItem = Record<string, unknown> & { photos?:ArchivePhoto[] };
             @if(creator()){<button type="button" (click)="open(connection)" [disabled]="busy()">Open my archive</button>}
             }
           </article>
-        } @empty {<p>No saved connections.</p>}
+        } @empty {<div class="collection-empty"><span class="collection-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4zM4 13h5l2 3h2l2-3h5"/></svg></span><h3>No saved connections</h3><p>Your available connection archives will appear here.</p></div>}
         </div>
         }
       </section>

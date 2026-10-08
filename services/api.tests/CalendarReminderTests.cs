@@ -29,6 +29,8 @@ public sealed partial class TogetherTests
         db.Add(CalendarTime.Create(new("Birthday",null,"2024-10-25","2024-10-25",null,null,"Europe/Paris",true,true,null),pair,owner,DateTime.UtcNow));db.Add(CalendarTime.Create(new("Doctor",null,"2026-10-25","2026-10-25",null,null,"Europe/Paris",true,false,null),pair,partner,DateTime.UtcNow));db.Add(new OutingUpdate{PairId=pair,SenderId=owner,Revision="outing",UpdatedUtc=DateTime.UtcNow,VenueJson=JsonSerializer.Serialize(new SharedVenue("Cafe","Public address","https://example.test",StartUtc:new DateTimeOffset(2026,10,25,15,0,0,TimeSpan.Zero)))});await db.SaveChangesAsync();
         (await Post(first,"calendar/preferences",new{dailyEnabled=true,timeZone="Europe/Paris",notifyMinutes=540})).EnsureSuccessStatusCode();
         (await Post(second,"calendar/preferences",new{dailyEnabled=false,timeZone="America/New_York",notifyMinutes=540})).EnsureSuccessStatusCode();
+        (await Post(first,"calendar/timezone",new{timeZone="America/New_York"})).EnsureSuccessStatusCode();
+        (await Post(second,"calendar/timezone",new{timeZone="Europe/Paris"})).EnsureSuccessStatusCode();
         var clock=new ReminderClock(new DateTimeOffset(2026,10,25,7,59,0,TimeSpan.Zero));var push=new CalendarPush();
         CalendarReminderDispatcher Dispatcher()=>new(factory.Services.GetRequiredService<IServiceScopeFactory>(),config,clock,factory.Services.GetRequiredService<IDataProtectionProvider>(),push,NullLogger<CalendarReminderDispatcher>.Instance);
         await Dispatcher().Dispatch(default);Assert.Empty(push.Sent);

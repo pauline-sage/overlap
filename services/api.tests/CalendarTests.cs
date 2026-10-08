@@ -75,7 +75,9 @@ public sealed partial class TogetherTests
         (await Post(first,"calendar/preferences",new{dailyEnabled=true,timeZone="Europe/Paris",notifyMinutes=540})).EnsureSuccessStatusCode();
         (await Post(first,"calendar/timezone",new{timeZone="America/Sao_Paulo"})).EnsureSuccessStatusCode();
         var preference=await first.GetFromJsonAsync<JsonElement>("/api/auth/calendar/preferences");
-        Assert.Equal("America/Sao_Paulo",preference.GetProperty("timeZone").GetString());Assert.True(preference.GetProperty("dailyEnabled").GetBoolean());Assert.Equal(540,preference.GetProperty("notifyMinutes").GetInt32());
+        Assert.Equal("America/Sao_Paulo",preference.GetProperty("timeZone").GetString());Assert.Equal("Europe/Paris",preference.GetProperty("notificationTimeZone").GetString());Assert.True(preference.GetProperty("dailyEnabled").GetBoolean());Assert.Equal(540,preference.GetProperty("notifyMinutes").GetInt32());
+        (await Post(first,"calendar/preferences",new{dailyEnabled=true,timeZone="America/New_York",notifyMinutes=600})).EnsureSuccessStatusCode();
+        preference=await first.GetFromJsonAsync<JsonElement>("/api/auth/calendar/preferences");Assert.Equal("America/Sao_Paulo",preference.GetProperty("timeZone").GetString());Assert.Equal("America/New_York",preference.GetProperty("notificationTimeZone").GetString());
         Assert.Equal(HttpStatusCode.BadRequest,(await Post(first,"calendar/timezone",new{timeZone="invalid"})).StatusCode);
         Assert.False((await second.GetFromJsonAsync<JsonElement>("/api/auth/calendar/preferences")).GetProperty("dailyEnabled").GetBoolean());
         (await Post(second,"together/leave",new {acceptTerms=true})).EnsureSuccessStatusCode();

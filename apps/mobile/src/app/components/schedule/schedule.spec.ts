@@ -19,6 +19,20 @@ describe('Shared calendar',()=>{
     expect(f.nativeElement.querySelectorAll('app-outing-choice')).toHaveLength(2);
     c.setTime('start','minute','37');c.setTime('end','hour','23');expect(c.startTime).toBe('09:37');expect(c.endTime).toBe('23:00');expect(c.minutes).toHaveLength(60);expect(f.nativeElement.textContent).not.toContain('End date');f.destroy();
   });
+  it('alternates views and uses the selected day for an editable appointment date',async()=>{
+    const f=await render();const c=f.componentInstance;
+    const toggle=()=>Array.from(f.nativeElement.querySelectorAll('.toolbar button')).find((button:any)=>/Month view|Week view/.test(button.textContent)) as HTMLButtonElement;
+    expect(f.nativeElement.querySelector('.week-strip')).not.toBeNull();
+    toggle().click();f.detectChanges();
+    expect(f.nativeElement.querySelector('.month-calendar')).not.toBeNull();expect(f.nativeElement.querySelector('.week-strip')).toBeNull();expect(f.nativeElement.querySelector('.week-heading')).toBeNull();
+    c.choose(new Date(2026,9,12,12));f.detectChanges();await f.whenStable();f.detectChanges();
+    toggle().click();f.detectChanges();expect(f.nativeElement.querySelector('.month-calendar')).toBeNull();expect(f.nativeElement.querySelector('.week-strip')).not.toBeNull();expect(c.selected()).toBe('2026-10-12');
+    c.add();f.detectChanges();await f.whenStable();f.detectChanges();
+    expect(f.nativeElement.querySelector('#schedule-zone')).toBeNull();expect(f.nativeElement.querySelector('#schedule-agenda')).toBeNull();expect(c.timeZone).toBe(c.zone);expect(c.entryDate).toBe('2026-10-12');expect(f.nativeElement.querySelector('.date-fields summary').textContent).toContain('12 Oct 2026');expect(f.nativeElement.textContent).not.toContain('Nothing planned');expect(f.nativeElement.textContent).not.toContain('A little breathing room');
+    const manualDay=f.nativeElement.querySelector('app-outing-calendar button[aria-label="2026-10-13"]') as HTMLButtonElement;
+    manualDay.click();f.detectChanges();expect(c.entryDate).toBe('2026-10-13');expect(f.nativeElement.querySelector('.date-fields summary').textContent).toContain('13 Oct 2026');
+    c.formOpened.set(false);f.detectChanges();expect(f.nativeElement.textContent).toContain('Nothing planned yet for this day.');f.destroy();
+  });
   it('includes planned outings in the day and Home summary and excludes cancellations',async()=>{
     const f=await render();const c=f.componentInstance;const start=new Date().toISOString();c.selected.set(c.instantDay(start));
     f.componentRef.setInput('outings',[{mine:true,cancelled:false,revision:'date',venue:{name:'Cafe',activity:'Coffee',startUtc:start}},{mine:false,cancelled:true,revision:'cancelled',venue:{name:'Old',activity:'Coffee',startUtc:start}}]);f.detectChanges();
@@ -36,7 +50,7 @@ describe('Shared calendar',()=>{
     const f=await render();const c=f.componentInstance;expect(c.zone).toBe('America/Sao_Paulo');expect(c.instantDay('2026-10-07T01:00:00Z')).toBe('2026-10-06');expect(c.clockTime('2026-10-07T01:00:00Z')).toBe('22:00');c.add();expect(c.timeZone).toBe('America/Sao_Paulo');f.destroy();
   });
   it('opens a real empty calendar and saves yearly all-day birthdays through the API',async()=>{
-    const f=await render();const c=f.componentInstance;
+    const f=await render();const c=f.componentInstance;await c.load();f.detectChanges();
     expect(f.nativeElement.textContent).not.toContain('Sample');expect(f.nativeElement.textContent).toContain('Nothing planned');
     c.add();c.title='Birthday';c.allDay=true;c.yearly=true;c.entryDate='2000-02-29';c.endDate=c.entryDate;c.timeZone='Europe/Paris';await c.save();
     expect(auth.submit).toHaveBeenCalledWith('calendar',expect.objectContaining({title:'Birthday',date:'2000-02-29',endDate:'2000-02-29',endTime:null,allDay:true,yearly:true,timeZone:'Europe/Paris'}));expect(c.notice()).toContain('saved and shared');expect(c.formOpened()).toBe(false);
