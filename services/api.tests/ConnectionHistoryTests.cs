@@ -17,6 +17,30 @@ namespace Overlap.Api.Tests;
 public sealed partial class TogetherTests
 {
     [Fact]
+    public async Task RemovingCreatorArchiveRevokesOnlyTheirRetainedAccess()
+    {
+        using var factory=new AuthFactory(unlimitedAuthRequests:true);using var first=factory.Client();using var second=factory.Client();
+        var owner=await SignIn(factory,first,"archive-removal");await SignIn(factory,second,"archive-other");
+        factory.Services.GetRequiredService<IConfiguration>()["ConnectionHistory:CreatorEmail"]="archive-removal@example.test";
+        (await Post(second,"together/accept",new{token=await Invite(first)})).EnsureSuccessStatusCode();
+        using var scope=factory.Services.CreateScope();var db=scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+        var pair=await db.PairMembers.Where(x=>x.AccountId==owner).Select(x=>x.PairId).SingleAsync();
+        Assert.Equal(HttpStatusCode.NotFound,(await Post(first,$"connection-history/{pair}/remove",new{confirm=true})).StatusCode);
+        var drawing=new DrawingRound{PairId=pair,CreatedBy=owner,Prompt="A waffle",Seconds=60};db.Add(drawing);await db.SaveChangesAsync();
+        (await Post(first,"together/leave",new{acceptTerms=true})).EnsureSuccessStatusCode();
+        var listing=await first.GetFromJsonAsync<JsonElement>("/api/auth/connection-history");
+        Assert.Equal("archive-other",listing.GetProperty("connections")[0].GetProperty("partnerName").GetString());
+        Assert.Equal(HttpStatusCode.NotFound,(await Post(second,$"connection-history/{pair}/remove",new{confirm=true})).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest,(await Post(first,$"connection-history/{pair}/remove",new{confirm=false})).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest,(await first.PostAsJsonAsync($"/api/auth/connection-history/{pair}/remove",new{confirm=true})).StatusCode);
+        (await Post(first,$"connection-history/{pair}/remove",new{confirm=true})).EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.NotFound,(await first.GetAsync($"/api/auth/connection-history/{pair}/archive")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound,(await first.GetAsync($"/api/auth/connection-history/{pair}/export")).StatusCode);
+        (await second.GetAsync($"/api/auth/connection-history/{pair}/export")).EnsureSuccessStatusCode();
+        Assert.Single(await db.Set<DrawingRound>().AsNoTracking().ToArrayAsync());
+        Assert.Single(await db.Set<AlbumAccess>().AsNoTracking().Where(x=>x.PairId==pair).ToArrayAsync());
+    }
+    [Fact]
     public async Task DisconnectRetainsRecordsRevokesAccessAndLimitsExportsToThirtyDays()
     {
         using var factory=new AuthFactory(unlimitedAuthRequests:true);

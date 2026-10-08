@@ -13,6 +13,7 @@ public sealed class ConnectionHistory
 }
 
 public sealed record EndConnection(bool AcceptTerms);
+public sealed record RemoveConnectionArchive(bool Confirm);
 
 public static partial class ConnectionHistoryEndpoints
 {
@@ -58,7 +59,10 @@ public static partial class ConnectionHistoryEndpoints
         group.MapGet("",async(ClaimsPrincipal user,AuthDbContext db,IConfiguration config,TimeProvider clock)=>{
             var account=AccountId(user);var creator=await Creator(db,config,account);var now=clock.GetUtcNow().UtcDateTime;
             var rows=await Own(db,account).AsNoTracking().Where(x=>creator || x.ExportExpiresUtc>now).OrderByDescending(x=>x.DisconnectedUtc).ToArrayAsync();
-            return Results.Ok(new{creator,connections=rows.Select(x=>new{x.PairId,startedUtc=Utc(x.StartedUtc),disconnectedUtc=Utc(x.DisconnectedUtc),exportExpiresUtc=Utc(x.ExportExpiresUtc)})});
+            var partners=await db.Set<AlbumAccess>().AsNoTracking()
+                .Where(m=>m.AccountId!=account && Own(db,account).Any(h=>h.PairId==m.PairId && (creator || h.ExportExpiresUtc>now)))
+                .Join(db.Users,m=>m.AccountId,u=>u.Id,(m,u)=>new{m.PairId,u.DisplayName}).ToArrayAsync();
+            return Results.Ok(new{creator,connections=rows.Select(x=>new{x.PairId,partnerName=partners.FirstOrDefault(p=>p.PairId==x.PairId)?.DisplayName,startedUtc=Utc(x.StartedUtc),disconnectedUtc=Utc(x.DisconnectedUtc),exportExpiresUtc=Utc(x.ExportExpiresUtc)})});
         });
         group.MapGet("/{pair}/archive",async(string pair,ClaimsPrincipal user,AuthDbContext db,IConfiguration config)=>{
             var account=AccountId(user);
@@ -66,6 +70,14 @@ public static partial class ConnectionHistoryEndpoints
             return Results.Ok(await Snapshot(db,pair,account));
         });
         group.MapGet("/{pair}/export",Export);
+        group.MapPost("/{pair}/remove",async(string pair,RemoveConnectionArchive request,ClaimsPrincipal user,AuthDbContext db,IConfiguration config)=>{
+            var account=AccountId(user);
+            if(!await Creator(db,config,account) || !await Own(db,account).AnyAsync(x=>x.PairId==pair))return Results.NotFound();
+            if(!request.Confirm)return Results.Problem(statusCode:400,title:"Confirm removal of this archive.");
+            // Remove only this creator's retained access, never the other participant's records.
+            var removed=await db.Set<AlbumAccess>().Where(x=>x.PairId==pair && x.AccountId==account).ExecuteDeleteAsync();
+            return removed==1 ? Results.NoContent() : Results.NotFound();
+        });
         group.MapGet("/{pair}/photo/{kind}/{id:long}/{owner}",async(string pair,string kind,long id,string owner,ClaimsPrincipal user,AuthDbContext db,IConfiguration config)=>{
             var account=AccountId(user);
             if(!await Creator(db,config,account) || !await Own(db,account).AnyAsync(x=>x.PairId==pair))return Results.NotFound();

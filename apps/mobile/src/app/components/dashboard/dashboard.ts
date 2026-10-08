@@ -57,7 +57,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   openCoffee():void{this.navigate('home');this.outingProposal.set(null);this.coffee.set(true);}
   readonly page=this.navigation.remember<DashboardPage>('dashboard.page',oneOf(['home','dates','profile','settings','notifications']),'home');
   readonly sessionExpired=output<void>();
-  navigate(page:DashboardPage):void{this.scheduleOpened.set(false);this.stayingIn.set(false);this.coffee.set(false);this.page.set(page);queueMicrotask(()=>document.getElementById('dashboard-heading')?.focus());}
+  navigate(page:DashboardPage):void{this.firstSteps.set(false);this.scheduleOpened.set(false);this.stayingIn.set(false);this.coffee.set(false);this.page.set(page);queueMicrotask(()=>document.getElementById('dashboard-heading')?.focus());}
   private readonly auth = inject(AuthService);
   readonly invitationToken = input('');
   readonly invitationHandled = output<void>();
@@ -180,6 +180,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return !!status && !status.partner && !status.invitationExpiresUtc && !this.invitation();
   }
   async createInvite(): Promise<void> {
+    this.invitationCopied.set(false);
     if (!this.canInvite()) return;
     await this.run(async () => {
       this.together.set(await this.auth.together());
@@ -192,20 +193,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.inviteUrl.set(result.url);
       this.page.set('profile');
       this.together.set(await this.auth.together());
-      this.notice.set(
-        'Your private link is ready. It expires in 48 hours. Share it only with your person.',
-      );
+
     });
   }
+  readonly invitationCopied=signal(false);
   async copyInvite(): Promise<void> {
+    this.invitationCopied.set(false);
     try {
       await navigator.clipboard.writeText(this.inviteUrl());
-      this.notice.set('Invitation copied.');
+      this.invitationCopied.set(true);
+      this.notice.set('');
     } catch {
       this.notice.set('Select the link below and copy it manually.');
     }
   }
   async revoke(): Promise<void> {
+    this.invitationCopied.set(false);
     await this.run(async () => {
       await this.auth.submit('together/revoke', {});
       this.inviteUrl.set('');
@@ -215,11 +218,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
   decline(): void {
     this.invitation.set(null);
+    this.pastedInvitationToken='';
     this.invitationHandled.emit();
+  }
+  private pastedInvitationToken='';
+  async previewInvitation(link:string):Promise<void> {
+    if(this.working() || this.busy() || this.together()?.partner)return;
+    let token:string|null=null;
+    try {
+      const url=new URL(link.trim());
+      if((url.protocol==='https:' || url.protocol==='http:') && url.hash.startsWith('#invite?'))
+        token=new URLSearchParams(url.hash.slice('#invite?'.length)).get('token');
+    } catch { /* Invalid links never leave this screen. */ }
+    if(!token || !/^[a-f0-9]{64}$/i.test(token)) {
+      this.error.set('Paste the complete invitation link your person sent you.');return;
+    }
+    const invitationToken=token;
+    await this.run(async()=>{
+      const preview=await this.auth.submit<{displayName:string;expiresUtc:string}>('together/preview',{token:invitationToken});
+      this.pastedInvitationToken=invitationToken;
+      this.invitation.set(preview);
+      this.navigate('profile');
+    });
   }
   async accept(): Promise<void> {
     await this.run(async () => {
-      await this.auth.submit('together/accept', { token: this.invitationToken() });
+      await this.auth.submit('together/accept', { token: this.pastedInvitationToken || this.invitationToken() });
       this.decline();
       this.navigate('home');
       this.welcomeConnection();

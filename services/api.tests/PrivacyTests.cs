@@ -6,6 +6,18 @@ namespace Overlap.Api.Tests;
 public sealed partial class TogetherTests
 {
     [Fact]
+    public async Task SharingPollingAfterConnectingDoesNotConsumeSecurityActionLimit()
+    {
+        using var factory=new AuthFactory();using var first=factory.Client();using var second=factory.Client();
+        await SignIn(factory,first,"poll-first");await SignIn(factory,second,"poll-second");
+        (await Post(second,"together/accept",new{token=await Invite(first)})).EnsureSuccessStatusCode();
+        for(var i=0;i<32;i++) {
+            Assert.Equal(HttpStatusCode.OK,(await first.GetAsync("/api/auth/privacy")).StatusCode);
+            Assert.Equal(HttpStatusCode.OK,(await second.GetAsync("/api/auth/together/")).StatusCode);
+        }
+        (await Post(first,"privacy/request",new{category="presence"})).EnsureSuccessStatusCode();
+    }
+    [Fact]
     public async Task OnlyOwnerControlsSharingAndAccessChangesImmediately()
     {
         using var factory = new AuthFactory(unlimitedAuthRequests: true);
@@ -16,7 +28,7 @@ public sealed partial class TogetherTests
         (await Post(first, "together/photo", new { pixels = Convert.ToBase64String(new byte[128 * 128 * 3]) })).EnsureSuccessStatusCode();
         (await Post(second, "together/accept", new { token = await Invite(first) })).EnsureSuccessStatusCode();
         async Task<JsonElement> Partner() => (await second.GetFromJsonAsync<JsonElement>("/api/auth/together/")).GetProperty("partner");
-        Assert.Equal(JsonValueKind.Null, (await Partner()).GetProperty("displayName").ValueKind);
+        Assert.Equal("first", (await Partner()).GetProperty("displayName").GetString());
         Assert.Equal(HttpStatusCode.NotFound, (await second.GetAsync($"/api/auth/together/photo/{id}")).StatusCode);
         (await Post(first, "privacy/request", new { category = "profile" })).EnsureSuccessStatusCode();
         (await Post(first, "privacy/request", new { category = "profile" })).EnsureSuccessStatusCode();
@@ -38,7 +50,7 @@ public sealed partial class TogetherTests
         (await Post(first, "privacy/request", new { category = "profile" })).EnsureSuccessStatusCode();
         (await Post(second, "together/leave", new {acceptTerms=true})).EnsureSuccessStatusCode();
         (await Post(second, "together/accept", new { token = await Invite(first) })).EnsureSuccessStatusCode();
-        Assert.Equal(JsonValueKind.Null, (await Partner()).GetProperty("displayName").ValueKind);
+        Assert.Equal("first", (await Partner()).GetProperty("displayName").GetString());
     }
 
     [Fact]

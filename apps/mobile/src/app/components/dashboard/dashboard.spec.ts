@@ -43,6 +43,40 @@ describe('Dashboard photos and invitations', () => {
     fixture.detectChanges();
     return fixture;
   }
+  it('shows only the tutorial and highlights Settings until the user leaves it',async()=>{
+    const fixture=await render();fixture.componentInstance.firstSteps.set(true);fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.first-steps')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.hero')).toBeNull();
+    expect(fixture.nativeElement.querySelector('app-schedule')).toBeNull();
+    expect(fixture.nativeElement.querySelector('app-stay-in-together')).toBeNull();
+    const settings=fixture.nativeElement.querySelector('button[aria-label="Settings"]') as HTMLButtonElement;
+    expect(settings.classList.contains('tutorial-highlight')).toBe(true);
+    settings.click();fixture.detectChanges();
+    expect(fixture.componentInstance.firstSteps()).toBe(false);
+    expect(fixture.componentInstance.page()).toBe('settings');
+    expect(fixture.nativeElement.querySelector('.first-steps')).toBeNull();
+    fixture.destroy();
+  });
+  it('previews a pasted invitation and accepts that token only after confirmation',async()=>{
+    const fixture=await render();const token='a'.repeat(64);
+    auth.submit.mockResolvedValue({displayName:'Your person',expiresUtc:'2026-10-10T10:00:00Z'});
+    await fixture.componentInstance.previewInvitation(`https://example.test/#invite?token=${token}`);
+    expect(auth.submit).toHaveBeenCalledWith('together/preview',{token});
+    expect(auth.submit).not.toHaveBeenCalledWith('together/accept',expect.anything());
+    expect(fixture.componentInstance.invitation()?.displayName).toBe('Your person');
+    expect(fixture.componentInstance.page()).toBe('profile');
+    auth.together.mockResolvedValue({...status,partner:{id:'partner',displayName:null,hasPhoto:false}});
+    await fixture.componentInstance.accept();
+    expect(auth.submit).toHaveBeenCalledWith('together/accept',{token});
+    fixture.destroy();
+  });
+  it('rejects malformed pasted links without sending a request',async()=>{
+    const fixture=await render();
+    await fixture.componentInstance.previewInvitation('https://example.test/#invite?token=bad');
+    expect(auth.submit).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.error()).toContain('complete invitation link');
+    fixture.destroy();
+  });
   it('clears the open shared activity and navigation when the partner disconnects',async()=>{
     const connected={...status,partner:{id:'partner',displayName:null,hasPhoto:false}};
     auth.together.mockResolvedValue(connected);
@@ -103,7 +137,7 @@ describe('Dashboard photos and invitations', () => {
     expect(auth.submit).toHaveBeenCalledWith('together/preview', { token: 'private' });
     fixture.componentInstance.navigate('profile');
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Partner invited you');
+    expect(fixture.nativeElement.textContent).toContain('An invite from Partner');
     await fixture.componentInstance.accept();
     fixture.detectChanges();
     expect(auth.submit).toHaveBeenCalledWith('together/accept', { token: 'private' });

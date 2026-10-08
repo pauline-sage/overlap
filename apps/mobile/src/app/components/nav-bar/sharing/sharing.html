@@ -19,12 +19,12 @@
             <span class="hint">{{ category.description }}</span>
           </span>
           <span class="control">
-            <input type="checkbox" role="switch" [attr.aria-label]="'Share ' + category.label"
+            <input type="checkbox" role="switch" [attr.aria-label]="category.key === 'presence' ? category.label : 'Share ' + category.label"
               [checked]="outgoing(category.key) === 'accepted'"
               [disabled]="sharing.busy() || !state.connected"
               (change)="toggle(category.key, $event)" />
             <span class="track" aria-hidden="true"></span>
-            <span class="state">{{ outgoing(category.key) === 'accepted' ? 'Shared' : outgoing(category.key) === 'partial' ? 'Partly shared' : 'Private' }}</span>
+            <span class="state">{{ category.key === 'presence' ? (outgoing(category.key) === 'accepted' ? 'Visible' : 'Hidden') : (outgoing(category.key) === 'accepted' ? 'Shared' : 'Private') }}</span>
           </span>
         </label>
       }

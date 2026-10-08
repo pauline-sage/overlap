@@ -5,6 +5,7 @@ COPY apps/mobile/package*.json ./
 RUN npm ci
 COPY apps/mobile/ ./
 RUN npm run build -- --configuration production
+RUN test -f dist/mobile/browser/index.html
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS api
 WORKDIR /src
@@ -13,6 +14,9 @@ COPY services/api/Overlap.Api.csproj services/api/
 RUN dotnet restore services/api/Overlap.Api.csproj
 COPY services/api/ services/api/
 RUN dotnet publish services/api/Overlap.Api.csproj -c Release -o /out --no-restore /p:UseAppHost=false
+RUN test -f /out/Overlap.Api.dll \
+    && test ! -e /out/appsettings.Local.json \
+    && test ! -e /out/appsettings.Push.Local.json
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS application
 WORKDIR /app
@@ -30,4 +34,6 @@ FROM application AS migrations
 CMD ["--migrate"]
 
 # Keep the default build target as the web application.
+# Supply ConnectionHistory__CreatorEmail privately at runtime. The API hosts
+# expired-connection cleanup; it is disabled when this setting is missing.
 FROM application AS runtime

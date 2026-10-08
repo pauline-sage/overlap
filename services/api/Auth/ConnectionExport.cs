@@ -59,13 +59,18 @@ public static partial class ConnectionHistoryEndpoints
     {
         var account=AccountId(user);var creator=await Creator(db,config,account);var now=clock.GetUtcNow().UtcDateTime;
         if(!await Own(db,account).AnyAsync(x=>x.PairId==pair && (creator || x.ExportExpiresUtc>now)))return Results.NotFound();
-        var snapshot=await Snapshot(db,pair,account);
         // .NET 9 ZipArchive writes its central directory synchronously on disposal.
         // Permit that only for this streamed download, rather than buffering all photos.
         var body=context.Features.Get<Microsoft.AspNetCore.Http.Features.IHttpBodyControlFeature>();
         if(body is not null)body.AllowSynchronousIO=true;
         // Write each photo directly to the response archive; no sensitive temporary files.
         return Results.Stream(async stream=>{
+            // Keep metadata and photo reads consistent if cleanup runs during a download.
+            await using var transaction=await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable,context.RequestAborted);
+            if(!await Own(db,account).AnyAsync(x=>x.PairId==pair && (creator || x.ExportExpiresUtc>now),context.RequestAborted)){
+                context.Response.StatusCode=404;return;
+            }
+            var snapshot=await Snapshot(db,pair,account);
             using var zip=new ZipArchive(stream,ZipArchiveMode.Create,leaveOpen:true);
             await using(var json=zip.CreateEntry("connection.json").Open())await JsonSerializer.SerializeAsync(json,snapshot,Json);
             await foreach(var photo in db.Set<DrawingPhoto>().AsNoTracking().Where(p=>db.Set<DrawingRound>().Any(r=>r.Id==p.RoundId && r.PairId==pair)).AsAsyncEnumerable()){

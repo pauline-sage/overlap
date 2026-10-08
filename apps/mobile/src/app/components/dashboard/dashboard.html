@@ -3,13 +3,14 @@
     <p class="guide-eyebrow">A little closer</p>
     <h2 id="first-steps-heading" tabindex="-1">You're connected. Make yourself at home.</h2>
     <ol>
-      <li><strong>Choose what feels right to share</strong><p>In Settings, choose whether to share your profile, online presence and selected watch picks. You can change your choices whenever you like.</p></li>
+      <li><strong>Choose what feels right to share</strong><p>In Settings, choose whether to share your photo, online presence and selected watch picks. You can change your choices whenever you like.</p></li>
       <li><strong>Make a little time together</strong><p>From Home, find something to watch or a place near you. Each of you searches locally. Share a chosen place only if you want to; your search location stays private.</p></li>
       <li><strong>Find your plans in Dates</strong><p>See your shared plans there. Notifications lets you know when your partner shares a pick, replies or cancels.</p></li>
     </ol>
     <div class="guide-actions"><button type="button" (click)="finishFirstSteps(true)">Choose my sharing settings <span aria-hidden="true">&#8594;</span></button><button type="button" (click)="finishFirstSteps()">I'll explore first</button></div>
   </section>
 }
+@if(!firstSteps()) {
 @if(working()) {<app-loading-indicator [label]="'Updating...'" />}
 <input
   #photoPicker
@@ -95,9 +96,11 @@
     [notice]="notice()"
     [error]="error()"
     [inviteUrl]="inviteUrl()"
+    [invitationCopied]="invitationCopied()"
     [invitation]="invitation()"
     [photoVersion]="photoVersion()"
     (action)="profileAction($event)"
+    (previewInvitation)="previewInvitation($event)"
     (upload)="uploadPhoto($event)"
     (openRecipe)="openCooking($event)"
     (openContest)="openContest($event)"
@@ -157,8 +160,10 @@
 }
 <app-stay-in-together [active]="stayingIn() && page()==='home'" [hidden]="!stayingIn() || page()!=='home'" [request]="stayInRequest()" [ownName]="greetingName()" [partnerName]="together()?.partner?.displayName || 'Your person'" (back)="navigate('home')" />
 @if(coffee() && page() === 'home'){<app-step-out-together (shared)="navigate('home')" [proposal]="outingProposal()" [partnerName]="together()?.partner?.displayName || 'Your person'" (back)="navigate(outingProposal() ? 'dates' : 'home')" />}
+}
 <app-nav-bar
   [current]="page()"
+  [tutorial]="firstSteps()"
   [disabled]="busy()"
   (navigate)="navigate($event)"
   (openDrawing)="openDrawing($event)" (openQuiz)="openQuiz($event)" (openContest)="navigate('home'); openContest($event)" (openCooking)="navigate('home'); openCooking($event)" (openPicks)="openPartnerPicks()" (pickYours)="pickYours($event)"

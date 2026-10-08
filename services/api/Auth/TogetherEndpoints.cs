@@ -18,8 +18,8 @@ public static class TogetherEndpoints
     public static void MapTogether(this WebApplication app)
     {
         var group = app.MapGroup("/api/auth/together").RequireAuthorization().RequireRateLimiting("auth");
-        group.MapGet("/", Status);
-        group.MapGet("/photo/{id}", Photo);
+        group.MapGet("/", Status).RequireRateLimiting("account-read");
+        group.MapGet("/photo/{id}", Photo).RequireRateLimiting("account-read");
         group.MapPost("/photo", SavePhoto);
         group.MapPost("/invite", CreateInvite);
         group.MapPost("/revoke", async (ClaimsPrincipal principal, AuthDbContext db) =>
@@ -34,7 +34,7 @@ public static class TogetherEndpoints
             if (owner is null || owner.Id == UserId(principal)) return Invalid("This invitation is invalid, expired, or belongs to you.");
             if (await db.PairMembers.AnyAsync(x => x.AccountId == owner.Id || x.AccountId == UserId(principal)))
                 return Invalid("One of you is already connected. Leave that connection before joining another.");
-            return Results.Ok(new { displayName = "Your person", expiresUtc = owner.InvitationExpiresUtc });
+            return Results.Ok(new { displayName = string.IsNullOrWhiteSpace(owner.DisplayName) ? "Your person" : owner.DisplayName, expiresUtc = owner.InvitationExpiresUtc });
         });
         group.MapPost("/accept", Accept);
         group.MapPost("/leave", ConnectionHistoryEndpoints.Leave);
@@ -50,7 +50,7 @@ public static class TogetherEndpoints
         var partnerId = pair is null ? null : await db.PairMembers.Where(x => x.PairId == pair && x.AccountId != id).Select(x => x.AccountId).SingleOrDefaultAsync();
         var profileAllowed = partnerId is not null && await PrivacyEndpoints.Allowed(db,pair,partnerId,"profile");
         var presenceAllowed = partnerId is not null && await PrivacyEndpoints.Allowed(db,pair,partnerId,"presence");
-        var partner = await db.Users.Where(x => x.Id == partnerId).Select(x => new { x.Id, DisplayName = profileAllowed && x.ShareDisplayName ? x.DisplayName : null, HasPhoto = profileAllowed && x.SharePhoto && x.Photo != null, x.SharePresence }).SingleOrDefaultAsync();
+        var partner = await db.Users.Where(x => x.Id == partnerId).Select(x => new { x.Id, x.DisplayName, HasPhoto = profileAllowed && x.SharePhoto && x.Photo != null, x.SharePresence }).SingleOrDefaultAsync();
         return Results.Ok(new { creator = await ConnectionHistoryEndpoints.Creator(db,config,id), id, own.HasPhoto, online = true, invitationExpiresUtc = own.InvitationExpiresUtc > DateTime.UtcNow ? own.InvitationExpiresUtc : null,
             partner = partner is null ? null : new { partner.Id, partner.DisplayName, partner.HasPhoto, online = presenceAllowed && partner.SharePresence ? (bool?)presence.IsOnline(partner.Id) : null } });
     }

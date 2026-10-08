@@ -1,4 +1,4 @@
-@if (current() === 'settings') {
+@if (!tutorial() && current() === 'settings') {
   <app-settings
     [busy]="disabled()"
     (changeEmail)="changeEmail.emit()"
@@ -6,7 +6,7 @@
     (signOut)="signOut.emit()"
   />
 }
-@if(current() === 'notifications') {
+@if(!tutorial() && current() === 'notifications') {
   <header class="page-banner">
     <span class="page-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 17h14l-2-3V9a5 5 0 0 0-10 0v5l-2 3ZM10 20h4" /></svg></span>
     <div><h2 id="dashboard-heading" tabindex="-1">Notifications</h2><p>Little updates that bring you closer.</p></div>
@@ -16,7 +16,7 @@
   @for(invitation of sharing.state()?.quizInvitations ?? [];track invitation.id){<section class="quiz-invitation"><h3>A quiz with your person</h3><p>Five questions to answer and guess together. Review the categories before accepting.</p><button type="button" [disabled]="disabled()" (click)="openQuiz.emit(invitation.id)">View quiz invitation</button></section>}
   <app-sharing [notifications]="true" (openContest)="openContest.emit($event)" (openCooking)="openCooking.emit($event)" (openPicks)="openPicks.emit()" (pickYours)="pickYours.emit($event)" />
 }
-@if(current() === 'dates') {
+@if(!tutorial() && current() === 'dates') {
   <header class="page-banner">
     <span class="page-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18M8 15h2M14 15h2"/></svg></span>
     <div><h2 id="dashboard-heading" tabindex="-1">Dates</h2><p>A little time set aside for each other.</p></div>
@@ -28,7 +28,7 @@
   <button
     type="button"
     aria-label="Home"
-    [attr.aria-current]="current() === 'home' ? 'page' : null"
+    [attr.aria-current]="!tutorial() && current() === 'home' ? 'page' : null"
     [disabled]="disabled()"
     (click)="navigate.emit('home')"
   >
@@ -73,6 +73,7 @@
   <button
     type="button"
     aria-label="Settings"
+    [class.tutorial-highlight]="tutorial()"
     [attr.aria-current]="current() === 'settings' ? 'page' : null"
     [disabled]="disabled()"
     (click)="navigate.emit('settings')"

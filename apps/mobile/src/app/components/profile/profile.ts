@@ -15,6 +15,9 @@ export type ProfileAction =
   | 'editProfile';
 @Component({ selector: 'app-profile', imports:[PartnerSharesComponent,ProfileTimezoneComponent], templateUrl: './profile.html', styleUrl: './profile.scss' })
 export class ProfileComponent {
+  readonly invitationLink=signal('');
+  readonly enteringInvitation=signal(false);
+  readonly previewInvitation=output<string>();
   readonly openRecipe=output<number>();
   readonly openContest=output<number>();
   readonly openQuiz=output<number>();
@@ -25,6 +28,7 @@ export class ProfileComponent {
   readonly notice = input('');
   readonly error = input('');
   readonly inviteUrl = input('');
+  readonly invitationCopied = input(false);
   readonly invitation = input<{ displayName: string; expiresUtc: string } | null>(null);
   readonly photoVersion = input(0);
   readonly action = output<ProfileAction>();

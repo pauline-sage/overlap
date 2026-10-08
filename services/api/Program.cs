@@ -169,6 +169,8 @@ if (authConfigured)
     builder.Services.AddHttpClient<AccountEmailSender>(client => client.Timeout = TimeSpan.FromSeconds(15))
         .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
     builder.Services.AddHostedService<AccountMailDispatcher>();
+    builder.Services.AddScoped<ConnectionRetention>();
+    builder.Services.AddHostedService<ConnectionRetentionWorker>();
     builder.Services.AddSingleton<IReminderPushSender,ReminderPushSender>();
     builder.Services.AddHttpClient("phone-push",client=>client.Timeout=TimeSpan.FromSeconds(8)).RemoveAllLoggers()
         .ConfigurePrimaryHttpMessageHandler(()=>new HttpClientHandler{AllowAutoRedirect=false});
@@ -179,6 +181,12 @@ if (authConfigured)
     builder.Services.AddRateLimiter(options =>
     {
         options.RejectionStatusCode = 429;
+        // Authenticated UI polling must not consume the IP-wide security-action budget.
+        options.AddPolicy("account-read", context => {
+            var account=context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            return RateLimitPartition.GetFixedWindowLimiter(account ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit=account is null ? 30 : 120,Window=TimeSpan.FromMinutes(1),QueueLimit=0 });
+        });
         options.AddPolicy("quiz", context => RateLimitPartition.GetFixedWindowLimiter(
             context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
             { PermitLimit = 60, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));

@@ -43,7 +43,7 @@ public sealed class AuthFactory : WebApplicationFactory<Program>
             {
                 services.RemoveAll<IConfigureOptions<Microsoft.AspNetCore.RateLimiting.RateLimiterOptions>>();
                 services.Configure<Microsoft.AspNetCore.RateLimiting.RateLimiterOptions>(options => {
-                    foreach(var policy in new[] { "auth", "email", "picks", "watch", "quiz" })
+                    foreach(var policy in new[] { "auth", "email", "picks", "watch", "quiz", "account-read" })
                         options.AddPolicy(policy, _ => System.Threading.RateLimiting.RateLimitPartition.GetNoLimiter("consent-test"));
                 });
             }
@@ -52,6 +52,7 @@ public sealed class AuthFactory : WebApplicationFactory<Program>
             services.AddDbContext<AuthDbContext>(options => options.UseSqlite(connection));
             var dispatcher = services.Single(x => x.ServiceType == typeof(IHostedService) && x.ImplementationType == typeof(AccountMailDispatcher));
             services.Remove(dispatcher);
+            services.Remove(services.Single(x=>x.ServiceType==typeof(IHostedService) && x.ImplementationType==typeof(ConnectionRetentionWorker)));
             var reminderWorker=services.Single(x=>x.ServiceType==typeof(IHostedService) && x.ImplementationType==typeof(Overlap.Api.Notifications.PhoneReminderWorker));
             services.Remove(reminderWorker);
             services.AddDataProtection().UseEphemeralDataProtectionProvider();

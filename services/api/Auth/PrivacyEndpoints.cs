@@ -38,8 +38,7 @@ public static class PrivacyEndpoints
                 return !x.OnMyWay && venue?.Activity != null && venue.StartUtc != null;
             }).ToList();
             var partnerId = await db.PairMembers.Where(x => pair != null && x.PairId == pair && x.AccountId != id).Select(x => x.AccountId).SingleOrDefaultAsync();
-            var partnerName = partnerId != null && await Allowed(db,pair,partnerId,"profile")
-                ? await db.Users.Where(x => x.Id == partnerId && x.ShareDisplayName).Select(x => x.DisplayName).SingleOrDefaultAsync() : null;
+            var partnerName = partnerId is null ? null : await db.Users.Where(x => x.Id == partnerId).Select(x => x.DisplayName).SingleOrDefaultAsync();
             var picks = await db.Set<Overlap.Api.Watch.SharedPick>().AsNoTracking().Where(x => (x.ProposedBy == id && x.CollectionKey == "personal") ||
                 (pair != null && x.PairId == pair && x.IsShared && db.Set<SharingGrant>().Any(g => g.PairId == pair && g.SenderId == x.ProposedBy && g.Category == "picks" && g.Status == "accepted"))).OrderByDescending(x => x.Id).ToListAsync();
             var recipes=await db.Set<Overlap.Api.Cooking.SavedRecipe>().AsNoTracking().Where(x=>pair!=null && x.PairId==pair && x.SharedBy!=id && x.ShareRevision!="").OrderByDescending(x=>x.Id).ToListAsync();
@@ -66,7 +65,7 @@ public static class PrivacyEndpoints
                     venue = x.VenueJson == null ? null : System.Text.Json.JsonSerializer.Deserialize<Overlap.Api.Outings.SharedVenue>(x.VenueJson) }),
                 outgoing = grants.Where(x => x.SenderId == id).Select(x => new {x.Category,x.Status}),
                 incoming = grants.Where(x => x.SenderId != id).Select(x => new {x.Category,x.Status}) });
-        });
+        }).RequireRateLimiting("account-read");
         group.MapPost("/request", async (SharingCategory request, ClaimsPrincipal user, AuthDbContext db) =>
         {
             if (!Categories.Contains(request.Category)) return Results.BadRequest();

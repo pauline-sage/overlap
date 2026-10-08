@@ -4,7 +4,7 @@
     <h2 id="end-connection-heading">End your connection</h2>
     <p>This ends the connection for both people. Invitations, dates and ongoing activities stop.</p>
     <p>Shared pictures, books, films, recipes, places and other connection records leave the app. A new connection starts fresh. This cannot be undone.</p>
-    <p>Both people can download their connection data from Settings for 30 days. After that, the download is unavailable. Ending a connection does not delete the stored records.</p>
+    <p>Both people can download their connection data from Settings for 30 days. After that, downloads close and shared records are deleted automatically, unless retained in a creator archive.</p>
     @if(together()?.creator){<p>Your creator account keeps a separate archive of your own connections, with no download deadline. Your partner follows the standard conditions.</p>}
     <label><input type="checkbox" [checked]="acceptTerms()" (change)="acceptTerms.set($any($event.target).checked)" /> I understand and accept these conditions.</label>
     @if(error()){<p role="alert">{{error()}}</p>}
@@ -79,6 +79,7 @@
   <div class="connection-card">
   <div class="connection-heading">
     <h3>Your connection</h3>
+    <div class="connection-actions">
     <button
       class="icon-button"
       type="button"
@@ -89,6 +90,12 @@
     >
       <span aria-hidden="true">&#8635;</span>
     </button>
+    @if (together()?.partner) {
+      <button class="icon-button" type="button" (click)="acceptTerms.set(false); showLeave.set(true)" [disabled]="working() || busy()" aria-label="End connection" title="End connection">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+    }
+    </div>
   </div>
   @if (together()?.partner; as partner) {
     <button id="partner-link" class="partner-row" type="button" (click)="viewPartner(true)" [attr.aria-label]="'View ' + (partner.displayName || 'your partner') + '’s profile'">
@@ -102,16 +109,24 @@
       </div>
       <span class="partner-arrow" aria-hidden="true">&#8250;</span>
     </button>
-  } @else if (canInvite()) {
-    <button type="button" (click)="action.emit('createInvite')" [disabled]="working()">
-      Invite your person
-    </button>
   }
-  </div>
-  <app-profile-timezone />
-</section>
-
-<section class="sharing" aria-label="Your connection">
+  @if (together() && !together()?.partner && !invitation()) {
+    <div class="invitation-choices">
+      @if(canInvite()) {
+        <button type="button" (click)="enteringInvitation.set(false); action.emit('createInvite')" [disabled]="working() || busy()">Invite your person</button>
+      }
+      <button type="button" (click)="enteringInvitation.set(!enteringInvitation())" [attr.aria-expanded]="enteringInvitation()" aria-controls="join-invitation" [disabled]="working() || busy()">Got an invite?</button>
+    </div>
+    @if(enteringInvitation()) {
+    <form id="join-invitation" class="join-invitation" (submit)="$event.preventDefault(); previewInvitation.emit(invitationLink())">
+      <label for="received-invitation">Your invitation link</label>
+      <input id="received-invitation" type="url" required autocomplete="off" spellcheck="false" placeholder="Paste your person's link" [value]="invitationLink()" (input)="invitationLink.set($any($event.target).value)" [disabled]="working() || busy()" />
+      <button type="submit" [disabled]="working() || busy() || !invitationLink().trim()">Open invitation</button>
+    </form>
+    }
+  }
+  @if(notice() || error() || invitation() || inviteUrl() || together()?.invitationExpiresUtc) {
+  <section class="sharing" aria-label="Your connection">
   @if (notice()) {
     <p role="status">{{ notice() }}</p>
   }
@@ -119,37 +134,48 @@
     <p role="alert">{{ error() }}</p>
   }
   @if (invitation(); as pending) {
-    <h2>{{ pending.displayName }} invited you</h2>
-    <p>Connect privately. You choose what to share with your partner from your profile.</p>
+    <h3 class="invitation-title">An invite from {{ pending.displayName }}</h3>
     <button type="button" (click)="action.emit('accept')" [disabled]="working()">
       Accept invitation
     </button>
     <button type="button" (click)="action.emit('decline')" [disabled]="working()">Not now</button>
   }
   @if (inviteUrl() && !together()?.partner) {
-    <label for="invitation-link">Private invitation link</label>
+    <div class="outgoing-invitation">
+    <label class="hint" for="invitation-link">Copy and send to your person · valid 48h</label>
+    <div class="invitation-link-row">
     <input
       id="invitation-link"
       readonly
       [value]="inviteUrl()"
       (click)="$any($event.target).select()"
     />
-    <button type="button" (click)="action.emit('copyInvite')">Copy invitation</button>
+    <button class="copy-invitation" type="button" (click)="action.emit('copyInvite')" [attr.aria-label]="invitationCopied() ? 'Invitation copied' : 'Copy invitation'" [title]="invitationCopied() ? 'Copied' : 'Copy invitation'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        @if(invitationCopied()){<path d="m5 12 4 4L19 6"/>}
+        @else{<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>}
+      </svg>
+      <span class="copy-status" role="status">{{invitationCopied() ? 'Invitation copied' : ''}}</span>
+    </button>
+    </div>
+    </div>
   }
 
   @if (together()?.invitationExpiresUtc && !together()?.partner) {
-    <p>Invitation sent. Once your person accepts, you will appear here together.</p>
-    <p class="hint">
-      Need a new link? Revoke this invitation first. If it has expired, refresh your connection.
-    </p>
-    <button type="button" (click)="action.emit('revoke')" [disabled]="working()">
+    <div class="invitation-footer">
+    <p class="invitation-waiting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg><span>Waiting for your person</span></p>
+    <button class="revoke-invitation" type="button" (click)="action.emit('revoke')" [disabled]="working()">
       Revoke invitation
     </button>
-  }
-  @if (together()?.partner) {
-    <button type="button" (click)="acceptTerms.set(false); showLeave.set(true)">Leave connection</button>
+    </div>
   }
 </section>
+  }
+  </div>
+  <app-profile-timezone />
+</section>
+
+
 
 }
 

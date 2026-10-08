@@ -17,6 +17,7 @@ export class NavBarComponent {
   readonly sharing = inject(SharingService);
   readonly openQuiz=output<number>();readonly openDrawing=output<number>();
   readonly pickYours=output<OutingUpdate>(); readonly openCooking=output<number>(); readonly openContest=output<number>(); readonly openPicks = output<void>();
+  readonly tutorial = input(false);
   readonly current = input<DashboardPage>('home');
   readonly disabled = input(false);
   readonly changeEmail = output<void>();

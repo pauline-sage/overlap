@@ -93,15 +93,10 @@ button.icon-button {
   color: var(--muted);
   line-height: 1.5;
 }
-.sharing {
-  margin-top: 1rem;
-}
-.sharing button {
-  margin: 0.3rem 0.5rem 0.3rem 0;
-}
-.sharing input {
-  width: 100%;
-}
+.sharing { display:grid;gap:.85rem;margin-top:1rem; }
+.sharing p { margin:0; }
+.sharing .invitation-title { margin:0;font-size:1.1rem; }
+.sharing input { width:100%;min-width:0;box-sizing:border-box; }
 p {
   line-height: 1.5;
 }
@@ -130,13 +125,11 @@ p {
 .partner-row{background:var(--canvas)}
 .partner-row img,.partner-initial{flex-shrink:0}
 .partner-row strong{font-size:1rem}
-.sharing{padding:.5rem .25rem}
 .partner-intro .presence-dot{border-color:var(--hero)}
 .partner-intro .partner-caption{display:flex;align-items:center;justify-content:center;gap:.5rem;width:fit-content;max-width:100%;box-sizing:border-box;margin:0;padding:.55rem .85rem;border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);border-radius:999px;background:color-mix(in srgb,var(--surface) 65%,transparent);color:var(--text);font-size:.8rem;line-height:1.4}
 .partner-caption svg{width:28px;height:20px;flex-shrink:0;color:var(--accent)}
 
 .profile-intro > button { border:0;background:transparent;font-size:.85rem;padding:.5rem .75rem; }
-.sharing { margin-top:1.25rem; }
 .sharing > button { background:transparent;font-size:.85rem; }
 
 .profile-intro > .edit-name { display:inline-flex;align-items:center;gap:.5rem;border:1px solid var(--line);border-radius:999px;padding:.4rem .85rem;color:var(--detail); }
@@ -145,3 +138,21 @@ p {
 .connection-terms p{line-height:1.65;color:var(--muted)}
 .connection-terms label{display:flex;align-items:center;gap:.75rem;min-height:48px;margin:1.5rem 0}
 .connection-terms input{width:1.2rem;height:1.2rem;flex-shrink:0}
+.join-invitation{display:grid;gap:.75rem;margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--line)}
+.join-invitation label{font-size:.85rem;color:var(--muted)}
+.join-invitation input{width:100%;min-width:0;box-sizing:border-box}
+.join-invitation button{justify-self:start}
+.invitation-choices{display:flex;flex-wrap:wrap;gap:.75rem}
+.connection-actions{display:flex;align-items:center;gap:.5rem}
+.copy-invitation{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px}
+.copy-invitation svg{width:20px;height:20px}
+.copy-status{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.outgoing-invitation{display:grid;gap:.6rem;padding:.9rem;border:1px solid var(--line);border-radius:1rem;background:var(--canvas)}
+.outgoing-invitation label{font-size:.85rem;font-weight:600}
+.invitation-link-row{display:flex;align-items:center;gap:.5rem;min-width:0}
+.invitation-link-row input{flex:1;padding:.65rem .75rem;font-size:.8rem;border-radius:.75rem}
+.invitation-link-row .copy-invitation{flex-shrink:0;width:44px;padding:0;border-radius:.75rem;background:var(--surface)}
+.invitation-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.25rem .75rem}
+.invitation-waiting{display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--muted)}
+.invitation-waiting svg{width:17px;height:17px;flex-shrink:0;color:var(--accent)}
+.invitation-footer .revoke-invitation{padding:.5rem .25rem;border:0;background:transparent;font-size:.8rem;color:var(--muted);text-decoration:underline;text-underline-offset:3px}

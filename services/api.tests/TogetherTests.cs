@@ -43,12 +43,14 @@ public sealed partial class TogetherTests
         await SignIn(factory, first, "first"); await SignIn(factory, second, "second");
         var token = await Invite(first);
         Assert.Equal(HttpStatusCode.BadRequest, (await Post(first, "together/accept", new { token })).StatusCode);
-        (await Post(second, "together/preview", new { token })).EnsureSuccessStatusCode();
+        var preview=await Post(second, "together/preview", new { token });
+        preview.EnsureSuccessStatusCode();
+        Assert.Equal("first",(await preview.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("displayName").GetString());
         var before = await second.GetFromJsonAsync<JsonElement>("/api/auth/together/");
         Assert.Equal(JsonValueKind.Null, before.GetProperty("partner").ValueKind);
         (await Post(second, "together/accept", new { token })).EnsureSuccessStatusCode();
         var after = await first.GetFromJsonAsync<JsonElement>("/api/auth/together/");
-        Assert.Equal(JsonValueKind.Null, after.GetProperty("partner").GetProperty("displayName").ValueKind);
+        Assert.Equal("second", after.GetProperty("partner").GetProperty("displayName").GetString());
         Assert.Equal(HttpStatusCode.BadRequest, (await Post(second, "together/accept", new { token })).StatusCode);
         (await Post(second, "together/leave", new {acceptTerms=true})).EnsureSuccessStatusCode();
         using var scope = factory.Services.CreateScope();

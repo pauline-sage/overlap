@@ -10,7 +10,7 @@ describe('Partner profile', () => {
     fixture.componentRef.setInput('greetingName','Person');
     fixture.componentRef.setInput('together',{id:'self',hasPhoto:false,invitationExpiresUtc:null,partner:{id:'other',displayName:null,hasPhoto:false}});
     fixture.detectChanges();
-    const leave=Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(button=>button.textContent?.trim()==='Leave connection')!;
+    const leave=fixture.nativeElement.querySelector('.connection-heading button[aria-label="End connection"]') as HTMLButtonElement;
     leave.click();fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('#end-connection-heading')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('#partner-link')).toBeNull();
