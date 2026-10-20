@@ -32,3 +32,6 @@ Thumbs.db
 
 # Personal local startup launcher
 /start-local.cmd
+
+# Public repository overview
+!/README.md
